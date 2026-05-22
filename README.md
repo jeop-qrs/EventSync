@@ -1,0 +1,2 @@
+# EventSync
+smol skol projekt
