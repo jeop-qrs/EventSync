@@ -1,232 +1,360 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="/frontend/assets/img/EventSync logo.webp"
+      type="image/png"
+      sizes="192x192"
+    />
     <title>EventSync - Prototype Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="/frontend/assets/css/style.css" />
+  </head>
+  <body>
     <div id="landingOverlay" class="landing-overlay">
-        <div class="landing-card">
-            <p class="landing-subtitle">WELCOME TO</p>
-            <h1 class="landing-title">EventSync</h1>
-            <p class="landing-copy">Please click your destination</p>
-            <div class="landing-actions">
-                <button class="btn landing-button" data-role="Student">STUDENT</button>
-                <button class="btn landing-button" data-role="Faculty">FACULTY</button>
-            </div>
-            <p class="landing-terms">By using this service, you understand and agree to the EventSync Online Services Terms of Use and Privacy Statement</p>
+      <div class="landing-card">
+        <p class="landing-subtitle">WELCOME TO</p>
+        <h1 class="landing-title">EventSync</h1>
+        <p class="landing-copy">Please click your destination</p>
+        <div class="landing-actions">
+          <button class="btn landing-button" data-role="Student">
+            STUDENT
+          </button>
+          <button class="btn landing-button" data-role="Faculty">
+            FACULTY
+          </button>
         </div>
+        <p class="landing-terms">
+          By using this service, you understand and agree to the EventSync
+          Online Services Terms of Use and Privacy Statement
+        </p>
+      </div>
     </div>
 
     <div class="role-simulator hidden">
-        <label>SIMULATE SYSTEM ROLE</label>
-        <select id="roleSelect">
-            <option value="Organizer">Organizer</option>
-            <option value="Administrator">Administrator</option>
-            <option value="Participant">Participant</option>
-        </select>
+      <label>SIMULATE SYSTEM ROLE</label>
+      <select id="roleSelect">
+        <option value="Organizer">Organizer</option>
+        <option value="Administrator">Administrator</option>
+        <option value="Participant">Participant</option>
+      </select>
     </div>
 
     <nav class="sidebar hidden">
-        <div>
-            <div class="sidebar-brand">
-                <h2>Event<span>Sync</span></h2>
-            </div>
-            <ul class="sidebar-menu">
-                <li class="menu-item active" data-view="dashboard-view">
-                    <i>📊</i> Dashboard Overview
-                </li>
-                <li class="menu-item" data-view="venues-view">
-                    <i>🏢</i> Venue Reservation
-                </li>
-                <li class="menu-item" data-view="schedule-view">
-                    <i>📅</i> Request Event Booking
-                </li>
-            </ul>
+      <div>
+        <div class="sidebar-brand">
+          <img
+            src="/frontend/assets/img/EventSync logo.webp"
+            alt="EventSync logo"
+            class="sidebar-logo"
+          />
+          <h2>EventSync</h2>
         </div>
-        <div class="sidebar-footer">
-            <p>System Stack: Node + MySQL</p>
-        </div>
+        <ul class="sidebar-menu">
+          <li class="menu-item active" data-view="dashboard-view">
+            <i>📊</i> Dashboard Overview
+          </li>
+          <li class="menu-item" data-view="venues-view">
+            <i>🏢</i> Venue Directory
+          </li>
+          <li class="menu-item" data-view="schedule-view">
+            <i>📅</i> Event Application
+          </li>
+        </ul>
+      </div>
     </nav>
 
     <main class="main-workspace hidden">
-        
-        <header class="navbar">
-            <div class="page-title">
-                <h1 id="workspaceTitle">Dashboard Overview</h1>
+      <header class="navbar">
+        <div class="page-title">
+          <h1 id="workspaceTitle">Dashboard Overview</h1>
+        </div>
+        <div class="nav-controls">
+          <div class="notification-bell" id="notificationBell">
+            <svg
+              class="bell-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Notifications"
+            >
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z"
+              />
+            </svg>
+            <span class="bell-dot" id="notificationCount">2</span>
+          </div>
+          <div class="notification-popup hidden" id="notificationPopup">
+            <div class="notification-popup-header">Notifications</div>
+            <div
+              class="notification-popup-list"
+              id="notificationPopupList"
+            ></div>
+          </div>
+          <div class="role-badge" id="currentRoleBadge">Role: Organizer</div>
+        </div>
+      </header>
+
+      <section class="content-container">
+        <div id="dashboard-view" class="view-section active-view">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Active Events</div>
+              <div class="stat-value" id="countActive">3</div>
             </div>
-            <div class="nav-controls">
-                <div class="notification-bell" id="notificationBell">
-                    <i>🔔</i>
-                    <span class="bell-dot"></span>
-                </div>
-                <div class="role-badge" id="currentRoleBadge">Role: Organizer</div>
+            <div class="stat-card">
+              <div class="stat-label">Pending Approval</div>
+              <div class="stat-value stat-value--warning" id="countPending">
+                1
+              </div>
             </div>
-        </header>
-
-        <section class="content-container">
-
-            <div id="dashboard-view" class="view-section active-view">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Active Events</div>
-                        <div class="stat-value" id="countActive">3</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Pending Approval</div>
-                        <div class="stat-value stat-value--warning" id="countPending">1</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Available Venues Today</div>
-                        <div class="stat-value stat-value--success" id="countVenues">4</div>
-                    </div>
-                </div>
-
-                <div class="dashboard-layout">
-                    <div class="table-container">
-                        <div class="section-header-inline">
-                            <h3>Live Tracking & Schedules</h3>
-                        </div>
-                        <table id="eventsTable">
-                            <thead>
-                                <tr>
-                                    <th>Event Title</th>
-                                    <th>Venue</th>
-                                    <th>Date & Time</th>
-                                    <th>Current Status</th>
-                                    <th class="admin-action-header">System Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Tech Innovation Summit</strong></td>
-                                    <td>Main Auditorium</td>
-                                    <td>May 22, 2026 | 09:00 AM</td>
-                                    <td><span class="status-pill status-approved">Approved</span></td>
-                                    <td class="admin-actions">-</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>UI/UX Design Masterclass</strong></td>
-                                    <td>IT Lab 302</td>
-                                    <td>May 25, 2026 | 01:00 PM</td>
-                                    <td><span class="status-pill status-approved">Approved</span></td>
-                                    <td class="admin-actions">-</td>
-                                </tr>
-                                <tr id="mockRowPending">
-                                    <td><strong>Web Stack Coding Bootcamp</strong></td>
-                                    <td>Seminar Hall Room A</td>
-                                    <td>June 02, 2026 | 10:00 AM</td>
-                                    <td><span class="status-pill status-pending" id="statusLabelPending">Pending Review</span></td>
-                                    <td class="admin-actions">
-                                        <button class="btn btn-small btn-success">Approve</button>
-                                        <button class="btn btn-small btn-danger">Reject</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="panel-container">
-                        <div class="section-header-inline">
-                            <h3>node-cron Alerts</h3>
-                        </div>
-                        <div class="notification-feed">
-                            <div class="notification-item">
-                                <strong>System Update:</strong> Double-booking validations passed for Main Auditorium.
-                                <div class="notification-time">Just now</div>
-                            </div>
-                            <div class="notification-item">
-                                <strong>Reminder Configured:</strong> Automated alert set for 24 hours prior to Tech Summit execution.
-                                <div class="notification-time">2 hours ago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-card">
+              <div class="stat-label">Available Venues Today</div>
+              <div class="stat-value stat-value--success" id="countVenues">
+                4
+              </div>
             </div>
+          </div>
 
-            <div id="venues-view" class="view-section">
-                <div class="section-header-inline">
-                    <p class="note-text">Near real-time inventory checking backed by structured MySQL availability pools.</p>
-                </div>
-                <div class="venue-grid">
-                    <div class="venue-card">
-                        <div class="venue-image-placeholder venue-image--purple">Capacity: 250</div>
-                        <div class="venue-info">
-                            <div>
-                                <div class="venue-title">Main Auditorium</div>
-                                <div class="venue-meta">Audio/Video System, Full Air-Con</div>
-                            </div>
-                            <button class="btn venue-select-button" data-venue="Main Auditorium">Select Asset</button>
-                        </div>
-                    </div>
-                    <div class="venue-card">
-                        <div class="venue-image-placeholder venue-image--green">Capacity: 45</div>
-                        <div class="venue-info">
-                            <div>
-                                <div class="venue-title">IT Lab 302</div>
-                                <div class="venue-meta">High-Performance Workstations, Projector</div>
-                            </div>
-                            <button class="btn venue-select-button" data-venue="IT Lab 302">Select Asset</button>
-                        </div>
-                    </div>
-                    <div class="venue-card">
-                        <div class="venue-image-placeholder venue-image--gold">Capacity: 80</div>
-                        <div class="venue-info">
-                            <div>
-                                <div class="venue-title">Seminar Hall Room A</div>
-                                <div class="venue-meta">Sound System, Flexible Seating Modals</div>
-                            </div>
-                            <button class="btn venue-select-button" data-venue="Seminar Hall Room A">Select Asset</button>
-                        </div>
-                    </div>
-                </div>
+          <div class="dashboard-layout">
+            <div class="table-container">
+              <div class="section-header-inline">
+                <h3>Live Tracking & Schedules</h3>
+              </div>
+              <table id="eventsTable">
+                <thead>
+                  <tr>
+                    <th>Event Title</th>
+                    <th>Venue</th>
+                    <th>Date & Time</th>
+                    <th>Current Status</th>
+                    <th class="admin-action-header">System Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Tech Innovation Summit</strong></td>
+                    <td>Main Auditorium</td>
+                    <td>May 22, 2026 | 09:00 AM</td>
+                    <td>
+                      <span class="status-pill status-approved">Approved</span>
+                    </td>
+                    <td class="admin-actions">-</td>
+                  </tr>
+                  <tr>
+                    <td><strong>UI/UX Design Masterclass</strong></td>
+                    <td>IT Lab 302</td>
+                    <td>May 25, 2026 | 01:00 PM</td>
+                    <td>
+                      <span class="status-pill status-approved">Approved</span>
+                    </td>
+                    <td class="admin-actions">-</td>
+                  </tr>
+                  <tr id="mockRowPending">
+                    <td><strong>Web Stack Coding Bootcamp</strong></td>
+                    <td>Seminar Hall Room A</td>
+                    <td>June 02, 2026 | 10:00 AM</td>
+                    <td>
+                      <span
+                        class="status-pill status-pending"
+                        id="statusLabelPending"
+                        >Pending Review</span
+                      >
+                    </td>
+                    <td class="admin-actions">
+                      <button class="btn btn-small btn-success">Approve</button>
+                      <button class="btn btn-small btn-danger">Reject</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div id="schedule-view" class="view-section">
-                <div class="form-card">
-                    <form id="scheduleForm">
-                        <div class="form-group">
-                            <label for="eventTitle">Event Designation / Title</label>
-                            <input type="text" id="eventTitle" class="form-control" required placeholder="e.g., Full-Stack Development Workshop">
-                        </div>
-                        <div class="form-group">
-                            <label for="eventVenue">Target Structural Space / Venue</label>
-                            <select id="eventVenue" class="form-control" required>
-                                <option value="">-- Choose target allocation space --</option>
-                                <option value="Main Auditorium">Main Auditorium</option>
-                                <option value="IT Lab 302">IT Lab 302</option>
-                                <option value="Seminar Hall Room A">Seminar Hall Room A</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="eventDate">Execution Timestamp / Date</label>
-                            <input type="date" id="eventDate" class="form-control" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="eventTime">Start Window</label>
-                                <input type="time" id="eventTime" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="attendees">Target Headcount Audience</label>
-                                <input type="number" id="attendees" class="form-control" required placeholder="Estimated footprint">
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn">File Allocation Request</button>
-                            <button type="button" id="scheduleCancelBtn" class="btn btn-secondary">Cancel</button>
-                        </div>
-                    </form>
+            <div class="panel-container">
+              <div class="section-header-inline">
+                <h3>node-cron Alerts</h3>
+              </div>
+              <div class="notification-feed">
+                <div class="notification-item">
+                  <strong>System Update:</strong> Double-booking validations
+                  passed for Main Auditorium.
+                  <div class="notification-time">Just now</div>
                 </div>
+                <div class="notification-item">
+                  <strong>Reminder Configured:</strong> Automated alert set for
+                  24 hours prior to Tech Summit execution.
+                  <div class="notification-time">2 hours ago</div>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
 
-        </section>
+        <div id="venues-view" class="view-section">
+          <div class="section-header-inline">
+            <p class="note-text">
+              Near real-time inventory checking backed by structured MySQL
+              availability pools.
+            </p>
+          </div>
+          <div class="venue-grid">
+            <div class="venue-card">
+              <div class="venue-image-placeholder venue-image--purple">
+                Capacity: 250
+              </div>
+              <div class="venue-info">
+                <div>
+                  <div class="venue-title">Bamboo Building</div>
+                  <div class="venue-meta">Audio/Video System, Full Air-Con</div>
+                </div>
+                <button
+                  class="btn venue-select-button"
+                  data-venue="Main Auditorium"
+                >
+                  See Venue Information
+                </button>
+              </div>
+            </div>
+            <div class="venue-card">
+              <div class="venue-image-placeholder venue-image--green">
+                Capacity: 45
+              </div>
+              <div class="venue-info">
+                <div>
+                  <div class="venue-title">Function Hall</div>
+                  <div class="venue-meta">
+                    High-Performance Workstations, Projector
+                  </div>
+                </div>
+                <button class="btn venue-select-button" data-venue="IT Lab 302">
+                  See Venue Information
+                </button>
+              </div>
+            </div>
+            <div class="venue-card">
+              <div class="venue-image-placeholder venue-image--gold">
+                Capacity: 80
+              </div>
+              <div class="venue-info">
+                <div>
+                  <div class="venue-title">PSC Ground</div>
+                  <div class="venue-meta">
+                    Sound System, Flexible Seating Modals
+                  </div>
+                </div>
+                <button
+                  class="btn venue-select-button"
+                  data-venue="Seminar Hall Room A"
+                >
+                  See Venue Information
+                </button>
+              </div>
+            </div>
+            <div class="venue-card">
+              <div class="venue-image-placeholder venue-image--yellow">
+                Capacity: 80
+              </div>
+              <div class="venue-info">
+                <div>
+                  <div class="venue-title">Court</div>
+                  <div class="venue-meta">
+                    Sound System, Flexible Seating Modals
+                  </div>
+                </div>
+                <button
+                  class="btn venue-select-button"
+                  data-venue="Court"
+                >
+                  See Venue Information
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="schedule-view" class="view-section">
+          <div class="form-card">
+            <form id="scheduleForm">
+              <div class="form-group">
+                <label for="eventTitle">Event Title</label>
+                <input
+                  type="text"
+                  id="eventTitle"
+                  class="form-control"
+                  required
+                  placeholder="e.g., Full-Stack Development Workshop"
+                />
+              </div>
+              <div class="form-group">
+                <label for="eventTitle">Student Organization / Department</label>
+                <input
+                  type="text"
+                  id="StudOrg"
+                  class="form-control"
+                  required
+                  placeholder="e.g., COMMITS"
+                />
+              </div>
+              <div class="form-group">
+                <label for="eventVenue">Select Venue</label>
+                <select id="eventVenue" class="form-control" required>
+                  <option value="">-- Choose a venue --</option>
+                  <option value="Bamboo Building">Bamboo Building</option>
+                  <option value="Function Hall">Function Hall</option>
+                  <option value="PSC Ground">PSC Ground</option>
+                  <option value="Court">Court</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="eventDate">Event Date</label>
+                <input
+                  type="date"
+                  id="eventDate"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="eventTime">Start Time</label>
+                  <input
+                    type="time"
+                    id="eventTime"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="attendees">Expected Attendance</label>
+                  <input
+                    type="number"
+                    id="attendees"
+                    class="form-control"
+                    required
+                    placeholder="Number of guests"
+                  />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn">
+                  Submit Booking Request
+                </button>
+                <button
+                  type="button"
+                  id="scheduleCancelBtn"
+                  class="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
-
-    <script src="script.js"></script>
-</body>
+    <script src="/frontend/assets/js/script.js"></script>
+  </body>
 </html>
-
