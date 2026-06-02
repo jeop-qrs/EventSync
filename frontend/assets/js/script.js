@@ -178,7 +178,8 @@ function handleStudentLoginSubmit(e) {
   // For now, assume successful login (front-end only)
   // If this page is the separate users.html, redirect back to index with role param
   const pathname = window.location.pathname || "";
-  const isUsersPage = pathname.endsWith("/users.html") || pathname.endsWith("users.html");
+  const isUsersPage =
+    pathname.endsWith("/users.html") || pathname.endsWith("users.html");
   if (isUsersPage) {
     // Redirect to index and let index initialize the Student session
     window.location.href = "index.html?role=Student";
@@ -210,7 +211,8 @@ function handleFacultyLoginSubmit(e) {
   }
 
   const pathname = window.location.pathname || "";
-  const isFacultyPage = pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
+  const isFacultyPage =
+    pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
   if (isFacultyPage) {
     window.location.href = "index.html?role=Faculty";
     return;
@@ -226,15 +228,13 @@ function initializeFacultyLogin() {
   const form = document.getElementById("facultyLoginForm");
   const backLink = document.getElementById("facultyLoginBackBtn");
   if (form) form.addEventListener("submit", handleFacultyLoginSubmit);
-  if (backLink) backLink.addEventListener("click", () => {
-    window.location.href = "index.html";
-  });
+  if (backLink)
+    backLink.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
 }
 
 function switchRoleContext(selectedRole) {
-  document.getElementById("currentRoleBadge").innerText =
-    `Role: ${selectedRole}`;
-
   const actionHeaders = document.querySelectorAll(".admin-action-header");
   const actionCells = document.querySelectorAll(".admin-actions");
 
@@ -245,6 +245,25 @@ function switchRoleContext(selectedRole) {
     actionHeaders.forEach((el) => (el.style.display = "none"));
     actionCells.forEach((el) => (el.style.display = "none"));
   }
+}
+
+function updateProfileDisplay(userType) {
+  const profileName = document.querySelector(".profile-name");
+  const profileAvatar = document.querySelector(".profile-avatar");
+  if (!profileName || !profileAvatar) return;
+
+  const profileData = {
+    Student: { label: "Organizer", avatar: "OG" },
+    Faculty: { label: "Manager", avatar: "EM" },
+  };
+
+  const display = profileData[userType] || {
+    label: "Admin",
+    avatar: "AS",
+  };
+
+  profileName.innerText = display.label;
+  profileAvatar.innerText = display.avatar;
 }
 
 function processStatus(outcome) {
@@ -315,12 +334,64 @@ function addNotification(message, time = "Just now") {
 }
 
 function toggleNotificationPopup() {
+  closeProfileDropdown();
   const popup = document.getElementById("notificationPopup");
   if (!popup) return;
   popup.classList.toggle("hidden");
   if (!popup.classList.contains("hidden")) {
     unreadNotifications = 0;
     updateNotificationBadge();
+  }
+}
+
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const button = document.getElementById("profileButton");
+  if (!dropdown || !button) return;
+
+  const isHidden = dropdown.classList.toggle("hidden");
+  button.setAttribute("aria-expanded", String(!isHidden));
+}
+
+function closeProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const button = document.getElementById("profileButton");
+  if (!dropdown) return;
+  dropdown.classList.add("hidden");
+  if (button) button.setAttribute("aria-expanded", "false");
+}
+
+function initializeProfileMenu() {
+  const profileButton = document.getElementById("profileButton");
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (profileButton) {
+    profileButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleProfileDropdown();
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      closeProfileDropdown();
+      alert("You have been logged out.");
+      const landingOverlay = document.getElementById("landingOverlay");
+      const sidebar = document.querySelector(".sidebar");
+      const workspace = document.querySelector(".main-workspace");
+      const roleSimulator = document.querySelector(".role-simulator");
+      if (landingOverlay) landingOverlay.style.display = "";
+      if (sidebar) sidebar.classList.add("hidden");
+      if (workspace) workspace.classList.add("hidden");
+      if (roleSimulator) roleSimulator.classList.add("hidden");
+    });
+  }
+}
+
+function handleDocumentClick(event) {
+  const profileMenu = document.getElementById("profileMenu");
+  if (!profileMenu) return;
+  if (!profileMenu.contains(event.target)) {
+    closeProfileDropdown();
   }
 }
 
@@ -336,6 +407,7 @@ function startSession(selectionRole) {
   const workspace = document.querySelector(".main-workspace");
   const roleSimulator = document.querySelector(".role-simulator");
 
+  updateProfileDisplay(selectionRole);
   document.getElementById("roleSelect").value = normalizedRole;
   switchRoleContext(normalizedRole);
   switchView(
@@ -408,12 +480,15 @@ document.addEventListener("DOMContentLoaded", () => {
   initializePdfDropzone();
   initializeStudentLogin();
   initializeFacultyLogin();
+  initializeProfileMenu();
+  document.addEventListener("click", handleDocumentClick);
 
-  // If redirected with ?role=Student, start the student session automatically
+  // If redirected with ?role=Student or ?role=Faculty, start the session automatically
   try {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("role") === "Student") {
-      startSession("Student");
+    const role = params.get("role");
+    if (role === "Student" || role === "Faculty") {
+      startSession(role);
     }
   } catch (err) {
     // ignore if URL API unavailable
