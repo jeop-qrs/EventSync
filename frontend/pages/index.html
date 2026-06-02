@@ -33,6 +33,8 @@
       </div>
     </div>
 
+    <!-- Student login moved to pages/users.html -->
+
     <div class="role-simulator hidden">
       <label>SIMULATE SYSTEM ROLE</label>
       <select id="roleSelect">
@@ -337,6 +339,20 @@
                     placeholder="Number of guests"
                   />
                 </div>
+              </div>
+              <div class="form-group">
+                <label for="eventPdf">Attach Letter Request</label>
+                <div id="pdfDropzone" class="pdf-dropzone">
+                  <span>Drag & drop your PDF here, or click to browse</span>
+                  <small id="pdfFileName">No file selected</small>
+                </div>
+                <input
+                  type="file"
+                  id="eventPdf"
+                  accept="application/pdf"
+                  required
+                  class="form-control file-input-hidden"
+                />
               </div>
               <div class="form-actions">
                 <button type="submit" class="btn">
