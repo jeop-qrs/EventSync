@@ -537,6 +537,43 @@ td {
   flex: 1;
 }
 
+.pdf-dropzone {
+  min-height: 110px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background-color: var(--bg-primary);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.pdf-dropzone span {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.pdf-dropzone small {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pdf-dropzone.dropzone-active {
+  border-color: var(--accent-color);
+  background-color: rgba(105, 170, 255, 0.06);
+}
+
+.file-input-hidden {
+  display: none;
+}
+
 .form-actions {
   margin-top: 12px;
   display: flex;
