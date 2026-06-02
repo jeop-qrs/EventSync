@@ -35,6 +35,15 @@ function handleFormSubmission(e) {
   const venue = document.getElementById("eventVenue").value;
   const date = document.getElementById("eventDate").value;
   const time = document.getElementById("eventTime").value;
+  const pdfInput = document.getElementById("eventPdf");
+  const pdfFile = pdfInput.files[0];
+
+  if (!pdfFile) {
+    alert("Please attach a letter request PDF before submitting.");
+    return;
+  }
+
+  const attachmentLabel = ` with attachment "${pdfFile.name}"`;
 
   const tableBody = document.querySelector("#eventsTable tbody");
   const newRow = document.createElement("tr");
@@ -53,19 +62,173 @@ function handleFormSubmission(e) {
   const logFeed = document.querySelector(".notification-feed");
   const alertItem = document.createElement("div");
   alertItem.className = "notification-item";
-  alertItem.innerHTML = `<strong>System Routing:</strong> Reservation request generated for "${title}". Awaiting Administrative check. <div class="notification-time">Just now</div>`;
+  alertItem.innerHTML = `<strong>System Routing:</strong> Reservation request generated for "${title}"${attachmentLabel}. Awaiting Administrative check. <div class="notification-time">Just now</div>`;
   logFeed.insertBefore(alertItem, logFeed.firstChild);
 
   addNotification(
-    `Reservation request generated for "${title}". Awaiting Administrative check.`,
+    `Reservation request generated for "${title}"${attachmentLabel}. Awaiting Administrative check.`,
     "Just now",
   );
 
   document.getElementById("scheduleForm").reset();
+  updatePdfFileDisplay();
   switchView(
     "dashboard-view",
     document.querySelector('[data-view="dashboard-view"]'),
   );
+}
+
+function validatePdfFile(file) {
+  return (
+    file &&
+    (file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf"))
+  );
+}
+
+function updatePdfFileDisplay(fileName) {
+  const pdfFileName = document.getElementById("pdfFileName");
+  if (pdfFileName) {
+    pdfFileName.innerText = fileName || "No file selected";
+  }
+}
+
+function handlePdfSelection() {
+  const pdfInput = document.getElementById("eventPdf");
+  const file = pdfInput.files[0];
+
+  if (!file) {
+    updatePdfFileDisplay();
+    return;
+  }
+
+  if (!validatePdfFile(file)) {
+    alert("Please upload a valid PDF file.");
+    pdfInput.value = "";
+    updatePdfFileDisplay();
+    return;
+  }
+
+  updatePdfFileDisplay(file.name);
+}
+
+function initializePdfDropzone() {
+  const pdfInput = document.getElementById("eventPdf");
+  const pdfDropzone = document.getElementById("pdfDropzone");
+
+  if (!pdfInput || !pdfDropzone) {
+    return;
+  }
+
+  pdfInput.addEventListener("change", handlePdfSelection);
+
+  pdfDropzone.addEventListener("click", () => pdfInput.click());
+
+  pdfDropzone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    pdfDropzone.classList.add("dropzone-active");
+  });
+
+  pdfDropzone.addEventListener("dragleave", (event) => {
+    event.preventDefault();
+    pdfDropzone.classList.remove("dropzone-active");
+  });
+
+  pdfDropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    pdfDropzone.classList.remove("dropzone-active");
+
+    if (event.dataTransfer.files.length) {
+      const file = event.dataTransfer.files[0];
+      if (!validatePdfFile(file)) {
+        alert("Please drop a valid PDF file.");
+        return;
+      }
+
+      pdfInput.files = event.dataTransfer.files;
+      updatePdfFileDisplay(file.name);
+    }
+  });
+}
+
+function showStudentLogin() {
+  const landing = document.getElementById("landingOverlay");
+  const login = document.getElementById("studentLoginOverlay");
+  if (landing) landing.classList.add("hidden");
+  if (login) login.classList.remove("hidden");
+}
+
+function hideStudentLogin() {
+  const landing = document.getElementById("landingOverlay");
+  const login = document.getElementById("studentLoginOverlay");
+  if (login) login.classList.add("hidden");
+  if (landing) landing.classList.remove("hidden");
+}
+
+function handleStudentLoginSubmit(e) {
+  e.preventDefault();
+  const studentNumber = document.getElementById("studentNumber").value.trim();
+  const password = document.getElementById("studentPassword").value;
+
+  if (!studentNumber || !password) {
+    alert("Please enter Student Number and Password.");
+    return;
+  }
+
+  // For now, assume successful login (front-end only)
+  // If this page is the separate users.html, redirect back to index with role param
+  const pathname = window.location.pathname || "";
+  const isUsersPage = pathname.endsWith("/users.html") || pathname.endsWith("users.html");
+  if (isUsersPage) {
+    // Redirect to index and let index initialize the Student session
+    window.location.href = "index.html?role=Student";
+    return;
+  }
+
+  const loginOverlay = document.getElementById("studentLoginOverlay");
+  if (loginOverlay) loginOverlay.classList.add("hidden");
+  startSession("Student");
+  const formEl = document.getElementById("studentLoginForm");
+  if (formEl) formEl.reset();
+}
+
+function initializeStudentLogin() {
+  const form = document.getElementById("studentLoginForm");
+  const backBtn = document.getElementById("studentLoginBackBtn");
+  if (form) form.addEventListener("submit", handleStudentLoginSubmit);
+  if (backBtn) backBtn.addEventListener("click", hideStudentLogin);
+}
+
+function handleFacultyLoginSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById("facultyUsername").value.trim();
+  const password = document.getElementById("facultyPassword").value;
+
+  if (!username || !password) {
+    alert("Please enter Username and Password.");
+    return;
+  }
+
+  const pathname = window.location.pathname || "";
+  const isFacultyPage = pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
+  if (isFacultyPage) {
+    window.location.href = "index.html?role=Faculty";
+    return;
+  }
+
+  // Fallback: start session inline
+  startSession("Faculty");
+  const formEl = document.getElementById("facultyLoginForm");
+  if (formEl) formEl.reset();
+}
+
+function initializeFacultyLogin() {
+  const form = document.getElementById("facultyLoginForm");
+  const backLink = document.getElementById("facultyLoginBackBtn");
+  if (form) form.addEventListener("submit", handleFacultyLoginSubmit);
+  if (backLink) backLink.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
 }
 
 function switchRoleContext(selectedRole) {
@@ -196,9 +359,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const eventsTableBody = document.querySelector("#eventsTable tbody");
   const landingButtons = document.querySelectorAll(".landing-button");
 
-  roleSelect.addEventListener("change", (event) =>
-    switchRoleContext(event.target.value),
-  );
+  if (roleSelect) {
+    roleSelect.addEventListener("change", (event) =>
+      switchRoleContext(event.target.value),
+    );
+  }
 
   if (notificationBell) {
     notificationBell.addEventListener("click", () => {
@@ -215,7 +380,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   landingButtons.forEach((button) => {
-    button.addEventListener("click", () => startSession(button.dataset.role));
+    if (button.dataset.role === "Student") {
+      button.addEventListener("click", () => {
+        // Navigate to separate users.html page for student login
+        window.location.href = "users.html";
+      });
+    } else if (button.dataset.role === "Faculty") {
+      button.addEventListener("click", () => {
+        // Navigate to separate faculty login page
+        window.location.href = "faculty.html";
+      });
+    } else {
+      button.addEventListener("click", () => startSession(button.dataset.role));
+    }
   });
 
   venueButtons.forEach((button) => {
@@ -226,6 +403,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (scheduleForm) {
     scheduleForm.addEventListener("submit", handleFormSubmission);
+  }
+
+  initializePdfDropzone();
+  initializeStudentLogin();
+  initializeFacultyLogin();
+
+  // If redirected with ?role=Student, start the student session automatically
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("role") === "Student") {
+      startSession("Student");
+    }
+  } catch (err) {
+    // ignore if URL API unavailable
   }
 
   renderNotificationPopup();
