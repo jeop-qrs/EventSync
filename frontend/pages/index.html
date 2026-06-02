@@ -231,81 +231,123 @@
         </div>
 
         <div id="venues-view" class="view-section">
-          <div class="section-header-inline">
-            <p class="note-text">
-              Near real-time inventory checking backed by structured MySQL
-              availability pools.
-            </p>
-          </div>
-          <div class="venue-grid">
-            <div class="venue-card">
-              <div class="venue-image-placeholder venue-image--purple">
-                Capacity: 250
+          <div class="venue-dashboard">
+            <section class="venue-list">
+              <div class="section-header-inline">
+                <h3>Venue Directory</h3>
               </div>
-              <div class="venue-info">
-                <div>
-                  <div class="venue-title">Bamboo Building</div>
-                  <div class="venue-meta">Audio/Video System, Full Air-Con</div>
-                </div>
-                <button
-                  class="btn venue-select-button"
-                  data-venue="Main Auditorium"
+              <div class="venue-grid">
+                <article
+                  class="venue-card"
+                  data-venue="Bamboo Building"
+                  tabindex="0"
                 >
-                  See Venue Information
-                </button>
-              </div>
-            </div>
-            <div class="venue-card">
-              <div class="venue-image-placeholder venue-image--green">
-                Capacity: 45
-              </div>
-              <div class="venue-info">
-                <div>
-                  <div class="venue-title">Function Hall</div>
-                  <div class="venue-meta">
-                    High-Performance Workstations, Projector
+                  <div class="venue-card-header venue-image--purple">
+                    Capacity: 250
                   </div>
-                </div>
-                <button class="btn venue-select-button" data-venue="IT Lab 302">
-                  See Venue Information
-                </button>
-              </div>
-            </div>
-            <div class="venue-card">
-              <div class="venue-image-placeholder venue-image--gold">
-                Capacity: 80
-              </div>
-              <div class="venue-info">
-                <div>
-                  <div class="venue-title">PSC Ground</div>
-                  <div class="venue-meta">
-                    Sound System, Flexible Seating Modals
+                  <div class="venue-image-placeholder">Bamboo Building</div>
+                  <div class="venue-card-body">
+                    <div class="venue-title">Bamboo Building</div>
+                    <ul class="venue-amenities">
+                      <li>Audio/Video System</li>
+                      <li>Full Air-Con</li>
+                      <li>Projector Ready</li>
+                    </ul>
                   </div>
-                </div>
-                <button
-                  class="btn venue-select-button"
-                  data-venue="Seminar Hall Room A"
+                </article>
+                <article
+                  class="venue-card"
+                  data-venue="Function Hall"
+                  tabindex="0"
                 >
-                  See Venue Information
-                </button>
+                  <div class="venue-card-header venue-image--green">
+                    Capacity: 45
+                  </div>
+                  <div class="venue-image-placeholder">Function Hall</div>
+                  <div class="venue-card-body">
+                    <div class="venue-title">Function Hall</div>
+                    <ul class="venue-amenities">
+                      <li>High-Performance Workstations</li>
+                      <li>Projector</li>
+                      <li>Modern Lighting</li>
+                    </ul>
+                  </div>
+                </article>
+                <article
+                  class="venue-card"
+                  data-venue="PSC Ground"
+                  tabindex="0"
+                >
+                  <div class="venue-card-header venue-image--gold">
+                    Capacity: 80
+                  </div>
+                  <div class="venue-image-placeholder">PSC Ground</div>
+                  <div class="venue-card-body">
+                    <div class="venue-title">PSC Ground</div>
+                    <ul class="venue-amenities">
+                      <li>Sound System</li>
+                      <li>Flexible Seating</li>
+                      <li>Modular Layout</li>
+                    </ul>
+                  </div>
+                </article>
+                <article class="venue-card" data-venue="Court" tabindex="0">
+                  <div class="venue-card-header venue-image--yellow">
+                    Capacity: 80
+                  </div>
+                  <div class="venue-image-placeholder">Court</div>
+                  <div class="venue-card-body">
+                    <div class="venue-title">Court</div>
+                    <ul class="venue-amenities">
+                      <li>Sound System</li>
+                      <li>Flexible Seating</li>
+                      <li>Outdoor Setup</li>
+                    </ul>
+                  </div>
+                </article>
               </div>
-            </div>
-            <div class="venue-card">
-              <div class="venue-image-placeholder venue-image--yellow">
-                Capacity: 80
-              </div>
-              <div class="venue-info">
-                <div>
-                  <div class="venue-title">Court</div>
-                  <div class="venue-meta">
-                    Sound System, Flexible Seating Modals
+            </section>
+
+            <aside class="venue-detail-panel">
+              <div class="detail-sidebar-inner">
+                <div class="detail-header">
+                  <h3>
+                    Detailed View:
+                    <span id="detailVenueName">Select a venue</span>
+                  </h3>
+                  <a
+                    id="externalVenueInfoLink"
+                    href="#"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    >See External Venue Info (Photos, Specs)</a
+                  >
+                </div>
+                <p id="venueDescription">
+                  Pick a venue from the left panel to see its description,
+                  availability, and booking options.
+                </p>
+
+                <div class="detail-section">
+                  <div class="section-header-inline">
+                    <h4>Availability</h4>
+                  </div>
+                  <div class="calendar-grid" id="venueCalendarGrid"></div>
+                  <div class="calendar-legend">
+                    <span class="legend-item legend-available"
+                      ><span></span>Available</span
+                    >
+                    <span class="legend-item legend-booked"
+                      ><span></span>Booked</span
+                    >
                   </div>
                 </div>
-                <button class="btn venue-select-button" data-venue="Court">
-                  See Venue Information
-                </button>
               </div>
-            </div>
+
+              <button id="bookNowBtn" class="btn book-now-btn" type="button">
+                Book Now
+              </button>
+            </aside>
           </div>
         </div>
 

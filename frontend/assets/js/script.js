@@ -1,3 +1,86 @@
+let activeVenue = null;
+
+const venueData = {
+  "Bamboo Building": {
+    title: "Bamboo Building",
+    capacity: 250,
+    description:
+      "A premium indoor venue with A/V support and climate control, ideal for large symposiums and product launches.",
+    link: "https://example.com/bamboo-building",
+    calendar: { booked: [3, 4, 8, 15, 16, 22], days: 30 },
+  },
+  "Function Hall": {
+    title: "Function Hall",
+    capacity: 45,
+    description:
+      "A compact, flexible room with workstation support and presentation-ready lighting for workshops or seminars.",
+    link: "https://example.com/function-hall",
+    calendar: { booked: [1, 6, 12, 19, 25], days: 30 },
+  },
+  "PSC Ground": {
+    title: "PSC Ground",
+    capacity: 80,
+    description:
+      "A versatile ground floor venue with sound support and flexible seating, great for fairs and networking events.",
+    link: "https://example.com/psc-ground",
+    calendar: { booked: [2, 7, 13, 18, 23, 29], days: 30 },
+  },
+  Court: {
+    title: "Court",
+    capacity: 80,
+    description:
+      "An open-air court setting with sound system options, suited for performances, competitions, and casual gatherings.",
+    link: "https://example.com/court",
+    calendar: { booked: [5, 9, 14, 20, 26], days: 30 },
+  },
+};
+
+function setActiveVenueCard(venueName) {
+  document.querySelectorAll(".venue-card[data-venue]").forEach((card) => {
+    if (card.dataset.venue === venueName) {
+      card.classList.add("selected");
+    } else {
+      card.classList.remove("selected");
+    }
+  });
+}
+
+function renderVenueCalendar(venueName) {
+  const calendarGrid = document.getElementById("venueCalendarGrid");
+  if (!calendarGrid) return;
+
+  const venue = venueData[venueName];
+  if (!venue) {
+    calendarGrid.innerHTML = "";
+    return;
+  }
+
+  const bookedDays = new Set(venue.calendar.booked);
+  const cells = [];
+
+  for (let day = 1; day <= venue.calendar.days; day += 1) {
+    const status = bookedDays.has(day) ? "booked" : "available";
+    cells.push(`
+      <div class="calendar-day ${status}">${day}</div>
+    `);
+  }
+
+  calendarGrid.innerHTML = cells.join("");
+}
+
+function displayVenueDetail(venueName) {
+  const venue = venueData[venueName];
+  if (!venue) return;
+
+  activeVenue = venueName;
+  document.getElementById("detailVenueName").innerText = venue.title;
+  document.getElementById("venueDescription").innerText = venue.description;
+  document.getElementById("externalVenueInfoLink").href = venue.link;
+
+  setActiveVenueCard(venueName);
+  renderVenueCalendar(venueName);
+}
+
 function switchView(viewId, element) {
   document.querySelectorAll(".view-section").forEach((view) => {
     view.classList.remove("active-view");
@@ -253,8 +336,8 @@ function updateProfileDisplay(userType) {
   if (!profileName || !profileAvatar) return;
 
   const profileData = {
-    Student: { label: "Organizer", avatar: "OG" },
-    Faculty: { label: "Manager", avatar: "EM" },
+    Student: { label: "Student", avatar: "STF" },
+    Faculty: { label: "Faculty", avatar: "FAH" },
   };
 
   const display = profileData[userType] || {
@@ -425,11 +508,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const roleSelect = document.getElementById("roleSelect");
   const notificationBell = document.getElementById("notificationBell");
   const menuItems = document.querySelectorAll(".sidebar-menu .menu-item");
-  const venueButtons = document.querySelectorAll(".venue-select-button");
+  const venueCards = document.querySelectorAll(".venue-card[data-venue]");
   const scheduleForm = document.getElementById("scheduleForm");
   const cancelButton = document.getElementById("scheduleCancelBtn");
   const eventsTableBody = document.querySelector("#eventsTable tbody");
   const landingButtons = document.querySelectorAll(".landing-button");
+  const bookNowBtn = document.getElementById("bookNowBtn");
 
   if (roleSelect) {
     roleSelect.addEventListener("change", (event) =>
@@ -467,11 +551,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  venueButtons.forEach((button) => {
-    button.addEventListener("click", () =>
-      openReservationWithVenue(button.dataset.venue),
-    );
+  venueCards.forEach((card) => {
+    const venueName = card.dataset.venue;
+    card.addEventListener("click", () => displayVenueDetail(venueName));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        displayVenueDetail(venueName);
+      }
+    });
   });
+
+  if (bookNowBtn) {
+    bookNowBtn.addEventListener("click", () => {
+      if (!activeVenue) {
+        alert("Please select a venue before booking.");
+        return;
+      }
+      openReservationWithVenue(activeVenue);
+    });
+  }
 
   if (scheduleForm) {
     scheduleForm.addEventListener("submit", handleFormSubmission);
