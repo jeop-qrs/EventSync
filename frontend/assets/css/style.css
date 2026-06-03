@@ -28,6 +28,33 @@ body {
   overflow: hidden;
 }
 
+/* Landing / Login overlay background */
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/frontend/assets/img/background.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1000;
+}
+
+.landing-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
+}
+
+.landing-card {
+  position: relative;
+  z-index: 1;
+}
+
 /* Sidebar Layout */
 .sidebar {
   background-color: var(--sidebar-bg);
@@ -492,29 +519,40 @@ td {
   outline-offset: -2px;
 }
 
-.venue-card-header,
-.venue-image-placeholder {
-  padding: 22px 20px;
+.venue-card-header {
+  padding: 18px 16px;
   color: white;
   font-weight: 700;
   font-size: 1rem;
+  min-height: 180px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  z-index: 1;
+}
+
+.venue-card-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .venue-image-placeholder {
-  min-height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background-color: rgba(255, 255, 255, 0.08);
+  display: none;
 }
 
 .venue-card-body {
-  padding: 22px 20px 24px;
+  padding: 18px 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .venue-amenities {
@@ -837,7 +875,7 @@ td {
 .landing-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.92);
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
