@@ -35,9 +35,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url('/frontend/assets/img/background.jpeg');
+  background-image: url("/frontend/assets/img/URS.svg");
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   z-index: 1000;
 }
@@ -884,20 +884,28 @@ td {
 }
 
 .landing-card {
-  width: min(560px, 100%);
-  background: #f6ef82;
-  border-radius: 24px;
-  padding: 48px 36px;
+  width: 40%;
+  height: 100%;
+  background: rgba(250, 249, 246, 0.7);
+  border-radius: 15px;
+  padding: 80px 56px;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
   text-align: center;
+  position: absolute;
+  left: 0;
+  right: -1;
+
 }
 
 .landing-subtitle {
   margin-bottom: 12px;
-  color: #0f172a;
-  font-size: 0.85rem;
+  /*  color: #0f172a; */
+  font-size: 1.1rem;
   letter-spacing: 1.75px;
   font-weight: 700;
+  position: relative;
+  top: 100px;
+  bottom: 0;
 }
 
 .landing-title {
@@ -905,17 +913,23 @@ td {
   font-size: clamp(2.5rem, 5vw, 4rem);
   color: #0f172a;
   letter-spacing: -1px;
+  position: relative;
+  top: 90px;
 }
 
 .landing-copy {
   margin: 20px auto 32px;
   color: #0f172a;
   font-weight: 600;
+  position: relative;
+  top: 90px;
 }
 
 .landing-actions {
   display: grid;
   gap: 16px;
+  position: relative;
+  top: 90px;
 }
 
 .landing-button {
@@ -923,11 +937,31 @@ td {
   padding: 16px 0;
   font-size: 1rem;
   border-radius: 12px;
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+}
+
+.landing-button:hover {
+  background-color: var(--accent-hover);
+}
+
+#student-btn {
+  background: #ECEA8D;
+  color: #0f172a;
+}
+
+#faculty-btn {
+  background: #000080;
+  color: #ffffff;
 }
 
 .landing-terms {
   margin-top: 28px;
-  color: #0f172a;
+  /*  color: #0f172a; */
   font-size: 0.82rem;
   line-height: 1.6;
+  position: relative;
+  top: 70px;
 }
