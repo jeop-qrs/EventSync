@@ -358,18 +358,65 @@
                   </div>
                 </div>
 
-                <div class="detail-section">
+                <div class="detail-section venue-calendar-section">
                   <div class="section-header-inline">
                     <h4>📅 Availability Calendar</h4>
                   </div>
-                  <div id="calendarMonth" class="calendar-month-header"></div>
-                  <div class="calendar-grid" id="venueCalendarGrid"></div>
+                  <div class="venue-calendar" id="venueCalendar">
+                    <div class="calendar-toolbar">
+                      <button
+                        type="button"
+                        id="calendarPrevMonth"
+                        class="calendar-nav-btn"
+                        aria-label="Previous month"
+                      >
+                        ‹
+                      </button>
+                      <h5 id="calendarMonthLabel" class="calendar-month-title"></h5>
+                      <button
+                        type="button"
+                        id="calendarNextMonth"
+                        class="calendar-nav-btn"
+                        aria-label="Next month"
+                      >
+                        ›
+                      </button>
+                    </div>
+                    <div class="calendar-weekdays" aria-hidden="true">
+                      <span>Sun</span>
+                      <span>Mon</span>
+                      <span>Tue</span>
+                      <span>Wed</span>
+                      <span>Thu</span>
+                      <span>Fri</span>
+                      <span>Sat</span>
+                    </div>
+                    <div
+                      class="calendar-dates"
+                      id="venueCalendarDates"
+                      role="grid"
+                      aria-labelledby="calendarMonthLabel"
+                    ></div>
+                    <div
+                      id="calendarDayDetail"
+                      class="calendar-day-detail"
+                      hidden
+                    >
+                      <p class="calendar-day-detail-heading">
+                        <span id="calendarDayDetailTitle"></span>
+                      </p>
+                      <ul id="calendarDayTimes" class="calendar-day-times-list"></ul>
+                    </div>
+                  </div>
                   <div class="calendar-legend">
                     <span class="legend-item legend-available"
-                      ><span></span>Available</span
+                      ><span></span>Available slots</span
                     >
                     <span class="legend-item legend-booked"
-                      ><span></span>Booked</span
+                      ><span></span>Fully booked</span
+                    >
+                    <span class="legend-item legend-neutral"
+                      ><span></span>No schedule data</span
                     >
                   </div>
                 </div>

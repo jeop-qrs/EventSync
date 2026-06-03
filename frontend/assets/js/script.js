@@ -1,6 +1,22 @@
 let activeVenue = null;
-let calendarMonth = new Date().getMonth();
-let calendarYear = new Date().getFullYear();
+let viewCalendarMonth = new Date().getMonth();
+let viewCalendarYear = new Date().getFullYear();
+let selectedCalendarDay = null;
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const venueData = {
   "Bamboo Building": {
@@ -84,110 +100,188 @@ function setActiveVenueCard(venueName) {
   });
 }
 
-function renderVenueCalendar(venueName) {
-  const calendarGrid = document.getElementById("venueCalendarGrid");
-  const calendarMonth = document.getElementById("calendarMonth");
+function getDayAvailabilityStatus(dayAvailability) {
+  if (!dayAvailability) return "neutral";
+  if (dayAvailability.booked) return "booked";
+  if (dayAvailability.times?.length) return "available";
+  return "neutral";
+}
 
-  if (!calendarGrid) return;
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
-  const venue = venueData[venueName];
-  if (!venue) {
-    calendarGrid.innerHTML = "";
+function formatCalendarDaySlots(times) {
+  if (!times?.length) return "";
+  return times
+    .map(
+      (slot) =>
+        `<span class="calendar-time-slot">${escapeHtml(slot)}</span>`,
+    )
+    .join("");
+}
+
+function updateCalendarDayDetail(venueName, day, dayAvailability) {
+  const detailPanel = document.getElementById("calendarDayDetail");
+  const detailTitle = document.getElementById("calendarDayDetailTitle");
+  const detailTimes = document.getElementById("calendarDayTimes");
+
+  if (!detailPanel || !detailTitle || !detailTimes) return;
+
+  if (!day || !dayAvailability) {
+    detailPanel.hidden = true;
+    detailTimes.innerHTML = "";
     return;
   }
 
-  // Update month/year display
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const currentDate = new Date(calendarYear, calendarMonth);
-  if (calendarMonth) {
-    calendarMonth.innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+  const monthLabel = MONTH_NAMES[viewCalendarMonth];
+  const status = getDayAvailabilityStatus(dayAvailability);
+
+  detailPanel.hidden = false;
+
+  if (status === "booked") {
+    detailTitle.textContent = `${monthLabel} ${day}, ${viewCalendarYear} — Fully booked`;
+    detailTimes.innerHTML =
+      '<li class="calendar-day-times-empty">This date is fully booked.</li>';
+    return;
   }
 
-  // Calculate calendar grid
-  const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
-  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  if (status === "available") {
+    detailTitle.textContent = `${monthLabel} ${day}, ${viewCalendarYear} — Available times`;
+    detailTimes.innerHTML = dayAvailability.times
+      .map((slot) => `<li>${escapeHtml(slot)}</li>`)
+      .join("");
+    return;
+  }
 
-  let html = '<div class="calendar-header">';
-  html += '<button id="prevMonth" class="calendar-nav-btn">&lt;</button>';
-  html += `<h4>${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}</h4>`;
-  html += '<button id="nextMonth" class="calendar-nav-btn">&gt;</button>';
-  html += "</div>";
+  detailTitle.textContent = `${monthLabel} ${day}, ${viewCalendarYear}`;
+  detailTimes.innerHTML =
+    '<li class="calendar-day-times-empty">No availability listed for this date.</li>';
+}
 
-  // Days of week header
-  html += '<div class="calendar-days-header">';
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  daysOfWeek.forEach((day) => {
-    html += `<div class="day-of-week">${day}</div>`;
-  });
-  html += "</div>";
+function selectCalendarDay(venueName, day) {
+  selectedCalendarDay = day;
+  const venue = venueData[venueName];
+  const dayAvailability = venue?.availability?.[day];
 
-  // Calendar grid
-  html += '<div class="calendar-dates">';
+  document
+    .querySelectorAll("#venueCalendarDates .calendar-date[data-day]")
+    .forEach((cell) => {
+      cell.classList.toggle(
+        "is-selected",
+        Number(cell.dataset.day) === day,
+      );
+    });
 
-  // Empty cells for days before month starts
+  updateCalendarDayDetail(venueName, day, dayAvailability);
+}
+
+function renderVenueCalendar(venueName) {
+  const calendarDates = document.getElementById("venueCalendarDates");
+  const monthLabel = document.getElementById("calendarMonthLabel");
+
+  if (!calendarDates) return;
+
+  const venue = venueData[venueName];
+  if (!venue) {
+    calendarDates.innerHTML = "";
+    if (monthLabel) monthLabel.textContent = "";
+    return;
+  }
+
+  if (monthLabel) {
+    monthLabel.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${viewCalendarYear}`;
+  }
+
+  const firstDay = new Date(viewCalendarYear, viewCalendarMonth, 1).getDay();
+  const daysInMonth = new Date(
+    viewCalendarYear,
+    viewCalendarMonth + 1,
+    0,
+  ).getDate();
+
+  let html = "";
+
   for (let i = 0; i < firstDay; i++) {
-    html += '<div class="calendar-date empty"></div>';
+    html += '<div class="calendar-date empty" aria-hidden="true"></div>';
   }
 
-  // Days of the month
   for (let day = 1; day <= daysInMonth; day++) {
     const dayAvailability = venue.availability[day];
-    const isBooked = dayAvailability?.booked || false;
+    const status = getDayAvailabilityStatus(dayAvailability);
     const times = dayAvailability?.times || [];
-    const statusClass = isBooked ? "booked" : "available";
-    const statusText = isBooked
-      ? "Booked"
-      : times.length > 0
-        ? "Available"
-        : "Not Listed";
-    const timesHTML =
-      times.length > 0
-        ? `<div class="day-times">${times.join("<br/>")}</div>`
-        : "";
+    const isSelected = selectedCalendarDay === day;
+    const ariaLabel =
+      status === "booked"
+        ? `${MONTH_NAMES[viewCalendarMonth]} ${day}: fully booked`
+        : status === "available"
+          ? `${MONTH_NAMES[viewCalendarMonth]} ${day}: available ${times.join(", ")}`
+          : `${MONTH_NAMES[viewCalendarMonth]} ${day}: no schedule data`;
+
+    const slotsHTML =
+      status === "available"
+        ? `<div class="day-times">${formatCalendarDaySlots(times)}</div>`
+        : status === "booked"
+          ? '<span class="day-status-label">Booked</span>'
+          : "";
 
     html += `
-      <div class="calendar-date ${statusClass}" data-day="${day}" title="${statusText}">
-        <div class="day-number">${day}</div>
-        ${timesHTML}
-      </div>
+      <button
+        type="button"
+        class="calendar-date ${status}${isSelected ? " is-selected" : ""}"
+        data-day="${day}"
+        aria-label="${escapeHtml(ariaLabel)}"
+      >
+        <span class="day-number">${day}</span>
+        ${slotsHTML}
+      </button>
     `;
   }
 
-  html += "</div>";
+  calendarDates.innerHTML = html;
 
-  calendarGrid.innerHTML = html;
-
-  // Attach event listeners to navigation buttons
-  document.getElementById("prevMonth")?.addEventListener("click", () => {
-    calendarMonth--;
-    if (calendarMonth < 0) {
-      calendarMonth = 11;
-      calendarYear--;
-    }
-    renderVenueCalendar(venueName);
+  calendarDates.querySelectorAll(".calendar-date[data-day]").forEach((cell) => {
+    cell.addEventListener("click", () => {
+      selectCalendarDay(venueName, Number(cell.dataset.day));
+    });
   });
 
-  document.getElementById("nextMonth")?.addEventListener("click", () => {
-    calendarMonth++;
-    if (calendarMonth > 11) {
-      calendarMonth = 0;
-      calendarYear++;
-    }
-    renderVenueCalendar(venueName);
-  });
+  if (
+    selectedCalendarDay &&
+    selectedCalendarDay <= daysInMonth &&
+    selectedCalendarDay >= 1
+  ) {
+    selectCalendarDay(venueName, selectedCalendarDay);
+  } else {
+    selectedCalendarDay = null;
+    updateCalendarDayDetail(venueName, null, null);
+  }
+}
+
+function shiftCalendarMonth(delta) {
+  viewCalendarMonth += delta;
+  if (viewCalendarMonth < 0) {
+    viewCalendarMonth = 11;
+    viewCalendarYear -= 1;
+  } else if (viewCalendarMonth > 11) {
+    viewCalendarMonth = 0;
+    viewCalendarYear += 1;
+  }
+  selectedCalendarDay = null;
+  if (activeVenue) renderVenueCalendar(activeVenue);
+}
+
+function initializeVenueCalendarNav() {
+  document
+    .getElementById("calendarPrevMonth")
+    ?.addEventListener("click", () => shiftCalendarMonth(-1));
+  document
+    .getElementById("calendarNextMonth")
+    ?.addEventListener("click", () => shiftCalendarMonth(1));
 }
 
 function displayVenueDetail(venueName) {
@@ -195,6 +289,9 @@ function displayVenueDetail(venueName) {
   if (!venue) return;
 
   activeVenue = venueName;
+  selectedCalendarDay = null;
+  viewCalendarMonth = new Date().getMonth();
+  viewCalendarYear = new Date().getFullYear();
   document.getElementById("detailVenueName").innerText = venue.title;
   document.getElementById("venueDescription").innerText = venue.description;
   document.getElementById("venueCapacity").innerText =
@@ -708,6 +805,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeStudentLogin();
   initializeFacultyLogin();
   initializeProfileMenu();
+  initializeVenueCalendarNav();
   document.addEventListener("click", handleDocumentClick);
 
   // If redirected with ?role=Student or ?role=Faculty, start the session automatically
