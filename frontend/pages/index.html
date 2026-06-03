@@ -19,10 +19,18 @@
         <h1 class="landing-title">EventSync</h1>
         <p class="landing-copy">Please click your destination</p>
         <div class="landing-actions">
-          <button id="student-btn" class="btn landing-button" data-role="Student">
+          <button
+            id="student-btn"
+            class="btn landing-button"
+            data-role="Student"
+          >
             STUDENT
           </button>
-          <button id="faculty-btn" class="btn landing-button" data-role="Faculty">
+          <button
+            id="faculty-btn"
+            class="btn landing-button"
+            data-role="Faculty"
+          >
             FACULTY
           </button>
         </div>
@@ -242,7 +250,12 @@
                   data-venue="Bamboo Building"
                   tabindex="0"
                 >
-                  <div class="venue-card-header venue-image--purple" style="background-image: url('/frontend/assets/img/Bamboo building.png');">
+                  <div
+                    class="venue-card-header venue-image--purple"
+                    style="
+                      background-image: url(&quot;/frontend/assets/img/Bamboo building.png&quot;);
+                    "
+                  >
                     Capacity: 250
                   </div>
                   <div class="venue-image-placeholder">Bamboo Building</div>
@@ -260,7 +273,12 @@
                   data-venue="Function Hall"
                   tabindex="0"
                 >
-                  <div class="venue-card-header venue-image--green" style="background-image: url('/frontend/assets/img/Function Hall.png');">
+                  <div
+                    class="venue-card-header venue-image--green"
+                    style="
+                      background-image: url(&quot;/frontend/assets/img/Function Hall.png&quot;);
+                    "
+                  >
                     Capacity: 45
                   </div>
                   <div class="venue-image-placeholder">Function Hall</div>
@@ -278,7 +296,12 @@
                   data-venue="PSC Ground"
                   tabindex="0"
                 >
-                  <div class="venue-card-header venue-image--gold" style="background-image: url('/frontend/assets/img/PSC Ground.png');">
+                  <div
+                    class="venue-card-header venue-image--gold"
+                    style="
+                      background-image: url(&quot;/frontend/assets/img/PSC Ground.png&quot;);
+                    "
+                  >
                     Capacity: 80
                   </div>
                   <div class="venue-image-placeholder">PSC Ground</div>
@@ -292,7 +315,12 @@
                   </div>
                 </article>
                 <article class="venue-card" data-venue="Court" tabindex="0">
-                  <div class="venue-card-header venue-image--yellow" style="background-image: url('/frontend/assets/img/Court.png');">
+                  <div
+                    class="venue-card-header venue-image--yellow"
+                    style="
+                      background-image: url(&quot;/frontend/assets/img/Court.png&quot;);
+                    "
+                  >
                     Capacity: 80
                   </div>
                   <div class="venue-image-placeholder">Court</div>
@@ -310,15 +338,31 @@
 
             <aside class="venue-detail-panel">
               <div class="detail-sidebar-inner">
-                <p id="venueDescription">
-                  Pick a venue from the left panel to see its description,
-                  availability, and booking options.
-                </p>
+                <div class="venue-info">
+                  <h3 id="detailVenueName">Select a Venue</h3>
+
+                  <p id="venueDescription">
+                    Pick a venue from the left panel to see its description,
+                    availability, and booking options.
+                  </p>
+
+                  <div class="venue-meta">
+                    <p>
+                      <strong>Capacity:</strong>
+                      <span id="venueCapacity">-</span>
+                    </p>
+                    <p>
+                      <strong>Link:</strong>
+                      <span id="externalVenueInfoLink">-</span>
+                    </p>
+                  </div>
+                </div>
 
                 <div class="detail-section">
                   <div class="section-header-inline">
-                    <h4>Availability</h4>
+                    <h4>📅 Availability Calendar</h4>
                   </div>
+                  <div id="calendarMonth" class="calendar-month-header"></div>
                   <div class="calendar-grid" id="venueCalendarGrid"></div>
                   <div class="calendar-legend">
                     <span class="legend-item legend-available"

@@ -1,4 +1,6 @@
 let activeVenue = null;
+let calendarMonth = new Date().getMonth();
+let calendarYear = new Date().getFullYear();
 
 const venueData = {
   "Bamboo Building": {
@@ -7,7 +9,16 @@ const venueData = {
     description:
       "A premium indoor venue with A/V support and climate control, ideal for large symposiums and product launches.",
     link: "https://example.com/bamboo-building",
-    calendar: { booked: [3, 4, 8, 15, 16, 22], days: 30 },
+    availability: {
+      3: { booked: true },
+      4: { booked: true },
+      8: { booked: true },
+      15: { booked: true },
+      16: { booked: true },
+      22: { booked: true },
+      1: { booked: false, times: ["09:00 - 12:00", "14:00 - 17:00"] },
+      2: { booked: false, times: ["08:00 - 11:00", "13:00 - 16:00"] },
+    },
   },
   "Function Hall": {
     title: "Function Hall",
@@ -15,7 +26,15 @@ const venueData = {
     description:
       "A compact, flexible room with workstation support and presentation-ready lighting for workshops or seminars.",
     link: "https://example.com/function-hall",
-    calendar: { booked: [1, 6, 12, 19, 25], days: 30 },
+    availability: {
+      1: { booked: true },
+      6: { booked: true },
+      12: { booked: true },
+      19: { booked: true },
+      25: { booked: true },
+      2: { booked: false, times: ["10:00 - 13:00", "15:00 - 18:00"] },
+      5: { booked: false, times: ["09:00 - 12:00", "14:00 - 17:00"] },
+    },
   },
   "PSC Ground": {
     title: "PSC Ground",
@@ -23,7 +42,19 @@ const venueData = {
     description:
       "A versatile ground floor venue with sound support and flexible seating, great for fairs and networking events.",
     link: "https://example.com/psc-ground",
-    calendar: { booked: [2, 7, 13, 18, 23, 29], days: 30 },
+    availability: {
+      2: { booked: true },
+      7: { booked: true },
+      13: { booked: true },
+      18: { booked: true },
+      23: { booked: true },
+      29: { booked: true },
+      3: {
+        booked: false,
+        times: ["08:00 - 11:00", "12:00 - 15:00", "16:00 - 19:00"],
+      },
+      10: { booked: false, times: ["09:00 - 12:00", "14:00 - 17:00"] },
+    },
   },
   Court: {
     title: "Court",
@@ -31,7 +62,15 @@ const venueData = {
     description:
       "An open-air court setting with sound system options, suited for performances, competitions, and casual gatherings.",
     link: "https://example.com/court",
-    calendar: { booked: [5, 9, 14, 20, 26], days: 30 },
+    availability: {
+      5: { booked: true },
+      9: { booked: true },
+      14: { booked: true },
+      20: { booked: true },
+      26: { booked: true },
+      6: { booked: false, times: ["10:00 - 13:00", "15:00 - 18:00"] },
+      11: { booked: false, times: ["08:00 - 11:00", "13:00 - 16:00"] },
+    },
   },
 };
 
@@ -47,6 +86,8 @@ function setActiveVenueCard(venueName) {
 
 function renderVenueCalendar(venueName) {
   const calendarGrid = document.getElementById("venueCalendarGrid");
+  const calendarMonth = document.getElementById("calendarMonth");
+
   if (!calendarGrid) return;
 
   const venue = venueData[venueName];
@@ -55,17 +96,98 @@ function renderVenueCalendar(venueName) {
     return;
   }
 
-  const bookedDays = new Set(venue.calendar.booked);
-  const cells = [];
-
-  for (let day = 1; day <= venue.calendar.days; day += 1) {
-    const status = bookedDays.has(day) ? "booked" : "available";
-    cells.push(`
-      <div class="calendar-day ${status}">${day}</div>
-    `);
+  // Update month/year display
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const currentDate = new Date(calendarYear, calendarMonth);
+  if (calendarMonth) {
+    calendarMonth.innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
   }
 
-  calendarGrid.innerHTML = cells.join("");
+  // Calculate calendar grid
+  const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+  let html = '<div class="calendar-header">';
+  html += '<button id="prevMonth" class="calendar-nav-btn">&lt;</button>';
+  html += `<h4>${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}</h4>`;
+  html += '<button id="nextMonth" class="calendar-nav-btn">&gt;</button>';
+  html += "</div>";
+
+  // Days of week header
+  html += '<div class="calendar-days-header">';
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  daysOfWeek.forEach((day) => {
+    html += `<div class="day-of-week">${day}</div>`;
+  });
+  html += "</div>";
+
+  // Calendar grid
+  html += '<div class="calendar-dates">';
+
+  // Empty cells for days before month starts
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="calendar-date empty"></div>';
+  }
+
+  // Days of the month
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayAvailability = venue.availability[day];
+    const isBooked = dayAvailability?.booked || false;
+    const times = dayAvailability?.times || [];
+    const statusClass = isBooked ? "booked" : "available";
+    const statusText = isBooked
+      ? "Booked"
+      : times.length > 0
+        ? "Available"
+        : "Not Listed";
+    const timesHTML =
+      times.length > 0
+        ? `<div class="day-times">${times.join("<br/>")}</div>`
+        : "";
+
+    html += `
+      <div class="calendar-date ${statusClass}" data-day="${day}" title="${statusText}">
+        <div class="day-number">${day}</div>
+        ${timesHTML}
+      </div>
+    `;
+  }
+
+  html += "</div>";
+
+  calendarGrid.innerHTML = html;
+
+  // Attach event listeners to navigation buttons
+  document.getElementById("prevMonth")?.addEventListener("click", () => {
+    calendarMonth--;
+    if (calendarMonth < 0) {
+      calendarMonth = 11;
+      calendarYear--;
+    }
+    renderVenueCalendar(venueName);
+  });
+
+  document.getElementById("nextMonth")?.addEventListener("click", () => {
+    calendarMonth++;
+    if (calendarMonth > 11) {
+      calendarMonth = 0;
+      calendarYear++;
+    }
+    renderVenueCalendar(venueName);
+  });
 }
 
 function displayVenueDetail(venueName) {
@@ -75,7 +197,13 @@ function displayVenueDetail(venueName) {
   activeVenue = venueName;
   document.getElementById("detailVenueName").innerText = venue.title;
   document.getElementById("venueDescription").innerText = venue.description;
-  document.getElementById("externalVenueInfoLink").href = venue.link;
+  document.getElementById("venueCapacity").innerText =
+    venue.capacity + " people";
+
+  const linkElement = document.getElementById("externalVenueInfoLink");
+  if (linkElement) {
+    linkElement.innerHTML = `<a href="${venue.link}" target="_blank" style="color: #0066cc; text-decoration: none;">View More Info →</a>`;
+  }
 
   setActiveVenueCard(venueName);
   renderVenueCalendar(venueName);

@@ -152,13 +152,13 @@ body {
 }
 
 .btn-secondary {
-  background-color: transparent;
+  background-color: var(--bg-primary);
   border: 1px solid var(--border);
   color: var(--text-main);
 }
 
 .btn-secondary:hover {
-  background-color: var(--bg-primary);
+  background-color: #e5e5e5;
 }
 
 .landing-terms {
