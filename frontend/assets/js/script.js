@@ -103,7 +103,8 @@ function setActiveVenueCard(venueName) {
 function getDayAvailabilityStatus(dayAvailability) {
   if (!dayAvailability) return "neutral";
   if (dayAvailability.booked) return "booked";
-  if (dayAvailability.times?.length) return "available";
+  if (dayAvailability.times?.length === 1) return "partial";
+  if (dayAvailability.times?.length > 1) return "available";
   return "neutral";
 }
 
@@ -150,8 +151,9 @@ function updateCalendarDayDetail(venueName, day, dayAvailability) {
     return;
   }
 
-  if (status === "available") {
-    detailTitle.textContent = `${monthLabel} ${day}, ${viewCalendarYear} — Available times`;
+  if (status === "available" || status === "partial") {
+    const heading = status === "partial" ? "Limited availability" : "Available times";
+    detailTitle.textContent = `${monthLabel} ${day}, ${viewCalendarYear} — ${heading}`;
     detailTimes.innerHTML = dayAvailability.times
       .map((slot) => `<li>${escapeHtml(slot)}</li>`)
       .join("");
@@ -220,10 +222,12 @@ function renderVenueCalendar(venueName) {
         ? `${MONTH_NAMES[viewCalendarMonth]} ${day}: fully booked`
         : status === "available"
           ? `${MONTH_NAMES[viewCalendarMonth]} ${day}: available ${times.join(", ")}`
-          : `${MONTH_NAMES[viewCalendarMonth]} ${day}: no schedule data`;
+          : status === "partial"
+            ? `${MONTH_NAMES[viewCalendarMonth]} ${day}: limited availability ${times.join(", ")}`
+            : `${MONTH_NAMES[viewCalendarMonth]} ${day}: no schedule data`;
 
     const slotsHTML =
-      status === "available"
+      status === "available" || status === "partial"
         ? `<div class="day-times">${formatCalendarDaySlots(times)}</div>`
         : status === "booked"
           ? '<span class="day-status-label">Booked</span>'
