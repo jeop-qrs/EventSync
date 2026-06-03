@@ -98,6 +98,10 @@ body {
   flex-grow: 1;
 }
 
+.sidebar-menu h4{
+  font-weight: 500;
+}
+
 .menu-item {
   padding: 14px 24px;
   display: flex;
@@ -555,14 +559,17 @@ td {
   gap: 10px;
 }
 
-.venue-amenities {
-  list-style: none;
+.venue-address {
   padding: 0;
   margin: 0;
   display: grid;
   gap: 6px;
+}
+
+.venue-address h5{
   color: var(--text-muted);
   font-size: 0.92rem;
+  font-weight: 500;
 }
 
 .venue-title {
