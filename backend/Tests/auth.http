@@ -1,0 +1,48 @@
+@baseUrl1 = http://localhost:5108
+@baseUrl2 = https://localhost:7248
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+@testUsername = appuser123
+@testPassword = password123
+@testRole = student
+
+POST {{baseUrl1}}/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "{{testUsername}}",
+    "password": "{{testPassword}}",
+    "role": "{{testRole}}"
+}
+
+###
+# @name login
+POST {{baseUrl1}}/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "{{testUsername}}",
+    "password": "{{testPassword}}"
+}
+
+###
+
+POST {{baseUrl1}}/api/auth/refresh
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "username": "{{testUsername}}",
+    "refreshToken": "{{refreshToken}}"
+}
+
+###
+
+POST {{baseUrl1}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "username": "{{testUsername}}",
+    "role": "{{testRole}}"
+}
