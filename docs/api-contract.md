@@ -43,20 +43,27 @@
 
 Register a new user account.
 
+**Header**
+```json
+{
+  "Content-Type": "application/json"
+}
+```
+
 **Request Body**
 ```json
 {
-  "studno": "01234abc2026-B",
-  "password": "pass",
+  "user": "juandelacruz",
+  "password": "password123",
   "role": "student" or "faculty"
 }
 ```
 
-**Response `201 Created`**
+**Response `200 OK`**
 ```json
 {
   "success": true,
-  "message": "Registration successful."
+  "backendMessage": "Register successful. Log in again"
 }
 ```
 
@@ -66,11 +73,18 @@ Register a new user account.
 
 Authenticate a user and return JWT tokens.
 
+**Header**
+```json
+{
+  "Content-Type": "application/json"
+}
+```
+
 **Request Body**
 ```json
 {
-  "studno": "01234abc2026-B",
-  "password": "SuperSecret123!"
+  "user": "juandelacruz",
+  "password": "password123"
 }
 ```
 
@@ -78,22 +92,83 @@ Authenticate a user and return JWT tokens.
 ```json
 {
   "success": true,
-  "message": "Login Successful",
-
-  "token": "ehJIwqh..",
-  "expiresAt": "2026-05-04T12:00:00Z"
+  "backendMessage": "Login Successful",
+  {
+    "studNo": "01234abc2026-B",
+    "role": "student",
+    "accessToken": "ehJwign...",
+    "expiresAt": "2000", (secs)
+    "refreshToken": "shWUbds..."
+  }
 }
 ```
 
 ---
 
-### 🟩 POST `/api/auth/logout` (Inactive)
+### 🟨 POST `/api/auth/refresh`
 
-Invalidate the current session/token.
+Rotate the accessToken and refreshToken (generate new tokens).
+Must be automatic if accessToken expired.
+
+**Header**
+```json
+{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer ehJwign..."
+}
+```
+
+**Request Body**
+```json
+{
+  "user": "juandelacruz",
+  "refreshToken": "shWUbds..."
+}
+```
+
+**Response `200 OK`**
+```json
+{
+  "success": true,
+  "backendMessage": "Token refreshed",
+  {
+    "studNo": "01234abc2026-B",
+    "role": "student",
+    "accessToken": "ehJwign...",
+    "expiresAt": "2026-07-03T9:34:52Z",
+    "refreshToken": "shWUbds..."
+  }
+}
+```
 
 ---
 
-## Auth (Coming soon)
+### 🟨 POST `/api/auth/logout`
+
+Invalidate the current session and stored refresh token.
+
+**Header**
+```json
+{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer ehJwign..."
+}
+```
+
+**Request Body**
+```json
+No body
+```
+
+**Response `200 OK`**
+```json
+{
+  "success": true,
+  "backendMessage": "Logout Successful",
+}
+```
+
+---
 
 ### 🟩 POST `/api/auth/forgot-password` (Inactive)
 

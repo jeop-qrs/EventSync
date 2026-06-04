@@ -4,9 +4,10 @@
 // ------------------------------------------------------------
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
-using backend.DTO.Auth;
-using backend.Services.App;
+using backend.DTO;
+using backend.Services;
 
 
 namespace backend.Controllers
@@ -15,34 +16,50 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
-        public AuthController(IAuthService authService)
+        private readonly AuthService _authService;
+        public AuthController(AuthService authService)
         {
             _authService = authService;
         }
 
         // api/auth/register
+        [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<ActionResult> Register(RegisterReq req)
+        public async Task<ActionResult> Register(AuthRegisterRequest req)
         {
             var result = await _authService.Register(req);
-            if (result.Success == false)
-            {
-                return BadRequest(new RegisterRes{ Success = result.Success, Message = result.Message });
-            }
-            return Ok(new RegisterRes{ Success = result.Success, Message = result.Message });
+            if (result.Success == false) return BadRequest(result);
+            return Ok(result);
         }
 
         // api/auth/login
+        [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult> Login(LoginReq req)
+        public async Task<ActionResult> Login(AuthLoginRequest req)
         {
             var result = await _authService.Login(req);
-            if (result.Success == false)
-            {
-                return BadRequest(new LoginRes{ Success = result.Success, Message = result.Message });
-            }
-            return Ok(new LoginRes{ Success = result.Success, Message = result.Message });
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+
+        // api/auth/refresh
+        [Authorize]
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(RefreshRequest req)
+        {
+            var result = await _authService.Refresh(req);
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+
+        // api/auth/logout
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ActionResult> Logout()
+        {
+            var result = await _authService.Logout();
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
         }
     }
 }

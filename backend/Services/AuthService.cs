@@ -5,72 +5,204 @@
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 
 using backend.Data;
-using backend.DTO.Auth;
+using backend.DTO;
 using backend.Models;
+using backend.Helpers;
 
 
-namespace backend.Services.App
+namespace backend.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService
     {
         private readonly AppDbContext _context;
         private readonly IPasswordHasher<User> _hasher;
-        public AuthService(AppDbContext context, IPasswordHasher<User> hasher)
+        private readonly JwtGenerator _jwtGenerator;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public AuthService(AppDbContext context, IPasswordHasher<User> hasher, JwtGenerator jwtGenerator, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _hasher = hasher;
+            _jwtGenerator = jwtGenerator;
+            _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<AuthRes> Register(RegisterReq req)
+
+        public async Task<AuthResponse> Register(AuthRegisterRequest req)
         {   
             // Check if user already exists
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.StudNo == req.StudNo);
+                .FirstOrDefaultAsync(u => u.Username == req.Username);
             if (existingUser != null)
             {
-                return new AuthRes { Success = false, Message = "Student ID already registered" };
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "User already registered"
+                };
             }
+
             // Check Password Length
             if (req.Password.Length <= 8)
             {
-                return new AuthRes { Success = false, Message = "Password must be at least 8 characters long."};
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "Password must be at least 8 characters long"
+                };
             }
             if (req.Password.Length >= 20)
             {
-                return new AuthRes { Success = false, Message = "Password may only be 20 characters long."};
+                return new AuthResponse
+                {
+                    Success = false,
+                    BackendMessage = "Password may only be 20 characters long"
+                };
             }
 
-            // Create an object for newUser
+            // Create object for newUser and initial AccessToken
             var newUser = new User
             {
-                StudNo = req.StudNo,
+                Username = req.Username,
                 PasswordHashed = _hasher.HashPassword(new User(), req.Password),
-                Role = req.Role
+                Role = req.Role,
             };
+
             // Add newUser to DB and save changes
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
-            return new AuthRes { Success = true, Message = "Registration successful" };
+
+            return new AuthResponse 
+            {
+                Success = true,
+                BackendMessage = "Register successful. Log in again",
+                Data = new ObjectResponse {
+                    Username = newUser.Username,
+                    Role = newUser.Role,
+                }
+            };
         }
-    public async Task<AuthRes> Login(LoginReq req)
+
+        public async Task<AuthResponse> Login(AuthLoginRequest req)
         {
-            // Check if user doesn't exist
+            // Check if user exists 
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.StudNo == req.StudNo);
+                .FirstOrDefaultAsync(u => u.Username == req.Username);
             if (user == null)
             {
-                return new AuthRes { Success = false, Message = "Student ID not found" };
+                return new AuthResponse{
+                    Success = false,
+                    BackendMessage = "User not found"
+                };
             }
 
             // Check if password is correct
-            var result = _hasher.VerifyHashedPassword(user, user.PasswordHashed, req.Password);
-            if (result == PasswordVerificationResult.Failed)
+            if (!_hasher.VerifyHashedPassword(user, user.PasswordHashed, req.Password).Equals(PasswordVerificationResult.Success))
             {
-                return new AuthRes { Success = false, Message = "Incorrect password" };
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "Incorrect password"
+                };
             }
 
-            return new AuthRes { Success = true, Message = "Login successful" };
+            // Generate token
+            var accessToken = _jwtGenerator.AccessToken(user);
+            var refreshToken = _jwtGenerator.RefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _context.SaveChangesAsync();
+            var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+            var expiresIn = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
+
+            return new AuthResponse {
+                Success = true,
+                BackendMessage = "Login successful",
+                Data = new ObjectResponse {
+                    Username = user.Username,
+                    Role = user.Role,
+                    AccessToken = accessToken,
+                    ExpiresIn = expiresIn,
+                    RefreshToken = refreshToken
+                }
+            };
+        }
+
+        public async Task<AuthResponse> Refresh(RefreshRequest req)
+        {
+            // Check if user exists
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == req.Username);
+            if (user == null)
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "User not found"
+                };
+
+            // Check if RefreshToken sent matches the RefreshToken saved in DB
+            if (user.RefreshToken != req.RefreshToken)
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "Invalid refresh token"
+                };
+
+            // Check if Refresh token is still valid
+            if (user.RefreshTokenExpiry < DateTime.UtcNow)
+                return new AuthResponse {
+                    Success = false,
+                    BackendMessage = "Refresh token expired"
+                };
+
+            // Rotate the accessToken and refreshToken
+            var accessToken = _jwtGenerator.AccessToken(user);
+            var refreshToken = _jwtGenerator.RefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _context.SaveChangesAsync();
+
+            var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+            var expiresIn = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
+
+            return new AuthResponse {
+                Success = true,
+                BackendMessage = "Token refreshed",
+                Data = new ObjectResponse {
+                    Username = user.Username,
+                    Role = user.Role,
+                    AccessToken = accessToken,
+                    ExpiresIn = expiresIn,
+                    RefreshToken = refreshToken
+                }
+            };
+        }
+
+        public async Task<AuthResponse> Logout()
+        {
+            // Read the username claim from the current JWT principal
+            var username = _httpContextAccessor.HttpContext?
+                .User.FindFirst("user")?.Value;
+
+            // Find the username in DB
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+            if (user == null)
+            {
+                return new AuthResponse
+                {
+                    Success = false,
+                    BackendMessage = "User not found"
+                };
+            }
+
+            // Clear RefreshToken from user
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            await _context.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Success = true,
+                BackendMessage = "Logout successful"
+            };
         }
     }
 }
