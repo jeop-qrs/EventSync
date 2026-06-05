@@ -1,23 +1,32 @@
 <!doctype html>
+
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link
       rel="icon"
       href="/frontend/assets/img/EventSync logo.webp"
       type="image/png"
       sizes="192x192"
     />
-    <title>EventSync - Prototype Dashboard</title>
+
+    <title>EventSync - Student Dashboard</title>
+
     <link rel="stylesheet" href="/frontend/assets/css/style.css" />
   </head>
-  <body>
+
+  <body data-page="student">
     <div id="landingOverlay" class="landing-overlay">
       <div class="landing-card">
         <p class="landing-subtitle">WELCOME TO</p>
+
         <h1 class="landing-title">EventSync</h1>
+
         <p class="landing-copy">Please click your destination</p>
+
         <div class="landing-actions">
           <button
             id="student-btn"
@@ -26,6 +35,7 @@
           >
             STUDENT
           </button>
+
           <button
             id="faculty-btn"
             class="btn landing-button"
@@ -34,6 +44,7 @@
             FACULTY
           </button>
         </div>
+
         <p class="landing-terms">
           By using this service, you understand and agree to the EventSync
           Online Services Terms of Use and Privacy Statement
@@ -41,14 +52,11 @@
       </div>
     </div>
 
-    <!-- Student login moved to pages/users.html -->
-
     <div class="role-simulator hidden">
       <label>SIMULATE SYSTEM ROLE</label>
+
       <select id="roleSelect">
-        <option value="Organizer">Organizer</option>
-        <option value="Administrator">Administrator</option>
-        <option value="Participant">Participant</option>
+        <option value="Participant" selected>Participant</option>
       </select>
     </div>
 
@@ -60,15 +68,19 @@
             alt="EventSync logo"
             class="sidebar-logo"
           />
+
           <h2>EventSync</h2>
         </div>
+
         <ul class="sidebar-menu">
           <li class="menu-item active" data-view="dashboard-view">
-            <h4>Dashboard Overview</h4> 
+            <h4>Dashboard Overview</h4>
           </li>
+
           <li class="menu-item" data-view="venues-view">
-            <h4>Venue Directory</h4> 
+            <h4>Venue Directory</h4>
           </li>
+
           <li class="menu-item" data-view="schedule-view">
             <h4>Event Application</h4>
           </li>
@@ -81,6 +93,7 @@
         <div class="page-title">
           <h1 id="workspaceTitle">Dashboard Overview</h1>
         </div>
+
         <div class="nav-controls">
           <div class="notification-bell" id="notificationBell">
             <svg
@@ -95,15 +108,19 @@
                 d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z"
               />
             </svg>
-            <span class="bell-dot" id="notificationCount">2</span>
+
+            <span class="bell-dot" id="notificationCount">0</span>
           </div>
+
           <div class="notification-popup hidden" id="notificationPopup">
             <div class="notification-popup-header">Notifications</div>
+
             <div
               class="notification-popup-list"
               id="notificationPopupList"
             ></div>
           </div>
+
           <div class="profile-menu" id="profileMenu">
             <button
               class="profile-button"
@@ -112,9 +129,11 @@
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span class="profile-avatar">AS</span>
-              <span class="profile-name">Admin</span>
+              <span class="profile-avatar">STF</span>
+
+              <span class="profile-name">Student</span>
             </button>
+
             <div
               class="profile-dropdown hidden"
               id="profileDropdown"
@@ -123,6 +142,7 @@
               <button class="profile-option" type="button" id="viewProfileBtn">
                 View Profile
               </button>
+
               <button
                 class="profile-option"
                 type="button"
@@ -130,7 +150,9 @@
               >
                 Settings
               </button>
+
               <div class="profile-dropdown-separator"></div>
+
               <button
                 class="profile-option profile-option--logout"
                 type="button"
@@ -145,94 +167,52 @@
 
       <section class="content-container">
         <div id="dashboard-view" class="view-section active-view">
-          <div class="stats-grid">
+          <div class="stats-grid stats-grid--three">
             <div class="stat-card">
-              <div class="stat-label">Total Active Events</div>
-              <div class="stat-value" id="countActive">3</div>
+              <div class="stat-label">Proposed Events</div>
+
+              <div class="stat-value" id="countProposed">0</div>
             </div>
+
             <div class="stat-card">
               <div class="stat-label">Pending Approval</div>
+
               <div class="stat-value stat-value--warning" id="countPending">
-                1
+                0
               </div>
             </div>
+
             <div class="stat-card">
               <div class="stat-label">Available Venues Today</div>
+
               <div class="stat-value stat-value--success" id="countVenues">
                 4
               </div>
             </div>
           </div>
 
-          <div class="dashboard-layout">
-            <div class="table-container">
-              <div class="section-header-inline">
-                <h3>Live Tracking & Schedules</h3>
-              </div>
-              <table id="eventsTable">
-                <thead>
-                  <tr>
-                    <th>Event Title</th>
-                    <th>Venue</th>
-                    <th>Date & Time</th>
-                    <th>Current Status</th>
-                    <th class="admin-action-header">System Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Tech Innovation Summit</strong></td>
-                    <td>Main Auditorium</td>
-                    <td>May 22, 2026 | 09:00 AM</td>
-                    <td>
-                      <span class="status-pill status-approved">Approved</span>
-                    </td>
-                    <td class="admin-actions">-</td>
-                  </tr>
-                  <tr>
-                    <td><strong>UI/UX Design Masterclass</strong></td>
-                    <td>IT Lab 302</td>
-                    <td>May 25, 2026 | 01:00 PM</td>
-                    <td>
-                      <span class="status-pill status-approved">Approved</span>
-                    </td>
-                    <td class="admin-actions">-</td>
-                  </tr>
-                  <tr id="mockRowPending">
-                    <td><strong>Web Stack Coding Bootcamp</strong></td>
-                    <td>Seminar Hall Room A</td>
-                    <td>June 02, 2026 | 10:00 AM</td>
-                    <td>
-                      <span
-                        class="status-pill status-pending"
-                        id="statusLabelPending"
-                        >Pending Review</span
-                      >
-                    </td>
-                    <td class="admin-actions">
-                      <button class="btn btn-small btn-success">Approve</button>
-                      <button class="btn btn-small btn-danger">Reject</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div class="student-dashboard-layout">
+            <button type="button" class="book-now-cta" id="dashboardBookNowBtn">
+              <span class="book-now-icon">+</span>
 
-            <div class="panel-container">
+              <span class="book-now-text">Book Now</span>
+
+              <span class="book-now-subtext"
+                >Browse venues and submit an event proposal</span
+              >
+            </button>
+
+            <div class="my-events-panel">
               <div class="section-header-inline">
-                <h3>node-cron Alerts</h3>
+                <h3>My Submitted Events</h3>
+
+                <span class="section-badge" id="myEventsCount">0 events</span>
               </div>
-              <div class="notification-feed">
-                <div class="notification-item">
-                  <strong>System Update:</strong> Double-booking validations
-                  passed for Main Auditorium.
-                  <div class="notification-time">Just now</div>
-                </div>
-                <div class="notification-item">
-                  <strong>Reminder Configured:</strong> Automated alert set for
-                  24 hours prior to Tech Summit execution.
-                  <div class="notification-time">2 hours ago</div>
-                </div>
+
+              <div class="my-events-list" id="myEventsList">
+                <p class="empty-state">
+                  You have not submitted any events yet.
+                </p>
               </div>
             </div>
           </div>
@@ -241,88 +221,11 @@
         <div id="venues-view" class="view-section">
           <div class="venue-dashboard">
             <section class="venue-list">
-              <div class="venue-grid">
-                <article
-                  class="venue-card"
-                  data-venue="Bamboo Building"
-                  tabindex="0"
-                >
-                  <div
-                    class="venue-card-header venue-image--purple"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Bamboo building.png&quot;);
-                    "
-                  >
-                    Capacity: 250
-                  </div>
-                  <div class="venue-image-placeholder">Bamboo Building</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Bamboo Building</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article
-                  class="venue-card"
-                  data-venue="Function Hall"
-                  tabindex="0"
-                >
-                  <div
-                    class="venue-card-header venue-image--green"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Function Hall.png&quot;);
-                    "
-                  >
-                    Capacity: 45
-                  </div>
-                  <div class="venue-image-placeholder">Function Hall</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Function Hall</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article
-                  class="venue-card"
-                  data-venue="PSC Ground"
-                  tabindex="0"
-                >
-                  <div
-                    class="venue-card-header venue-image--gold"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/PSC Ground.png&quot;);
-                    "
-                  >
-                    Capacity: 80
-                  </div>
-                  <div class="venue-image-placeholder">PSC Ground</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">PSC Ground</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article class="venue-card" data-venue="Court" tabindex="0">
-                  <div
-                    class="venue-card-header venue-image--yellow"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Court.png&quot;);
-                    "
-                  >
-                    Capacity: 80
-                  </div>
-                  <div class="venue-image-placeholder">Court</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Court</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA KUAN</h5>
-                    </div>
-                  </div>
-                </article>
+              <div class="section-header-inline">
+                <h3>Venue Directory</h3>
               </div>
+
+              <div class="venue-grid" id="studentVenueGrid"></div>
             </section>
 
             <aside class="venue-detail-panel">
@@ -331,18 +234,21 @@
                   <h3 id="detailVenueName">Select a Venue</h3>
 
                   <p id="venueDescription">
-                    Pick a venue from the left panel to see its description,
+                    Pick a venue from the directory to see its description,
                     availability, and booking options.
                   </p>
 
                   <div class="venue-meta">
                     <p>
-                      <strong>Capacity:</strong>
-                      <span id="venueCapacity">-</span>
+                      <strong>Address:</strong>
+
+                      <span id="venueAddress">-</span>
                     </p>
+
                     <p>
-                      <strong>Link:</strong>
-                      <span id="externalVenueInfoLink">-</span>
+                      <strong>Availability:</strong>
+
+                      <span id="venueAvailabilityText">-</span>
                     </p>
                   </div>
                 </div>
@@ -351,6 +257,7 @@
                   <div class="section-header-inline">
                     <h4>Availability Calendar</h4>
                   </div>
+
                   <div class="venue-calendar" id="venueCalendar">
                     <div class="calendar-toolbar">
                       <button
@@ -361,7 +268,12 @@
                       >
                         ‹
                       </button>
-                      <h5 id="calendarMonthLabel" class="calendar-month-title"></h5>
+
+                      <h5
+                        id="calendarMonthLabel"
+                        class="calendar-month-title"
+                      ></h5>
+
                       <button
                         type="button"
                         id="calendarNextMonth"
@@ -371,21 +283,30 @@
                         ›
                       </button>
                     </div>
+
                     <div class="calendar-weekdays" aria-hidden="true">
                       <span>Sun</span>
+
                       <span>Mon</span>
+
                       <span>Tue</span>
+
                       <span>Wed</span>
+
                       <span>Thu</span>
+
                       <span>Fri</span>
+
                       <span>Sat</span>
                     </div>
+
                     <div
                       class="calendar-dates"
                       id="venueCalendarDates"
                       role="grid"
                       aria-labelledby="calendarMonthLabel"
                     ></div>
+
                     <div
                       id="calendarDayDetail"
                       class="calendar-day-detail"
@@ -394,18 +315,25 @@
                       <p class="calendar-day-detail-heading">
                         <span id="calendarDayDetailTitle"></span>
                       </p>
-                      <ul id="calendarDayTimes" class="calendar-day-times-list"></ul>
+
+                      <ul
+                        id="calendarDayTimes"
+                        class="calendar-day-times-list"
+                      ></ul>
                     </div>
                   </div>
+
                   <div class="calendar-legend">
                     <span class="legend-item legend-available"
-                      ><span></span>Limited availability</span
-                    >
-                    <span class="legend-item legend-partial"
                       ><span></span>Available slots</span
                     >
+
                     <span class="legend-item legend-booked"
                       ><span></span>Fully booked</span
+                    >
+
+                    <span class="legend-item legend-neutral"
+                      ><span></span>No schedule data</span
                     >
                   </div>
                 </div>
@@ -423,6 +351,7 @@
             <form id="scheduleForm">
               <div class="form-group">
                 <label for="eventTitle">Event Title</label>
+
                 <input
                   type="text"
                   id="eventTitle"
@@ -431,10 +360,10 @@
                   placeholder="e.g., Full-Stack Development Workshop"
                 />
               </div>
+
               <div class="form-group">
-                <label for="eventTitle"
-                  >Student Organization / Department</label
-                >
+                <label for="StudOrg">Student Organization / Department</label>
+
                 <input
                   type="text"
                   id="StudOrg"
@@ -443,18 +372,18 @@
                   placeholder="e.g., COMMITS"
                 />
               </div>
+
               <div class="form-group">
                 <label for="eventVenue">Select Venue</label>
+
                 <select id="eventVenue" class="form-control" required>
                   <option value="">-- Choose a venue --</option>
-                  <option value="Bamboo Building">Bamboo Building</option>
-                  <option value="Function Hall">Function Hall</option>
-                  <option value="PSC Ground">PSC Ground</option>
-                  <option value="Court">Court</option>
                 </select>
               </div>
+
               <div class="form-group">
                 <label for="eventDate">Event Date</label>
+
                 <input
                   type="date"
                   id="eventDate"
@@ -462,9 +391,11 @@
                   required
                 />
               </div>
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="eventTime">Start Time</label>
+
                   <input
                     type="time"
                     id="eventTime"
@@ -472,8 +403,10 @@
                     required
                   />
                 </div>
+
                 <div class="form-group">
                   <label for="attendees">Expected Attendance</label>
+
                   <input
                     type="number"
                     id="attendees"
@@ -483,12 +416,16 @@
                   />
                 </div>
               </div>
+
               <div class="form-group">
                 <label for="eventPdf">Attach Letter Request</label>
+
                 <div id="pdfDropzone" class="pdf-dropzone">
                   <span>Drag & drop your PDF here, or click to browse</span>
+
                   <small id="pdfFileName">No file selected</small>
                 </div>
+
                 <input
                   type="file"
                   id="eventPdf"
@@ -497,10 +434,12 @@
                   class="form-control file-input-hidden"
                 />
               </div>
+
               <div class="form-actions">
                 <button type="submit" class="btn">
                   Submit Booking Request
                 </button>
+
                 <button
                   type="button"
                   id="scheduleCancelBtn"
@@ -514,6 +453,7 @@
         </div>
       </section>
     </main>
-    <script src="/frontend/assets/js/script.js"></script>
+
+    <script src="/frontend/assets/js/student.js"></script>
   </body>
 </html>

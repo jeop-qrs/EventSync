@@ -12,47 +12,15 @@
     <title>EventSync - Faculty Dashboard</title>
     <link rel="stylesheet" href="/frontend/assets/css/faculty-dash.css" />
   </head>
-  <body>
-    <div id="landingOverlay" class="landing-overlay">
-      <div class="landing-card">
-        <p class="landing-subtitle">WELCOME TO</p>
-        <h1 class="landing-title">EventSync</h1>
-        <p class="landing-copy">Please click your destination</p>
-        <div class="landing-actions">
-          <button
-            id="student-btn"
-            class="btn landing-button"
-            data-role="Student"
-          >
-            STUDENT
-          </button>
-          <button
-            id="faculty-btn"
-            class="btn landing-button"
-            data-role="Faculty"
-          >
-            FACULTY
-          </button>
-        </div>
-        <p class="landing-terms">
-          By using this service, you understand and agree to the EventSync
-          Online Services Terms of Use and Privacy Statement
-        </p>
-      </div>
-    </div>
-
-    <!-- Student login moved to pages/users.html -->
-
+  <body data-page="faculty">
     <div class="role-simulator hidden">
       <label>SIMULATE SYSTEM ROLE</label>
       <select id="roleSelect">
-        <option value="Organizer">Organizer</option>
-        <option value="Administrator">Administrator</option>
-        <option value="Participant">Participant</option>
+        <option value="Administrator" selected>Administrator</option>
       </select>
     </div>
 
-    <nav class="sidebar hidden">
+    <nav class="sidebar">
       <div>
         <div class="sidebar-brand">
           <img
@@ -64,19 +32,19 @@
         </div>
         <ul class="sidebar-menu">
           <li class="menu-item active" data-view="dashboard-view">
-            <h4>Dashboard Overview</h4> 
+            <h4>Dashboard Overview</h4>
           </li>
           <li class="menu-item" data-view="venues-view">
-            <h4>Venue Directory</h4> 
+            <h4>Venue Directory</h4>
           </li>
-          <li class="menu-item" data-view="schedule-view">
-            <h4>Event Application</h4>
+          <li class="menu-item" data-view="proposals-view">
+            <h4>Proposed Events</h4>
           </li>
         </ul>
       </div>
     </nav>
 
-    <main class="main-workspace hidden">
+    <main class="main-workspace">
       <header class="navbar">
         <div class="page-title">
           <h1 id="workspaceTitle">Dashboard Overview</h1>
@@ -95,7 +63,7 @@
                 d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z"
               />
             </svg>
-            <span class="bell-dot" id="notificationCount">2</span>
+            <span class="bell-dot" id="notificationCount">0</span>
           </div>
           <div class="notification-popup hidden" id="notificationPopup">
             <div class="notification-popup-header">Notifications</div>
@@ -112,8 +80,8 @@
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span class="profile-avatar">AS</span>
-              <span class="profile-name">Admin</span>
+              <span class="profile-avatar">FAH</span>
+              <span class="profile-name">Faculty</span>
             </button>
             <div
               class="profile-dropdown hidden"
@@ -144,184 +112,61 @@
       </header>
 
       <section class="content-container">
+        <!-- Dashboard -->
         <div id="dashboard-view" class="view-section active-view">
-          <div class="stats-grid">
+          <div class="stats-grid stats-grid--four">
             <div class="stat-card">
               <div class="stat-label">Total Active Events</div>
-              <div class="stat-value" id="countActive">3</div>
+              <div class="stat-value" id="countActive">0</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Pending Approval</div>
               <div class="stat-value stat-value--warning" id="countPending">
-                1
+                0
               </div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Available Venues Today</div>
               <div class="stat-value stat-value--success" id="countVenues">
-                4
+                0
+              </div>
+            </div>
+            <div class="stat-card stat-card--rejected">
+              <div class="stat-label">Rejected</div>
+              <div class="stat-value stat-value--danger" id="countRejected">
+                0
               </div>
             </div>
           </div>
 
-          <div class="dashboard-layout">
-            <div class="table-container">
-              <div class="section-header-inline">
-                <h3>Live Tracking & Schedules</h3>
-              </div>
-              <table id="eventsTable">
-                <thead>
-                  <tr>
-                    <th>Event Title</th>
-                    <th>Venue</th>
-                    <th>Date & Time</th>
-                    <th>Current Status</th>
-                    <th class="admin-action-header">System Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Tech Innovation Summit</strong></td>
-                    <td>Main Auditorium</td>
-                    <td>May 22, 2026 | 09:00 AM</td>
-                    <td>
-                      <span class="status-pill status-approved">Approved</span>
-                    </td>
-                    <td class="admin-actions">-</td>
-                  </tr>
-                  <tr>
-                    <td><strong>UI/UX Design Masterclass</strong></td>
-                    <td>IT Lab 302</td>
-                    <td>May 25, 2026 | 01:00 PM</td>
-                    <td>
-                      <span class="status-pill status-approved">Approved</span>
-                    </td>
-                    <td class="admin-actions">-</td>
-                  </tr>
-                  <tr id="mockRowPending">
-                    <td><strong>Web Stack Coding Bootcamp</strong></td>
-                    <td>Seminar Hall Room A</td>
-                    <td>June 02, 2026 | 10:00 AM</td>
-                    <td>
-                      <span
-                        class="status-pill status-pending"
-                        id="statusLabelPending"
-                        >Pending Review</span
-                      >
-                    </td>
-                    <td class="admin-actions">
-                      <button class="btn btn-small btn-success">Approve</button>
-                      <button class="btn btn-small btn-danger">Reject</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="schedule-tracker">
+            <div class="section-header-inline">
+              <h3>Live Tracking &amp; Schedules</h3>
+              <span class="section-badge" id="scheduleTrackerCount">0 events</span>
             </div>
-
-            <div class="panel-container">
-              <div class="section-header-inline">
-                <h3>node-cron Alerts</h3>
-              </div>
-              <div class="notification-feed">
-                <div class="notification-item">
-                  <strong>System Update:</strong> Double-booking validations
-                  passed for Main Auditorium.
-                  <div class="notification-time">Just now</div>
-                </div>
-                <div class="notification-item">
-                  <strong>Reminder Configured:</strong> Automated alert set for
-                  24 hours prior to Tech Summit execution.
-                  <div class="notification-time">2 hours ago</div>
-                </div>
-              </div>
+            <div class="schedule-card-list" id="facultyScheduleList">
+              <p class="empty-state">No scheduled events to display yet.</p>
             </div>
           </div>
         </div>
 
+        <!-- Venue Directory -->
         <div id="venues-view" class="view-section">
           <div class="venue-dashboard">
             <section class="venue-list">
-              <div class="venue-grid">
-                <article
-                  class="venue-card"
-                  data-venue="Bamboo Building"
-                  tabindex="0"
+              <div class="section-header-inline">
+                <h3>Venue Directory</h3>
+              </div>
+              <div class="venue-grid" id="facultyVenueGrid">
+                <button
+                  type="button"
+                  class="venue-card venue-card--add"
+                  id="openAddVenueBtn"
+                  aria-label="Add a new venue"
                 >
-                  <div
-                    class="venue-card-header venue-image--purple"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Bamboo building.png&quot;);
-                    "
-                  >
-                    Capacity: 250
-                  </div>
-                  <div class="venue-image-placeholder">Bamboo Building</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Bamboo Building</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article
-                  class="venue-card"
-                  data-venue="Function Hall"
-                  tabindex="0"
-                >
-                  <div
-                    class="venue-card-header venue-image--green"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Function Hall.png&quot;);
-                    "
-                  >
-                    Capacity: 45
-                  </div>
-                  <div class="venue-image-placeholder">Function Hall</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Function Hall</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article
-                  class="venue-card"
-                  data-venue="PSC Ground"
-                  tabindex="0"
-                >
-                  <div
-                    class="venue-card-header venue-image--gold"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/PSC Ground.png&quot;);
-                    "
-                  >
-                    Capacity: 80
-                  </div>
-                  <div class="venue-image-placeholder">PSC Ground</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">PSC Ground</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA MAY KUAN</h5>
-                    </div>
-                  </div>
-                </article>
-                <article class="venue-card" data-venue="Court" tabindex="0">
-                  <div
-                    class="venue-card-header venue-image--yellow"
-                    style="
-                      background-image: url(&quot;/frontend/assets/img/Court.png&quot;);
-                    "
-                  >
-                    Capacity: 80
-                  </div>
-                  <div class="venue-image-placeholder">Court</div>
-                  <div class="venue-card-body">
-                    <div class="venue-title">Court</div>
-                    <div class="venue-address">
-                      <h5>Location: DYAN SA KUAN</h5>
-                    </div>
-                  </div>
-                </article>
+                  <span class="add-venue-icon">+</span>
+                  <span class="add-venue-label">Add Venue</span>
+                </button>
               </div>
             </section>
 
@@ -329,20 +174,18 @@
               <div class="detail-sidebar-inner">
                 <div class="venue-info">
                   <h3 id="detailVenueName">Select a Venue</h3>
-
                   <p id="venueDescription">
-                    Pick a venue from the left panel to see its description,
-                    availability, and booking options.
+                    Pick a venue from the directory to view its details and
+                    availability.
                   </p>
-
                   <div class="venue-meta">
                     <p>
-                      <strong>Capacity:</strong>
-                      <span id="venueCapacity">-</span>
+                      <strong>Address:</strong>
+                      <span id="venueAddress">-</span>
                     </p>
                     <p>
-                      <strong>Link:</strong>
-                      <span id="externalVenueInfoLink">-</span>
+                      <strong>Availability:</strong>
+                      <span id="venueAvailabilityText">-</span>
                     </p>
                   </div>
                 </div>
@@ -397,123 +240,69 @@
                       <ul id="calendarDayTimes" class="calendar-day-times-list"></ul>
                     </div>
                   </div>
-                  <div class="calendar-legend">
-                    <span class="legend-item legend-available"
-                      ><span></span>Limited availability</span
-                    >
-                    <span class="legend-item legend-partial"
-                      ><span></span>Available slots</span
-                    >
-                    <span class="legend-item legend-booked"
-                      ><span></span>Fully booked</span
-                    >
-                  </div>
                 </div>
               </div>
-
-              <button id="bookNowBtn" class="btn book-now-btn" type="button">
-                Book Now
-              </button>
             </aside>
           </div>
         </div>
 
-        <div id="schedule-view" class="view-section">
-          <div class="form-card">
-            <form id="scheduleForm">
-              <div class="form-group">
-                <label for="eventTitle">Event Title</label>
-                <input
-                  type="text"
-                  id="eventTitle"
-                  class="form-control"
-                  required
-                  placeholder="e.g., Full-Stack Development Workshop"
-                />
-              </div>
-              <div class="form-group">
-                <label for="eventTitle"
-                  >Student Organization / Department</label
-                >
-                <input
-                  type="text"
-                  id="StudOrg"
-                  class="form-control"
-                  required
-                  placeholder="e.g., COMMITS"
-                />
-              </div>
-              <div class="form-group">
-                <label for="eventVenue">Select Venue</label>
-                <select id="eventVenue" class="form-control" required>
-                  <option value="">-- Choose a venue --</option>
-                  <option value="Bamboo Building">Bamboo Building</option>
-                  <option value="Function Hall">Function Hall</option>
-                  <option value="PSC Ground">PSC Ground</option>
-                  <option value="Court">Court</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="eventDate">Event Date</label>
-                <input
-                  type="date"
-                  id="eventDate"
-                  class="form-control"
-                  required
-                />
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="eventTime">Start Time</label>
-                  <input
-                    type="time"
-                    id="eventTime"
-                    class="form-control"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="attendees">Expected Attendance</label>
-                  <input
-                    type="number"
-                    id="attendees"
-                    class="form-control"
-                    required
-                    placeholder="Number of guests"
-                  />
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="eventPdf">Attach Letter Request</label>
-                <div id="pdfDropzone" class="pdf-dropzone">
-                  <span>Drag & drop your PDF here, or click to browse</span>
-                  <small id="pdfFileName">No file selected</small>
-                </div>
-                <input
-                  type="file"
-                  id="eventPdf"
-                  accept="application/pdf"
-                  required
-                  class="form-control file-input-hidden"
-                />
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn">
-                  Submit Booking Request
-                </button>
-                <button
-                  type="button"
-                  id="scheduleCancelBtn"
-                  class="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        <!-- Proposed Events -->
+        <div id="proposals-view" class="view-section">
+          <div class="section-header-inline">
+            <h3>Proposed Events</h3>
+            <span class="section-badge" id="proposalsCount">0 proposals</span>
+          </div>
+          <p class="note-text">
+            Review student-submitted event applications. Accept or reject each
+            proposal below.
+          </p>
+          <div class="proposals-grid" id="proposalsGrid">
+            <p class="empty-state">No student proposals yet.</p>
           </div>
         </div>
       </section>
     </main>
-    <script src="/frontend/assets/js/script.js"></script>
+
+    <!-- Add Venue Modal -->
+    <div class="modal-overlay hidden" id="addVenueModal" role="dialog" aria-modal="true" aria-labelledby="addVenueModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="addVenueModalTitle">Add New Venue</h3>
+          <button type="button" class="modal-close" id="closeAddVenueBtn" aria-label="Close">&times;</button>
+        </div>
+        <form id="addVenueForm">
+          <div class="form-group">
+            <label for="venueNameInput">Venue Name</label>
+            <input type="text" id="venueNameInput" class="form-control" required placeholder="e.g., Bamboo Building" />
+          </div>
+          <div class="form-group">
+            <label for="venueAddressInput">Address</label>
+            <input type="text" id="venueAddressInput" class="form-control" required placeholder="e.g., Main Campus, Building A" />
+          </div>
+          <div class="form-group">
+            <label for="venueDescInput">Venue Description</label>
+            <textarea id="venueDescInput" class="form-control" rows="3" required placeholder="Describe the venue features and capacity..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="venueAvailInput">Availability</label>
+            <textarea id="venueAvailInput" class="form-control" rows="2" required placeholder="e.g., Mon–Fri 8:00 AM – 6:00 PM"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="venuePhotoInput">Photo Upload</label>
+            <div class="photo-upload-zone" id="venuePhotoZone">
+              <span>Click or drag an image here</span>
+              <small id="venuePhotoName">No file selected</small>
+            </div>
+            <input type="file" id="venuePhotoInput" accept="image/*" class="file-input-hidden" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn">Add Venue</button>
+            <button type="button" class="btn btn-secondary" id="cancelAddVenueBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/frontend/assets/js/faculty-dash.js"></script>
   </body>
 </html>
