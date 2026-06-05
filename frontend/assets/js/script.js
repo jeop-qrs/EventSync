@@ -526,7 +526,7 @@ function handleFacultyLoginSubmit(e) {
   const isFacultyPage =
     pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
   if (isFacultyPage) {
-    window.location.href = "index.html?role=Faculty";
+    window.location.href = "faculty-dash.html";
     return;
   }
 
@@ -812,15 +812,23 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeVenueCalendarNav();
   document.addEventListener("click", handleDocumentClick);
 
-  // If redirected with ?role=Student or ?role=Faculty, start the session automatically
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const role = params.get("role");
-    if (role === "Student" || role === "Faculty") {
-      startSession(role);
+  const currentPath = window.location.pathname || "";
+  const isFacultyDash =
+    currentPath.endsWith("/faculty-dash.html") ||
+    currentPath.endsWith("faculty-dash.html");
+
+  if (isFacultyDash) {
+    startSession("Faculty");
+  } else {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const role = params.get("role");
+      if (role === "Student" || role === "Faculty") {
+        startSession(role);
+      }
+    } catch (err) {
+      // ignore if URL API unavailable
     }
-  } catch (err) {
-    // ignore if URL API unavailable
   }
 
   renderNotificationPopup();
