@@ -770,6 +770,11 @@ td {
   color: #991b1b;
 }
 
+.status-cancelled {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
 .admin-action-header,
 .admin-actions {
   display: none;
