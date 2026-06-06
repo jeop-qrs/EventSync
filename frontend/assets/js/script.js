@@ -502,7 +502,10 @@ let unreadNotifications = notifications.length;
 
 function initializeProfileMenu() {
   const profileButton = document.getElementById("profileButton");
+  const viewProfileBtn = document.getElementById("viewProfileBtn");
+  const accountSettingsBtn = document.getElementById("accountSettingsBtn");
   const logoutBtn = document.getElementById("logoutBtn");
+  
   if (profileButton) {
     profileButton.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -510,18 +513,24 @@ function initializeProfileMenu() {
     });
   }
 
+  if (viewProfileBtn) {
+    viewProfileBtn.addEventListener("click", () => {
+      closeProfileDropdown();
+      alert("View Profile page not yet implemented.");
+    });
+  }
+
+  if (accountSettingsBtn) {
+    accountSettingsBtn.addEventListener("click", () => {
+      closeProfileDropdown();
+      alert("Account Settings page not yet implemented.");
+    });
+  }
+
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       closeProfileDropdown();
-      alert("You have been logged out.");
-      const landingOverlay = document.getElementById("landingOverlay");
-      const sidebar = document.querySelector(".sidebar");
-      const workspace = document.querySelector(".main-workspace");
-      const roleSimulator = document.querySelector(".role-simulator");
-      if (landingOverlay) landingOverlay.style.display = "";
-      if (sidebar) sidebar.classList.add("hidden");
-      if (workspace) workspace.classList.add("hidden");
-      if (roleSimulator) roleSimulator.classList.add("hidden");
+      window.location.href = "index.html";
     });
   }
 }
