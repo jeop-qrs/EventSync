@@ -65,6 +65,7 @@
               id="notificationPopupList"
             ></div>
           </div>
+          
           <div class="profile-menu" id="profileMenu">
             <button
               class="profile-button"
@@ -121,7 +122,7 @@
             <div class="stat-card">
               <div class="stat-label">Available Venues Today</div>
               <div class="stat-value stat-value--success" id="countVenues">
-                0
+                4
               </div>
             </div>
             <div class="stat-card stat-card--rejected">
@@ -135,7 +136,9 @@
           <div class="schedule-tracker">
             <div class="section-header-inline">
               <h3>Live Tracking &amp; Schedules</h3>
-              <span class="section-badge" id="scheduleTrackerCount">0 events</span>
+              <span class="section-badge" id="scheduleTrackerCount"
+                >0 events</span
+              >
             </div>
             <div class="schedule-card-list" id="facultyScheduleList">
               <p class="empty-state">No scheduled events to display yet.</p>
@@ -197,7 +200,10 @@
                       >
                         ‹
                       </button>
-                      <h5 id="calendarMonthLabel" class="calendar-month-title"></h5>
+                      <h5
+                        id="calendarMonthLabel"
+                        class="calendar-month-title"
+                      ></h5>
                       <button
                         type="button"
                         id="calendarNextMonth"
@@ -230,7 +236,10 @@
                       <p class="calendar-day-detail-heading">
                         <span id="calendarDayDetailTitle"></span>
                       </p>
-                      <ul id="calendarDayTimes" class="calendar-day-times-list"></ul>
+                      <ul
+                        id="calendarDayTimes"
+                        class="calendar-day-times-list"
+                      ></ul>
                     </div>
                   </div>
                 </div>
@@ -257,28 +266,65 @@
     </main>
 
     <!-- Add Venue Modal -->
-    <div class="modal-overlay hidden" id="addVenueModal" role="dialog" aria-modal="true" aria-labelledby="addVenueModalTitle">
+    <div
+      class="modal-overlay hidden"
+      id="addVenueModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="addVenueModalTitle"
+    >
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="addVenueModalTitle">Add New Venue</h3>
-          <button type="button" class="modal-close" id="closeAddVenueBtn" aria-label="Close">&times;</button>
+          <button
+            type="button"
+            class="modal-close"
+            id="closeAddVenueBtn"
+            aria-label="Close"
+          >
+            &times;
+          </button>
         </div>
-        <form id="addVenueForm">
+        <form id="addVenueForm" novalidate>
           <div class="form-group">
-            <label for="venueNameInput">Venue Name</label>
-            <input type="text" id="venueNameInput" class="form-control" required placeholder="e.g., Bamboo Building" />
+            <label for="venueNameInput">Venue Name <span class="required-indicator" aria-label="required">*</span></label>
+            <input
+              type="text"
+              id="venueNameInput"
+              class="form-control"
+              required
+              placeholder="e.g., Bamboo Building"
+            />
           </div>
           <div class="form-group">
-            <label for="venueAddressInput">Address</label>
-            <input type="text" id="venueAddressInput" class="form-control" required placeholder="e.g., Main Campus, Building A" />
+            <label for="venueAddressInput">Address <span class="required-indicator" aria-label="required">*</span></label>
+            <input
+              type="text"
+              id="venueAddressInput"
+              class="form-control"
+              required
+              placeholder="e.g., Main Campus, Building A"
+            />
           </div>
           <div class="form-group">
-            <label for="venueDescInput">Venue Description</label>
-            <textarea id="venueDescInput" class="form-control" rows="3" required placeholder="Describe the venue features and capacity..."></textarea>
+            <label for="venueDescInput">Venue Description <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea
+              id="venueDescInput"
+              class="form-control"
+              rows="3"
+              required
+              placeholder="Describe the venue features and capacity..."
+            ></textarea>
           </div>
           <div class="form-group">
-            <label for="venueAvailInput">Availability</label>
-            <textarea id="venueAvailInput" class="form-control" rows="2" required placeholder="e.g., Mon–Fri 8:00 AM – 6:00 PM"></textarea>
+            <label for="venueAvailInput">Availability <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea
+              id="venueAvailInput"
+              class="form-control"
+              rows="2"
+              required
+              placeholder="e.g., Mon–Fri 8:00 AM – 6:00 PM"
+            ></textarea>
           </div>
           <div class="form-group">
             <label for="venuePhotoInput">Photo Upload</label>
@@ -286,11 +332,22 @@
               <span>Click or drag an image here</span>
               <small id="venuePhotoName">No file selected</small>
             </div>
-            <input type="file" id="venuePhotoInput" accept="image/*" class="file-input-hidden" />
+            <input
+              type="file"
+              id="venuePhotoInput"
+              accept="image/*"
+              class="file-input-hidden"
+            />
           </div>
           <div class="form-actions">
             <button type="submit" class="btn">Add Venue</button>
-            <button type="button" class="btn btn-secondary" id="cancelAddVenueBtn">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelAddVenueBtn"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

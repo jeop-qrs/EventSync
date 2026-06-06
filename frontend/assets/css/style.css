@@ -1315,3 +1315,54 @@ td {
   position: relative;
   top: 70px;
 }
+
+/* Required Field Indicator */
+.required-indicator {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* Success Modal */
+.modal-content--success {
+  max-width: 420px;
+}
+
+.modal-content--success .modal-body {
+  text-align: center;
+  padding: 48px 32px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #d1fae5;
+  border-radius: 50%;
+  font-size: 2.5rem;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.modal-content--success h2 {
+  font-size: 1.5rem;
+  margin: 16px 0 12px;
+  color: var(--text-main);
+}
+
+.modal-content--success p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.modal-content--success .form-actions {
+  justify-content: center;
+}
+
+.modal-content--success .btn {
+  min-width: 120px;
+}

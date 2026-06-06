@@ -213,9 +213,6 @@
         <div id="venues-view" class="view-section">
           <div class="venue-dashboard">
             <section class="venue-list">
-              <div class="section-header-inline">
-                <h3>Venue Directory</h3>
-              </div>
 
               <div class="venue-grid" id="studentVenueGrid"></div>
             </section>
@@ -340,9 +337,9 @@
 
         <div id="schedule-view" class="view-section">
           <div class="form-card">
-            <form id="scheduleForm">
+            <form id="scheduleForm" novalidate>
               <div class="form-group">
-                <label for="eventTitle">Event Title</label>
+                <label for="eventTitle">Event Title <span class="required-indicator" aria-label="required">*</span></label>
 
                 <input
                   type="text"
@@ -354,7 +351,7 @@
               </div>
 
               <div class="form-group">
-                <label for="StudOrg">Student Organization / Department</label>
+                <label for="StudOrg">Student Organization / Department <span class="required-indicator" aria-label="required">*</span></label>
 
                 <input
                   type="text"
@@ -366,7 +363,7 @@
               </div>
 
               <div class="form-group">
-                <label for="eventVenue">Select Venue</label>
+                <label for="eventVenue">Select Venue <span class="required-indicator" aria-label="required">*</span></label>
 
                 <select id="eventVenue" class="form-control" required>
                   <option value="">-- Choose a venue --</option>
@@ -374,7 +371,7 @@
               </div>
 
               <div class="form-group">
-                <label for="eventDate">Event Date</label>
+                <label for="eventDate">Event Date <span class="required-indicator" aria-label="required">*</span></label>
 
                 <input
                   type="date"
@@ -386,7 +383,7 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="eventTime">Start Time</label>
+                  <label for="eventTime">Start Time <span class="required-indicator" aria-label="required">*</span></label>
 
                   <input
                     type="time"
@@ -397,7 +394,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="attendees">Expected Attendance</label>
+                  <label for="attendees">Expected Attendance <span class="required-indicator" aria-label="required">*</span></label>
 
                   <input
                     type="number"
@@ -410,7 +407,7 @@
               </div>
 
               <div class="form-group">
-                <label for="eventPdf">Attach Letter Request</label>
+                <label for="eventPdf">Attach Letter Request <span class="required-indicator" aria-label="required">*</span></label>
 
                 <div id="pdfDropzone" class="pdf-dropzone">
                   <span>Drag & drop your PDF here, or click to browse</span>
@@ -468,6 +465,20 @@
                 <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal hidden" id="successModal">
+        <div class="modal-overlay" id="successModalOverlay"></div>
+        <div class="modal-content modal-content--success">
+          <div class="modal-body">
+            <div class="success-icon">✓</div>
+            <h2>Booking Request Submitted</h2>
+            <p>Booking request successfully submitted to the faculty.</p>
+            <div class="form-actions">
+              <button type="button" class="btn" id="successModalBtn">Got It</button>
+            </div>
           </div>
         </div>
       </div>

@@ -28,7 +28,9 @@ function buildVenueDataMap(venues) {
 }
 
 function switchView(viewId, element) {
-  document.querySelectorAll(".view-section").forEach((v) => v.classList.remove("active-view"));
+  document
+    .querySelectorAll(".view-section")
+    .forEach((v) => v.classList.remove("active-view"));
   document.getElementById(viewId)?.classList.add("active-view");
 
   const titles = {
@@ -40,7 +42,9 @@ function switchView(viewId, element) {
   if (titleEl) titleEl.textContent = titles[viewId] || "Dashboard";
 
   if (element) {
-    document.querySelectorAll(".menu-item").forEach((i) => i.classList.remove("active"));
+    document
+      .querySelectorAll(".menu-item")
+      .forEach((i) => i.classList.remove("active"));
     element.classList.add("active");
   }
 
@@ -72,7 +76,8 @@ function renderFacultySchedule() {
   }
 
   if (!proposals.length) {
-    list.innerHTML = '<p class="empty-state">No scheduled events to display yet.</p>';
+    list.innerHTML =
+      '<p class="empty-state">No scheduled events to display yet.</p>';
     return;
   }
 
@@ -151,7 +156,9 @@ function renderFacultyVenueGrid() {
     });
   });
 
-  document.getElementById("openAddVenueBtn")?.addEventListener("click", openAddVenueModal);
+  document
+    .getElementById("openAddVenueBtn")
+    ?.addEventListener("click", openAddVenueModal);
   updateDashboardStats();
 }
 
@@ -167,7 +174,8 @@ function displayVenueDetail(venueId) {
   document.getElementById("detailVenueName").textContent = venue.name;
   document.getElementById("venueDescription").textContent = venue.description;
   document.getElementById("venueAddress").textContent = venue.address;
-  document.getElementById("venueAvailabilityText").textContent = venue.availability;
+  document.getElementById("venueAvailabilityText").textContent =
+    venue.availability;
 
   setActiveVenueCard(venueId);
   renderVenueCalendar(venueId);
@@ -192,7 +200,11 @@ function renderVenueCalendar(venueId) {
 
   const availability = venue.calendarAvailability || {};
   const firstDay = new Date(viewCalendarYear, viewCalendarMonth, 1).getDay();
-  const daysInMonth = new Date(viewCalendarYear, viewCalendarMonth + 1, 0).getDate();
+  const daysInMonth = new Date(
+    viewCalendarYear,
+    viewCalendarMonth + 1,
+    0,
+  ).getDate();
 
   let html = "";
   for (let i = 0; i < firstDay; i++) {
@@ -224,8 +236,13 @@ function renderVenueCalendar(venueId) {
 
 function shiftCalendarMonth(delta) {
   viewCalendarMonth += delta;
-  if (viewCalendarMonth < 0) { viewCalendarMonth = 11; viewCalendarYear -= 1; }
-  else if (viewCalendarMonth > 11) { viewCalendarMonth = 0; viewCalendarYear += 1; }
+  if (viewCalendarMonth < 0) {
+    viewCalendarMonth = 11;
+    viewCalendarYear -= 1;
+  } else if (viewCalendarMonth > 11) {
+    viewCalendarMonth = 0;
+    viewCalendarYear += 1;
+  }
   selectedCalendarDay = null;
   if (activeVenue) renderVenueCalendar(activeVenue);
 }
@@ -343,17 +360,23 @@ function renderProposals() {
   });
   grid.querySelectorAll(".proposal-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.getElementById(`reject-form-${btn.dataset.id}`)?.classList.remove("hidden");
+      document
+        .getElementById(`reject-form-${btn.dataset.id}`)
+        ?.classList.remove("hidden");
     });
   });
   grid.querySelectorAll(".proposal-cancel-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.getElementById(`reject-form-${btn.dataset.id}`)?.classList.add("hidden");
+      document
+        .getElementById(`reject-form-${btn.dataset.id}`)
+        ?.classList.add("hidden");
     });
   });
   grid.querySelectorAll(".proposal-confirm-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const reason = document.getElementById(`reject-reason-${btn.dataset.id}`)?.value.trim();
+      const reason = document
+        .getElementById(`reject-reason-${btn.dataset.id}`)
+        ?.value.trim();
       if (!reason) {
         alert("Please provide a reason for rejection.");
         return;
@@ -370,7 +393,10 @@ function acceptProposal(id) {
 
   proposal.status = "accepted";
   saveProposals(proposals);
-  addNotification(`Proposal "${proposal.title}" has been accepted.`, "Just now");
+  addNotification(
+    `Proposal "${proposal.title}" has been accepted.`,
+    "Just now",
+  );
   renderProposals();
   renderFacultySchedule();
   updateDashboardStats();
@@ -384,7 +410,10 @@ function rejectProposal(id, reason) {
   proposal.status = "rejected";
   proposal.rejectionReason = reason;
   saveProposals(proposals);
-  addNotification(`Proposal "${proposal.title}" has been rejected.`, "Just now");
+  addNotification(
+    `Proposal "${proposal.title}" has been rejected.`,
+    "Just now",
+  );
   renderProposals();
   renderFacultySchedule();
   updateDashboardStats();
@@ -407,21 +436,63 @@ document.addEventListener("DOMContentLoaded", () => {
     item.addEventListener("click", () => switchView(item.dataset.view, item));
   });
 
-  document.getElementById("calendarPrevMonth")?.addEventListener("click", () => shiftCalendarMonth(-1));
-  document.getElementById("calendarNextMonth")?.addEventListener("click", () => shiftCalendarMonth(1));
+  document
+    .getElementById("calendarPrevMonth")
+    ?.addEventListener("click", () => shiftCalendarMonth(-1));
+  document
+    .getElementById("calendarNextMonth")
+    ?.addEventListener("click", () => shiftCalendarMonth(1));
 
-  document.getElementById("addVenueForm")?.addEventListener("submit", handleAddVenueSubmit);
-  document.getElementById("closeAddVenueBtn")?.addEventListener("click", closeAddVenueModal);
-  document.getElementById("cancelAddVenueBtn")?.addEventListener("click", closeAddVenueModal);
+  document
+    .getElementById("addVenueForm")
+    ?.addEventListener("submit", handleAddVenueSubmit);
+  document
+    .getElementById("closeAddVenueBtn")
+    ?.addEventListener("click", closeAddVenueModal);
+  document
+    .getElementById("cancelAddVenueBtn")
+    ?.addEventListener("click", closeAddVenueModal);
   document.getElementById("addVenueModal")?.addEventListener("click", (e) => {
     if (e.target.id === "addVenueModal") closeAddVenueModal();
   });
 
-  document.getElementById("notificationBell")?.addEventListener("click", toggleNotificationPopup);
+  document
+    .getElementById("notificationBell")
+    ?.addEventListener("click", toggleNotificationPopup);
 
   document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    window.location.href = "faculty.html";
+    closeProfileDropdown();
+    document.getElementById("landingOverlay").style.display = "";
+    document.querySelector(".sidebar")?.classList.add("hidden");
+    document.querySelector(".main-workspace")?.classList.add("hidden");
+    document.querySelector(".role-simulator")?.classList.add("hidden");
   });
+
+  function initializeProfileMenu() {
+    const profileButton = document.getElementById("profileButton");
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (profileButton) {
+      profileButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleProfileDropdown();
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        alert("You have been logged out.");
+        const landingOverlay = document.getElementById("landingOverlay");
+        const sidebar = document.querySelector(".sidebar");
+        const workspace = document.querySelector(".main-workspace");
+        const roleSimulator = document.querySelector(".role-simulator");
+        if (landingOverlay) landingOverlay.style.display = "";
+        if (sidebar) sidebar.classList.add("hidden");
+        if (workspace) workspace.classList.add("hidden");
+        if (roleSimulator) roleSimulator.classList.add("hidden");
+      });
+    }
+  }
 
   initializeVenuePhotoZone();
   renderFacultyVenueGrid();
