@@ -177,8 +177,39 @@ function displayVenueDetail(venueId) {
   document.getElementById("venueAvailabilityText").textContent =
     venue.availability;
 
+  const deleteBtn = document.getElementById("deleteVenueBtn");
+  if (deleteBtn) {
+    deleteBtn.style.display = "inline-block";
+  }
+
   setActiveVenueCard(venueId);
   renderVenueCalendar(venueId);
+}
+
+function deleteVenue(venueId) {
+  if (!confirm("Are you sure you want to delete this venue? This action cannot be undone.")) {
+    return;
+  }
+
+  const venues = loadVenues();
+  const venueIndex = venues.findIndex((v) => v.id === venueId);
+  if (venueIndex === -1) return;
+
+  const venueName = venues[venueIndex].name;
+  venues.splice(venueIndex, 1);
+  saveVenues(venues);
+
+  activeVenue = null;
+  document.getElementById("detailVenueName").textContent = "Select a Venue";
+  document.getElementById("venueDescription").textContent =
+    "Pick a venue from the directory to view its details and availability.";
+  document.getElementById("venueAddress").textContent = "-";
+  document.getElementById("venueAvailabilityText").textContent = "-";
+  document.getElementById("deleteVenueBtn").style.display = "none";
+
+  renderFacultyVenueGrid();
+  updateDashboardStats();
+  addNotification(`Venue "${venueName}" has been deleted.`, "Just now");
 }
 
 function getDayAvailabilityStatus(dayAvailability) {
@@ -268,6 +299,11 @@ function readFileAsDataUrl(file) {
 
 async function handleAddVenueSubmit(e) {
   e.preventDefault();
+  const form = document.getElementById("addVenueForm");
+  if (form && !form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
 
   const name = document.getElementById("venueNameInput").value.trim();
   const address = document.getElementById("venueAddressInput").value.trim();
@@ -305,7 +341,7 @@ function renderProposals() {
   const countBadge = document.getElementById("proposalsCount");
   if (!grid) return;
 
-  const proposals = loadProposals().filter((p) => p.status === "pending");
+  const proposals = loadProposals();
 
   if (countBadge) {
     countBadge.textContent = `${proposals.length} proposal${proposals.length === 1 ? "" : "s"}`;
@@ -317,18 +353,36 @@ function renderProposals() {
   }
 
   grid.innerHTML = proposals
-    .map(
-      (p) => `
+    .map((p) => {
+      const statusClass =
+        p.status === "accepted"
+          ? "status-approved"
+          : p.status === "rejected"
+            ? "status-rejected"
+            : p.status === "cancelled"
+              ? "status-cancelled"
+              : "status-pending";
+      const statusLabel =
+        p.status === "accepted"
+          ? "Accepted"
+          : p.status === "rejected"
+            ? "Rejected"
+            : p.status === "cancelled"
+              ? "Cancelled"
+              : "Pending Review";
+
+      return `
       <article class="proposal-card" data-id="${escapeHtml(p.id)}">
         <div class="proposal-card-header">
           <h4>${escapeHtml(p.title)}</h4>
-          <span class="status-pill status-pending">Pending Review</span>
+          <span class="status-pill ${statusClass}">${statusLabel}</span>
         </div>
         <div class="proposal-card-body">
           <p><strong>Organization:</strong> ${escapeHtml(p.org)}</p>
           <p><strong>Venue:</strong> ${escapeHtml(p.venue)}</p>
           <p><strong>Date &amp; Time:</strong> ${escapeHtml(p.date)} · ${escapeHtml(p.time)}</p>
           <p><strong>Attendance:</strong> ${escapeHtml(String(p.attendees || "-"))}</p>
+          ${p.status === "rejected" && p.rejectionReason ? `<p class="event-reject-reason"><strong>Rejection Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>` : ""}
         </div>
         <div class="proposal-pdf-preview">
           <div class="proposal-pdf-label">Letter Request Preview</div>
@@ -339,20 +393,24 @@ function renderProposals() {
           }
         </div>
         <div class="proposal-card-actions">
-          <button type="button" class="btn btn-success proposal-accept-btn" data-id="${escapeHtml(p.id)}">Accept</button>
-          <button type="button" class="btn btn-danger proposal-reject-btn" data-id="${escapeHtml(p.id)}">Reject</button>
+          ${p.status === "pending" ? `
+            <button type="button" class="btn btn-success proposal-accept-btn" data-id="${escapeHtml(p.id)}">Accept</button>
+            <button type="button" class="btn btn-danger proposal-reject-btn" data-id="${escapeHtml(p.id)}">Reject</button>
+          ` : ""}
         </div>
-        <div class="proposal-reject-form hidden" id="reject-form-${escapeHtml(p.id)}">
-          <label for="reject-reason-${escapeHtml(p.id)}">Reason for rejection</label>
-          <textarea id="reject-reason-${escapeHtml(p.id)}" class="form-control" rows="2" placeholder="Provide a reason for the student..."></textarea>
-          <div class="form-actions">
-            <button type="button" class="btn btn-danger proposal-confirm-reject-btn" data-id="${escapeHtml(p.id)}">Confirm Reject</button>
-            <button type="button" class="btn btn-secondary proposal-cancel-reject-btn" data-id="${escapeHtml(p.id)}">Cancel</button>
+        ${p.status === "pending" ? `
+          <div class="proposal-reject-form hidden" id="reject-form-${escapeHtml(p.id)}">
+            <label for="reject-reason-${escapeHtml(p.id)}">Reason for rejection <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea id="reject-reason-${escapeHtml(p.id)}" class="form-control" rows="2" required placeholder="Provide a reason for the student..."></textarea>
+            <div class="form-actions">
+              <button type="button" class="btn btn-danger proposal-confirm-reject-btn" data-id="${escapeHtml(p.id)}">Confirm Reject</button>
+              <button type="button" class="btn btn-secondary proposal-cancel-reject-btn" data-id="${escapeHtml(p.id)}">Cancel</button>
+            </div>
           </div>
-        </div>
+        ` : ""}
       </article>
-    `,
-    )
+    `;
+    })
     .join("");
 
   grid.querySelectorAll(".proposal-accept-btn").forEach((btn) => {
@@ -457,20 +515,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document
+    .getElementById("deleteVenueBtn")
+    ?.addEventListener("click", () => {
+      if (activeVenue) {
+        deleteVenue(activeVenue);
+      }
+    });
+
+  document
     .getElementById("notificationBell")
     ?.addEventListener("click", toggleNotificationPopup);
 
-  document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    closeProfileDropdown();
-    document.getElementById("landingOverlay").style.display = "";
-    document.querySelector(".sidebar")?.classList.add("hidden");
-    document.querySelector(".main-workspace")?.classList.add("hidden");
-    document.querySelector(".role-simulator")?.classList.add("hidden");
-  });
-
   function initializeProfileMenu() {
     const profileButton = document.getElementById("profileButton");
+    const viewProfileBtn = document.getElementById("viewProfileBtn");
+    const accountSettingsBtn = document.getElementById("accountSettingsBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    
     if (profileButton) {
       profileButton.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -478,22 +539,32 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    if (viewProfileBtn) {
+      viewProfileBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        alert("View Profile page not yet implemented.");
+      });
+    }
+
+    if (accountSettingsBtn) {
+      accountSettingsBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        alert("Account Settings page not yet implemented.");
+      });
+    }
+
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => {
         closeProfileDropdown();
-        alert("You have been logged out.");
-        const landingOverlay = document.getElementById("landingOverlay");
-        const sidebar = document.querySelector(".sidebar");
-        const workspace = document.querySelector(".main-workspace");
-        const roleSimulator = document.querySelector(".role-simulator");
-        if (landingOverlay) landingOverlay.style.display = "";
-        if (sidebar) sidebar.classList.add("hidden");
-        if (workspace) workspace.classList.add("hidden");
-        if (roleSimulator) roleSimulator.classList.add("hidden");
+        window.location.href = "index.html";
       });
     }
   }
 
+  initializeProfileMenu();
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
+  });
   initializeVenuePhotoZone();
   renderFacultyVenueGrid();
   renderFacultySchedule();
