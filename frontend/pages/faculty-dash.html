@@ -169,7 +169,10 @@
             <aside class="venue-detail-panel">
               <div class="detail-sidebar-inner">
                 <div class="venue-info">
-                  <h3 id="detailVenueName">Select a Venue</h3>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="detailVenueName">Select a Venue</h3>
+                    <button type="button" id="deleteVenueBtn" class="btn btn-danger" style="display: none;" aria-label="Delete venue">Delete</button>
+                  </div>
                   <p id="venueDescription">
                     Pick a venue from the directory to view its details and
                     availability.
@@ -285,7 +288,7 @@
             &times;
           </button>
         </div>
-        <form id="addVenueForm" novalidate>
+        <form id="addVenueForm">
           <div class="form-group">
             <label for="venueNameInput">Venue Name <span class="required-indicator" aria-label="required">*</span></label>
             <input
