@@ -52,14 +52,6 @@
       </div>
     </div>
 
-    <div class="role-simulator hidden">
-      <label>SIMULATE SYSTEM ROLE</label>
-
-      <select id="roleSelect">
-        <option value="Participant" selected>Participant</option>
-      </select>
-    </div>
-
     <nav class="sidebar hidden">
       <div>
         <div class="sidebar-brand">
@@ -452,8 +444,36 @@
           </div>
         </div>
       </section>
+
+      <div class="modal hidden" id="cancelReasonModal">
+        <div class="modal-overlay" id="cancelReasonOverlay"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Cancel Request</h2>
+            <button type="button" class="modal-close" id="cancelReasonClose">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="cancelReasonForm">
+              <div class="form-group">
+                <label for="cancelReason">Why are you canceling this request? (Optional)</label>
+                <textarea
+                  id="cancelReason"
+                  class="form-control"
+                  placeholder="Please provide details about your cancellation..."
+                  rows="4"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </main>
 
+    <script src="/frontend/assets/js/shared.js"></script>
     <script src="/frontend/assets/js/student.js"></script>
   </body>
 </html>
