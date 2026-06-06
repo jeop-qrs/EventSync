@@ -1,8 +1,3 @@
-const STORAGE_KEYS = {
-  VENUES: "eventsync_faculty_venues",
-  PROPOSALS: "eventsync_proposals",
-};
-
 const DEFAULT_VENUES = [
   {
     id: "bamboo-building",
@@ -59,18 +54,6 @@ const DEFAULT_VENUES = [
   },
 ];
 
-const VENUE_COLORS = [
-  "venue-image--purple",
-  "venue-image--green",
-  "venue-image--gold",
-  "venue-image--yellow",
-];
-
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
 let activeVenue = null;
 let viewCalendarMonth = new Date().getMonth();
 let viewCalendarYear = new Date().getFullYear();
@@ -78,14 +61,7 @@ let selectedCalendarDay = null;
 let studentVenueData = {};
 let notifications = [];
 let unreadNotifications = 0;
-
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+let cancelEventId = null;
 
 function loadFacultyVenues() {
   try {
@@ -94,20 +70,6 @@ function loadFacultyVenues() {
   } catch {
     return [];
   }
-}
-
-function loadProposals() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.PROPOSALS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveProposals(proposals) {
-  localStorage.setItem(STORAGE_KEYS.PROPOSALS, JSON.stringify(proposals));
-  window.dispatchEvent(new Event("eventsync-proposals-updated"));
 }
 
 function getAllVenues() {
@@ -191,8 +153,8 @@ function renderMyEvents() {
       const rejectNote = p.status === "rejected" && p.rejectionReason
         ? `<p class="event-reject-reason"><strong>Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>`
         : "";
-      const cancelBtn = p.status === "accepted"
-        ? `<button type="button" class="btn btn-secondary btn-small cancel-event-btn" data-id="${escapeHtml(p.id)}">Cancel Event</button>`
+      const cancelBtn = (p.status === "accepted" || p.status === "pending")
+        ? `<button type="button" class="btn btn-secondary btn-small cancel-event-btn" data-id="${escapeHtml(p.id)}">Cancel Request</button>`
         : "";
 
       return `
@@ -217,15 +179,35 @@ function renderMyEvents() {
 }
 
 function cancelEvent(id) {
-  if (!confirm("Are you sure you want to cancel this event?")) return;
+  cancelEventId = id;
+  document.getElementById("cancelReason").value = "";
+  document.getElementById("cancelReasonModal").classList.remove("hidden");
+}
 
+function openCancelReasonModal() {
+  document.getElementById("cancelReasonModal").classList.remove("hidden");
+}
+
+function closeCancelReasonModal() {
+  document.getElementById("cancelReasonModal").classList.add("hidden");
+  cancelEventId = null;
+}
+
+function confirmCancellation() {
+  if (!cancelEventId) return;
+
+  const reason = document.getElementById("cancelReason").value.trim();
   const proposals = loadProposals();
-  const proposal = proposals.find((p) => p.id === id);
+  const proposal = proposals.find((p) => p.id === cancelEventId);
   if (!proposal) return;
 
   proposal.status = "cancelled";
+  if (reason) {
+    proposal.cancellationReason = reason;
+  }
   saveProposals(proposals);
   addNotification(`Event "${proposal.title}" has been cancelled.`, "Just now");
+  closeCancelReasonModal();
   refreshAll();
 }
 
@@ -284,12 +266,6 @@ function populateVenueSelect(venues) {
   if (current) select.value = current;
 }
 
-function setActiveVenueCard(venueId) {
-  document.querySelectorAll(".venue-card[data-venue]").forEach((card) => {
-    card.classList.toggle("selected", card.dataset.venue === venueId);
-  });
-}
-
 function displayVenueDetail(venueId) {
   const venue = studentVenueData[venueId];
   if (!venue) return;
@@ -313,12 +289,6 @@ function getDayAvailabilityStatus(dayAvailability) {
   if (dayAvailability.booked) return "booked";
   if (dayAvailability.times?.length) return "available";
   return "neutral";
-}
-
-function formatCalendarDaySlots(times) {
-  return (times || [])
-    .map((slot) => `<span class="calendar-time-slot">${escapeHtml(slot)}</span>`)
-    .join("");
 }
 
 function updateCalendarDayDetail(venueId, day, dayAvailability) {
@@ -474,91 +444,6 @@ async function handleFormSubmission(e) {
   refreshAll();
 }
 
-function validatePdfFile(file) {
-  return file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
-}
-
-function updatePdfFileDisplay(fileName) {
-  const el = document.getElementById("pdfFileName");
-  if (el) el.textContent = fileName || "No file selected";
-}
-
-function initializePdfDropzone() {
-  const pdfInput = document.getElementById("eventPdf");
-  const pdfDropzone = document.getElementById("pdfDropzone");
-  if (!pdfInput || !pdfDropzone) return;
-
-  pdfInput.addEventListener("change", () => {
-    const file = pdfInput.files[0];
-    if (file && !validatePdfFile(file)) {
-      alert("Please upload a valid PDF file.");
-      pdfInput.value = "";
-      updatePdfFileDisplay();
-      return;
-    }
-    updatePdfFileDisplay(file?.name);
-  });
-
-  pdfDropzone.addEventListener("click", () => pdfInput.click());
-  pdfDropzone.addEventListener("dragover", (e) => { e.preventDefault(); pdfDropzone.classList.add("dropzone-active"); });
-  pdfDropzone.addEventListener("dragleave", (e) => { e.preventDefault(); pdfDropzone.classList.remove("dropzone-active"); });
-  pdfDropzone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    pdfDropzone.classList.remove("dropzone-active");
-    if (e.dataTransfer.files.length) {
-      const file = e.dataTransfer.files[0];
-      if (!validatePdfFile(file)) { alert("Please drop a valid PDF file."); return; }
-      pdfInput.files = e.dataTransfer.files;
-      updatePdfFileDisplay(file.name);
-    }
-  });
-}
-
-function addNotification(message, time = "Just now") {
-  notifications.unshift({ message, time });
-  unreadNotifications += 1;
-  renderNotificationPopup();
-  updateNotificationBadge();
-}
-
-function renderNotificationPopup() {
-  const list = document.getElementById("notificationPopupList");
-  if (!list) return;
-  list.innerHTML = notifications
-    .map((n) => `<div class="notification-popup-item"><div>${escapeHtml(n.message)}</div><small>${escapeHtml(n.time)}</small></div>`)
-    .join("");
-}
-
-function updateNotificationBadge() {
-  const badge = document.getElementById("notificationCount");
-  if (!badge) return;
-  badge.textContent = unreadNotifications > 99 ? "99+" : unreadNotifications;
-  badge.style.display = unreadNotifications > 0 ? "inline-flex" : "none";
-}
-
-function toggleNotificationPopup() {
-  const popup = document.getElementById("notificationPopup");
-  if (!popup) return;
-  popup.classList.toggle("hidden");
-  if (!popup.classList.contains("hidden")) {
-    unreadNotifications = 0;
-    updateNotificationBadge();
-  }
-}
-
-function toggleProfileDropdown() {
-  const dropdown = document.getElementById("profileDropdown");
-  const button = document.getElementById("profileButton");
-  if (!dropdown || !button) return;
-  const isHidden = dropdown.classList.toggle("hidden");
-  button.setAttribute("aria-expanded", String(!isHidden));
-}
-
-function closeProfileDropdown() {
-  document.getElementById("profileDropdown")?.classList.add("hidden");
-  document.getElementById("profileButton")?.setAttribute("aria-expanded", "false");
-}
-
 function refreshAll() {
   updateStudentStats();
   renderMyEvents();
@@ -617,6 +502,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializePdfDropzone();
   updateNotificationBadge();
+
+  // Cancel reason modal handlers
+  document.getElementById("cancelReasonForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    confirmCancellation();
+  });
+  document.getElementById("cancelReasonClose")?.addEventListener("click", closeCancelReasonModal);
+  document.getElementById("cancelReasonCancel")?.addEventListener("click", closeCancelReasonModal);
+  document.getElementById("cancelReasonOverlay")?.addEventListener("click", closeCancelReasonModal);
 
   const params = new URLSearchParams(window.location.search);
   if (params.get("role") === "Student") {
