@@ -58,6 +58,7 @@ let activeVenue = null;
 let viewCalendarMonth = new Date().getMonth();
 let viewCalendarYear = new Date().getFullYear();
 let selectedCalendarDay = null;
+let selectedCalendarTime = "";
 let studentVenueData = {};
 let notifications = [];
 let unreadNotifications = 0;
@@ -272,6 +273,7 @@ function displayVenueDetail(venueId) {
 
   activeVenue = venueId;
   selectedCalendarDay = null;
+  selectedCalendarTime = "";
   viewCalendarMonth = new Date().getMonth();
   viewCalendarYear = new Date().getFullYear();
 
@@ -323,6 +325,7 @@ function selectCalendarDay(venueId, day) {
   selectedCalendarDay = day;
   const venue = studentVenueData[venueId];
   const dayAvailability = venue?.calendarAvailability?.[day];
+  selectedCalendarTime = dayAvailability?.times?.[0] || "";
 
   document.querySelectorAll("#venueCalendarDates .calendar-date[data-day]").forEach((cell) => {
     cell.classList.toggle("is-selected", Number(cell.dataset.day) === day);
@@ -382,12 +385,28 @@ function shiftCalendarMonth(delta) {
   if (viewCalendarMonth < 0) { viewCalendarMonth = 11; viewCalendarYear -= 1; }
   else if (viewCalendarMonth > 11) { viewCalendarMonth = 0; viewCalendarYear += 1; }
   selectedCalendarDay = null;
+  selectedCalendarTime = "";
   if (activeVenue) renderVenueCalendar(activeVenue);
+}
+
+function formatCalendarInputDate(year, month, day) {
+  const paddedMonth = String(month + 1).padStart(2, "0");
+  const paddedDay = String(day).padStart(2, "0");
+  return `${year}-${paddedMonth}-${paddedDay}`;
 }
 
 function openReservationWithVenue(venueName) {
   const select = document.getElementById("eventVenue");
+  const dateInput = document.getElementById("eventDate");
+  const timeInput = document.getElementById("eventTime");
   if (select) select.value = venueName;
+  if (dateInput && selectedCalendarDay) {
+    dateInput.value = formatCalendarInputDate(viewCalendarYear, viewCalendarMonth, selectedCalendarDay);
+  }
+  if (timeInput && selectedCalendarTime) {
+    const normalizedTime = selectedCalendarTime.split(" - ")[0];
+    timeInput.value = normalizedTime;
+  }
   switchView("schedule-view", document.querySelector('[data-view="schedule-view"]'));
 }
 
@@ -402,6 +421,11 @@ function readFileAsDataUrl(file) {
 
 async function handleFormSubmission(e) {
   e.preventDefault();
+  const form = document.getElementById("scheduleForm");
+  if (form && !form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
 
   const title = document.getElementById("eventTitle").value.trim();
   const org = document.getElementById("StudOrg").value.trim();
@@ -437,8 +461,16 @@ async function handleFormSubmission(e) {
 
   saveProposals(proposals);
   addNotification(`Proposal "${title}" submitted. Awaiting faculty review.`, "Just now");
+  showSuccessModal();
+}
 
-  document.getElementById("scheduleForm").reset();
+function showSuccessModal() {
+  document.getElementById("successModal")?.classList.remove("hidden");
+}
+
+function closeSuccessModal() {
+  document.getElementById("successModal")?.classList.add("hidden");
+  document.getElementById("scheduleForm")?.reset();
   updatePdfFileDisplay();
   switchView("dashboard-view", document.querySelector('[data-view="dashboard-view"]'));
   refreshAll();
@@ -484,17 +516,43 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("calendarNextMonth")?.addEventListener("click", () => shiftCalendarMonth(1));
 
   document.getElementById("notificationBell")?.addEventListener("click", toggleNotificationPopup);
-  document.getElementById("profileButton")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleProfileDropdown();
-  });
-  document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    closeProfileDropdown();
-    document.getElementById("landingOverlay").style.display = "";
-    document.querySelector(".sidebar")?.classList.add("hidden");
-    document.querySelector(".main-workspace")?.classList.add("hidden");
-    document.querySelector(".role-simulator")?.classList.add("hidden");
-  });
+
+  function initializeProfileMenu() {
+    const profileButton = document.getElementById("profileButton");
+    const viewProfileBtn = document.getElementById("viewProfileBtn");
+    const accountSettingsBtn = document.getElementById("accountSettingsBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    
+    if (profileButton) {
+      profileButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleProfileDropdown();
+      });
+    }
+
+    if (viewProfileBtn) {
+      viewProfileBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        alert("View Profile page not yet implemented.");
+      });
+    }
+
+    if (accountSettingsBtn) {
+      accountSettingsBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        alert("Account Settings page not yet implemented.");
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        closeProfileDropdown();
+        window.location.href = "index.html";
+      });
+    }
+  }
+
+  initializeProfileMenu();
 
   document.addEventListener("click", (e) => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
@@ -511,6 +569,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cancelReasonClose")?.addEventListener("click", closeCancelReasonModal);
   document.getElementById("cancelReasonCancel")?.addEventListener("click", closeCancelReasonModal);
   document.getElementById("cancelReasonOverlay")?.addEventListener("click", closeCancelReasonModal);
+
+  document.getElementById("successModalBtn")?.addEventListener("click", closeSuccessModal);
+  document.getElementById("successModalOverlay")?.addEventListener("click", closeSuccessModal);
 
   const params = new URLSearchParams(window.location.search);
   if (params.get("role") === "Student") {
