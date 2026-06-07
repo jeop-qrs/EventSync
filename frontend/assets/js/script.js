@@ -523,7 +523,13 @@ function initializeProfileMenu() {
   if (accountSettingsBtn) {
     accountSettingsBtn.addEventListener("click", () => {
       closeProfileDropdown();
-      alert("Account Settings page not yet implemented.");
+      const role = document.body?.dataset?.page;
+      if (role === "student" || role === "faculty") {
+        if (typeof toggleTheme === "function") toggleTheme(role);
+        else alert("Toggle theme not available.");
+      } else {
+        alert("Theme setting is available only from the student or faculty dashboard.");
+      }
     });
   }
 
