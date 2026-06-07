@@ -1,58 +1,4 @@
-const DEFAULT_VENUES = [
-  {
-    id: "bamboo-building",
-    name: "Bamboo Building",
-    address: "Main Campus, Building B",
-    description:
-      "A premium indoor venue with A/V support and climate control, ideal for large symposiums.",
-    availability: "Mon–Fri 8:00 AM – 6:00 PM",
-    photoDataUrl: "/frontend/assets/img/Bamboo building.png",
-    calendarAvailability: {
-      3: { booked: true },
-      1: { booked: false, times: ["09:00 - 12:00", "14:00 - 17:00"] },
-      2: { booked: false, times: ["08:00 - 11:00", "13:00 - 16:00"] },
-    },
-  },
-  {
-    id: "function-hall",
-    name: "Function Hall",
-    address: "Annex Wing, Level 2",
-    description:
-      "A compact, flexible room with workstation support for workshops or seminars.",
-    availability: "Tue–Sat 9:00 AM – 5:00 PM",
-    photoDataUrl: "/frontend/assets/img/Function Hall.png",
-    calendarAvailability: {
-      1: { booked: true },
-      2: { booked: false, times: ["10:00 - 13:00", "15:00 - 18:00"] },
-    },
-  },
-  {
-    id: "psc-ground",
-    name: "PSC Ground",
-    address: "Ground Floor, PSC Building",
-    description:
-      "A versatile ground floor venue with sound support and flexible seating.",
-    availability: "Daily 7:00 AM – 8:00 PM",
-    photoDataUrl: "/frontend/assets/img/PSC Ground.png",
-    calendarAvailability: {
-      2: { booked: true },
-      3: { booked: false, times: ["08:00 - 11:00", "16:00 - 19:00"] },
-    },
-  },
-  {
-    id: "court",
-    name: "Court",
-    address: "Outdoor Sports Complex",
-    description:
-      "An open-air court setting with sound system options for performances and gatherings.",
-    availability: "Weekends 8:00 AM – 4:00 PM",
-    photoDataUrl: "/frontend/assets/img/Court.png",
-    calendarAvailability: {
-      5: { booked: true },
-      6: { booked: false, times: ["10:00 - 13:00", "15:00 - 18:00"] },
-    },
-  },
-];
+// DEFAULT_VENUES removed: student will only show faculty-provided venues
 
 let activeVenue = null;
 let viewCalendarMonth = new Date().getMonth();
@@ -74,14 +20,7 @@ function loadFacultyVenues() {
 }
 
 function getAllVenues() {
-  const facultyVenues = loadFacultyVenues();
-  const merged = [...DEFAULT_VENUES];
-  facultyVenues.forEach((fv) => {
-    if (!merged.find((v) => v.id === fv.id || v.name === fv.name)) {
-      merged.push(fv);
-    }
-  });
-  return merged;
+  return loadFacultyVenues();
 }
 
 function buildVenueMap(venues) {
@@ -122,7 +61,7 @@ function updateStudentStats() {
 
   document.getElementById("countProposed").textContent = proposed;
   document.getElementById("countPending").textContent = pending;
-  document.getElementById("countVenues").textContent = 4;
+  document.getElementById("countVenues").textContent = getAllVenues().length;
 }
 
 function renderMyEvents() {
@@ -553,6 +492,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   initializeProfileMenu();
+
+  // Initialize theme toggle inside profile dropdown (student)
+  (function initThemeToggleStudent() {
+    const toggle = document.getElementById("themeToggleStudent");
+    if (!toggle || typeof loadTheme !== "function") return;
+    try {
+      toggle.checked = loadTheme("student") === "dark";
+    } catch {}
+    toggle.addEventListener("change", () => {
+      const next = toggle.checked ? "dark" : "light";
+      if (typeof saveTheme === "function") saveTheme("student", next);
+      if (typeof applyTheme === "function") applyTheme(next);
+    });
+  })();
 
   document.addEventListener("click", (e) => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
