@@ -399,6 +399,50 @@ body {
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* Dark mode overrides */
+body.dark-mode {
+  --bg-primary: #071422;
+  --sidebar-bg: #05101a;
+  --sidebar-hover: #0f1a2b;
+  --accent-color: #7c9cff;
+  --accent-hover: #6b86ff;
+  --text-main: #e6eef8;
+  --text-muted: #9fb0c8;
+  --card-bg: #071b26;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --border: rgba(255,255,255,0.06);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+body.dark-mode .sidebar {
+  background-color: var(--sidebar-bg);
+}
+
+body.dark-mode .profile-button,
+body.dark-mode .notification-bell,
+body.dark-mode .stat-card,
+body.dark-mode .profile-dropdown,
+body.dark-mode .notification-popup,
+body.dark-mode .modal-content,
+body.dark-mode .form-card {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+body.dark-mode .menu-item {
+  color: var(--text-muted);
+}
+
+body.dark-mode .profile-option:hover,
+body.dark-mode .profile-button:hover,
+body.dark-mode .notification-bell:hover {
+  background-color: var(--sidebar-hover);
+}
+
 @media (max-width: 768px) {
   .stats-grid--three {
     grid-template-columns: 1fr;
