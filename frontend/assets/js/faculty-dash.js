@@ -69,7 +69,7 @@ function renderFacultySchedule() {
   const countBadge = document.getElementById("scheduleTrackerCount");
   if (!list) return;
 
-  const proposals = loadProposals().filter((p) => p.status !== "rejected");
+  const proposals = loadProposals().filter((p) => p.status !== "rejected" && p.status !== "cancelled");
 
   if (countBadge) {
     countBadge.textContent = `${proposals.length} event${proposals.length === 1 ? "" : "s"}`;
@@ -85,6 +85,7 @@ function renderFacultySchedule() {
     pending: { label: "Pending Review", cls: "status-pending" },
     accepted: { label: "Accepted", cls: "status-approved" },
     rejected: { label: "Rejected", cls: "status-rejected" },
+    cancelled: { label: "Cancelled", cls: "status-cancelled" },
   };
 
   list.innerHTML = proposals
@@ -562,6 +563,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   initializeProfileMenu();
+  // Initialize theme toggle inside profile dropdown (faculty)
+  (function initThemeToggleFaculty() {
+    const toggle = document.getElementById("themeToggleFaculty");
+    if (!toggle || typeof loadTheme !== "function") return;
+    try {
+      toggle.checked = loadTheme("faculty") === "dark";
+    } catch {}
+    toggle.addEventListener("change", () => {
+      const next = toggle.checked ? "dark" : "light";
+      if (typeof saveTheme === "function") saveTheme("faculty", next);
+      if (typeof applyTheme === "function") applyTheme(next);
+    });
+  })();
   document.addEventListener("click", (e) => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
   });
