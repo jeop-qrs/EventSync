@@ -23,6 +23,8 @@ const VENUE_COLORS = [
 const STORAGE_KEYS = {
   VENUES: "eventsync_faculty_venues",
   PROPOSALS: "eventsync_proposals",
+  THEME_STUDENT: "eventsync_theme_student",
+  THEME_FACULTY: "eventsync_theme_faculty",
 };
 
 function escapeHtml(text) {
@@ -181,3 +183,48 @@ function setActiveVenueCard(venueId) {
     card.classList.toggle("selected", card.dataset.venue === venueId);
   });
 }
+
+// Theme utilities (light / dark)
+
+function loadTheme(role) {
+  try {
+    if (role === "faculty") return localStorage.getItem(STORAGE_KEYS.THEME_FACULTY) || "light";
+    return localStorage.getItem(STORAGE_KEYS.THEME_STUDENT) || "light";
+  } catch {
+    return "light";
+  }
+}
+
+function saveTheme(role, theme) {
+  try {
+    if (role === "faculty") localStorage.setItem(STORAGE_KEYS.THEME_FACULTY, theme);
+    else localStorage.setItem(STORAGE_KEYS.THEME_STUDENT, theme);
+  } catch {}
+}
+
+function applyTheme(theme) {
+  if (typeof document === "undefined") return;
+  if (theme === "dark") document.body.classList.add("dark-mode");
+  else document.body.classList.remove("dark-mode");
+}
+
+function toggleTheme(role) {
+  if (!role) return;
+  const current = loadTheme(role);
+  const next = current === "dark" ? "light" : "dark";
+  saveTheme(role, next);
+  applyTheme(next);
+}
+
+// Expose for page scripts
+window.loadTheme = loadTheme;
+window.saveTheme = saveTheme;
+window.applyTheme = applyTheme;
+window.toggleTheme = toggleTheme;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const role = document.body?.dataset?.page;
+  if (role === "student" || role === "faculty") {
+    applyTheme(loadTheme(role));
+  }
+});
