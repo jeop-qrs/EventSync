@@ -1,3 +1,10 @@
+// =============================================
+// faculty-dash.js — Faculty Dashboard (faculty-dash.html)
+// Handles venue management, proposal review, schedule tracking,
+// and venue schedule editing with 3-slot-per-day model.
+// Depends on shared.js being loaded first.
+// =============================================
+
 let activeVenue = null;
 let viewCalendarMonth = new Date().getMonth();
 let viewCalendarYear = new Date().getFullYear();
@@ -5,7 +12,21 @@ let selectedCalendarDay = null;
 let facultyVenueData = {};
 let notifications = [];
 let unreadNotifications = 0;
+let editingVenueId = null; // Track if we're editing vs adding
 
+// =============================================
+// Venue Data — localStorage CRUD
+// =============================================
+
+/**
+ * loadVenues() / saveVenues(venues)
+ * Read/write the venues array to localStorage under STORAGE_KEYS.VENUES.
+ * Each venue: { id, name, address, description, availability, photoDataUrl,
+ *               calendarAvailability, timeSlots }
+ *
+ * calendarAvailability: { [day]: { booked: bool, times: string[] } }
+ * timeSlots: string[] — the 3 customizable time slots for this venue
+ */
 function loadVenues() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.VENUES);
@@ -21,16 +42,16 @@ function saveVenues(venues) {
 
 function buildVenueDataMap(venues) {
   const map = {};
-  venues.forEach((v) => {
-    map[v.id] = v;
-  });
+  venues.forEach((v) => { map[v.id] = v; });
   return map;
 }
 
+// =============================================
+// View Navigation
+// =============================================
+
 function switchView(viewId, element) {
-  document
-    .querySelectorAll(".view-section")
-    .forEach((v) => v.classList.remove("active-view"));
+  document.querySelectorAll(".view-section").forEach((v) => v.classList.remove("active-view"));
   document.getElementById(viewId)?.classList.add("active-view");
 
   const titles = {
@@ -42,14 +63,16 @@ function switchView(viewId, element) {
   if (titleEl) titleEl.textContent = titles[viewId] || "Dashboard";
 
   if (element) {
-    document
-      .querySelectorAll(".menu-item")
-      .forEach((i) => i.classList.remove("active"));
+    document.querySelectorAll(".menu-item").forEach((i) => i.classList.remove("active"));
     element.classList.add("active");
   }
 
   if (viewId === "proposals-view") renderProposals();
 }
+
+// =============================================
+// Dashboard Stats
+// =============================================
 
 function updateDashboardStats() {
   const proposals = loadProposals();
@@ -64,6 +87,10 @@ function updateDashboardStats() {
   document.getElementById("countVenues").textContent = venues.length;
 }
 
+// =============================================
+// Schedule Tracker (Dashboard)
+// =============================================
+
 function renderFacultySchedule() {
   const list = document.getElementById("facultyScheduleList");
   const countBadge = document.getElementById("scheduleTrackerCount");
@@ -76,8 +103,7 @@ function renderFacultySchedule() {
   }
 
   if (!proposals.length) {
-    list.innerHTML =
-      '<p class="empty-state">No scheduled events to display yet.</p>';
+    list.innerHTML = '<p class="empty-state">No scheduled events to display yet.</p>';
     return;
   }
 
@@ -110,6 +136,10 @@ function renderFacultySchedule() {
     })
     .join("");
 }
+
+// =============================================
+// Venue Grid Rendering
+// =============================================
 
 function renderFacultyVenueGrid() {
   const grid = document.getElementById("facultyVenueGrid");
@@ -157,11 +187,13 @@ function renderFacultyVenueGrid() {
     });
   });
 
-  document
-    .getElementById("openAddVenueBtn")
-    ?.addEventListener("click", openAddVenueModal);
+  document.getElementById("openAddVenueBtn")?.addEventListener("click", openAddVenueModal);
   updateDashboardStats();
 }
+
+// =============================================
+// Venue Detail Panel
+// =============================================
 
 function displayVenueDetail(venueId) {
   const venue = facultyVenueData[venueId];
@@ -175,17 +207,21 @@ function displayVenueDetail(venueId) {
   document.getElementById("detailVenueName").textContent = venue.name;
   document.getElementById("venueDescription").textContent = venue.description;
   document.getElementById("venueAddress").textContent = venue.address;
-  document.getElementById("venueAvailabilityText").textContent =
-    venue.availability;
+  document.getElementById("venueAvailabilityText").textContent = venue.availability;
 
+  // Show action buttons
   const deleteBtn = document.getElementById("deleteVenueBtn");
-  if (deleteBtn) {
-    deleteBtn.style.display = "inline-block";
-  }
+  const editBtn = document.getElementById("editVenueBtn");
+  if (deleteBtn) deleteBtn.style.display = "inline-block";
+  if (editBtn) editBtn.style.display = "inline-block";
 
   setActiveVenueCard(venueId);
   renderVenueCalendar(venueId);
 }
+
+// =============================================
+// Venue CRUD — Delete
+// =============================================
 
 function deleteVenue(venueId) {
   if (!confirm("Are you sure you want to delete this venue? This action cannot be undone.")) {
@@ -201,17 +237,160 @@ function deleteVenue(venueId) {
   saveVenues(venues);
 
   activeVenue = null;
+  resetVenueDetailPanel();
+  renderFacultyVenueGrid();
+  updateDashboardStats();
+  addNotification(`Venue "${venueName}" has been deleted.`, "Just now");
+}
+
+function resetVenueDetailPanel() {
   document.getElementById("detailVenueName").textContent = "Select a Venue";
   document.getElementById("venueDescription").textContent =
     "Pick a venue from the directory to view its details and availability.";
   document.getElementById("venueAddress").textContent = "-";
   document.getElementById("venueAvailabilityText").textContent = "-";
   document.getElementById("deleteVenueBtn").style.display = "none";
-
-  renderFacultyVenueGrid();
-  updateDashboardStats();
-  addNotification(`Venue "${venueName}" has been deleted.`, "Just now");
+  document.getElementById("editVenueBtn").style.display = "none";
 }
+
+// =============================================
+// Venue CRUD — Add / Edit Modal
+// =============================================
+
+function openAddVenueModal() {
+  editingVenueId = null;
+  document.getElementById("addVenueModalTitle").textContent = "Add New Venue";
+  document.getElementById("addVenueSubmitBtn").textContent = "Add Venue";
+  document.getElementById("addVenueForm")?.reset();
+  document.getElementById("venuePhotoName").textContent = "No file selected";
+
+  // Reset schedule editor
+  const s1 = document.getElementById("venueSlot1");
+  const s2 = document.getElementById("venueSlot2");
+  const s3 = document.getElementById("venueSlot3");
+  if (s1) s1.value = DEFAULT_TIME_SLOTS[0];
+  if (s2) s2.value = DEFAULT_TIME_SLOTS[1];
+  if (s3) s3.value = DEFAULT_TIME_SLOTS[2];
+
+  document.getElementById("addVenueModal")?.classList.remove("hidden");
+}
+
+/**
+ * openEditVenueModal(venueId)
+ * Pre-fills the Add Venue modal with existing venue data for editing.
+ */
+function openEditVenueModal(venueId) {
+  const venue = facultyVenueData[venueId];
+  if (!venue) return;
+
+  editingVenueId = venueId;
+  document.getElementById("addVenueModalTitle").textContent = "Edit Venue";
+  document.getElementById("addVenueSubmitBtn").textContent = "Save Changes";
+
+  // Pre-fill form fields
+  document.getElementById("venueNameInput").value = venue.name;
+  document.getElementById("venueAddressInput").value = venue.address;
+  document.getElementById("venueDescInput").value = venue.description;
+  document.getElementById("venueAvailInput").value = venue.availability;
+  document.getElementById("venuePhotoName").textContent = venue.photoDataUrl ? "Current photo loaded" : "No file selected";
+
+  // Pre-fill time slots
+  const slots = venue.timeSlots || DEFAULT_TIME_SLOTS;
+  const s1 = document.getElementById("venueSlot1");
+  const s2 = document.getElementById("venueSlot2");
+  const s3 = document.getElementById("venueSlot3");
+  if (s1) s1.value = slots[0] || DEFAULT_TIME_SLOTS[0];
+  if (s2) s2.value = slots[1] || DEFAULT_TIME_SLOTS[1];
+  if (s3) s3.value = slots[2] || DEFAULT_TIME_SLOTS[2];
+
+  document.getElementById("addVenueModal")?.classList.remove("hidden");
+}
+
+function closeAddVenueModal() {
+  document.getElementById("addVenueModal")?.classList.add("hidden");
+  editingVenueId = null;
+}
+
+/**
+ * handleAddVenueSubmit(e)
+ * Handles both Add and Edit venue submissions.
+ * Reads the time slots from the schedule editor fields.
+ */
+async function handleAddVenueSubmit(e) {
+  e.preventDefault();
+  const form = document.getElementById("addVenueForm");
+  if (form && !form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const name = document.getElementById("venueNameInput").value.trim();
+  const address = document.getElementById("venueAddressInput").value.trim();
+  const description = document.getElementById("venueDescInput").value.trim();
+  const availability = document.getElementById("venueAvailInput").value.trim();
+  const photoInput = document.getElementById("venuePhotoInput");
+  const photoFile = photoInput?.files?.[0];
+
+  // Read time slot values from the schedule editor
+  const timeSlots = [
+    document.getElementById("venueSlot1")?.value.trim() || DEFAULT_TIME_SLOTS[0],
+    document.getElementById("venueSlot2")?.value.trim() || DEFAULT_TIME_SLOTS[1],
+    document.getElementById("venueSlot3")?.value.trim() || DEFAULT_TIME_SLOTS[2],
+  ];
+
+  const venues = loadVenues();
+
+  if (editingVenueId) {
+    // ---- EDIT MODE ----
+    const venueIndex = venues.findIndex((v) => v.id === editingVenueId);
+    if (venueIndex === -1) return;
+
+    venues[venueIndex].name = name;
+    venues[venueIndex].address = address;
+    venues[venueIndex].description = description;
+    venues[venueIndex].availability = availability;
+    venues[venueIndex].timeSlots = timeSlots;
+
+    // Only update photo if a new one was selected
+    if (photoFile) {
+      venues[venueIndex].photoDataUrl = await readFileAsDataUrl(photoFile);
+    }
+
+    saveVenues(venues);
+    closeAddVenueModal();
+    renderFacultyVenueGrid();
+    displayVenueDetail(editingVenueId);
+    addNotification(`Venue "${name}" has been updated.`, "Just now");
+  } else {
+    // ---- ADD MODE ----
+    let photoDataUrl = "";
+    if (photoFile) {
+      photoDataUrl = await readFileAsDataUrl(photoFile);
+    }
+
+    const newVenue = {
+      id: `venue-${Date.now()}`,
+      name,
+      address,
+      description,
+      availability,
+      photoDataUrl,
+      calendarAvailability: {},
+      timeSlots,
+    };
+
+    venues.push(newVenue);
+    saveVenues(venues);
+    closeAddVenueModal();
+    renderFacultyVenueGrid();
+    displayVenueDetail(newVenue.id);
+    addNotification(`Venue "${name}" added to the directory.`, "Just now");
+  }
+}
+
+// =============================================
+// Calendar Rendering (Faculty View)
+// =============================================
 
 function getDayAvailabilityStatus(dayAvailability) {
   if (!dayAvailability) return "neutral";
@@ -232,11 +411,7 @@ function renderVenueCalendar(venueId) {
 
   const availability = venue.calendarAvailability || {};
   const firstDay = new Date(viewCalendarYear, viewCalendarMonth, 1).getDay();
-  const daysInMonth = new Date(
-    viewCalendarYear,
-    viewCalendarMonth + 1,
-    0,
-  ).getDate();
+  const daysInMonth = new Date(viewCalendarYear, viewCalendarMonth + 1, 0).getDate();
 
   let html = "";
   for (let i = 0; i < firstDay; i++) {
@@ -279,64 +454,15 @@ function shiftCalendarMonth(delta) {
   if (activeVenue) renderVenueCalendar(activeVenue);
 }
 
-function openAddVenueModal() {
-  document.getElementById("addVenueModal")?.classList.remove("hidden");
-  document.getElementById("addVenueForm")?.reset();
-  document.getElementById("venuePhotoName").textContent = "No file selected";
-}
+// =============================================
+// Proposals — Render, Accept, Reject
+// =============================================
 
-function closeAddVenueModal() {
-  document.getElementById("addVenueModal")?.classList.add("hidden");
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function handleAddVenueSubmit(e) {
-  e.preventDefault();
-  const form = document.getElementById("addVenueForm");
-  if (form && !form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-
-  const name = document.getElementById("venueNameInput").value.trim();
-  const address = document.getElementById("venueAddressInput").value.trim();
-  const description = document.getElementById("venueDescInput").value.trim();
-  const availability = document.getElementById("venueAvailInput").value.trim();
-  const photoInput = document.getElementById("venuePhotoInput");
-  const photoFile = photoInput?.files?.[0];
-
-  let photoDataUrl = "";
-  if (photoFile) {
-    photoDataUrl = await readFileAsDataUrl(photoFile);
-  }
-
-  const venues = loadVenues();
-  const newVenue = {
-    id: `venue-${Date.now()}`,
-    name,
-    address,
-    description,
-    availability,
-    photoDataUrl,
-    calendarAvailability: {},
-  };
-
-  venues.push(newVenue);
-  saveVenues(venues);
-  closeAddVenueModal();
-  renderFacultyVenueGrid();
-  displayVenueDetail(newVenue.id);
-  addNotification(`Venue "${name}" added to the directory.`, "Just now");
-}
-
+/**
+ * renderProposals()
+ * Reads proposals from localStorage and renders each as a card.
+ * Includes PDF preview iframe AND a download button for direct download.
+ */
 function renderProposals() {
   const grid = document.getElementById("proposalsGrid");
   const countBadge = document.getElementById("proposalsCount");
@@ -356,21 +482,24 @@ function renderProposals() {
   grid.innerHTML = proposals
     .map((p) => {
       const statusClass =
-        p.status === "accepted"
-          ? "status-approved"
-          : p.status === "rejected"
-            ? "status-rejected"
-            : p.status === "cancelled"
-              ? "status-cancelled"
-              : "status-pending";
+        p.status === "accepted" ? "status-approved"
+        : p.status === "rejected" ? "status-rejected"
+        : p.status === "cancelled" ? "status-cancelled"
+        : "status-pending";
       const statusLabel =
-        p.status === "accepted"
-          ? "Accepted"
-          : p.status === "rejected"
-            ? "Rejected"
-            : p.status === "cancelled"
-              ? "Cancelled"
-              : "Pending Review";
+        p.status === "accepted" ? "Accepted"
+        : p.status === "rejected" ? "Rejected"
+        : p.status === "cancelled" ? "Cancelled"
+        : "Pending Review";
+
+      // PDF section: preview iframe + download button
+      const pdfSection = p.pdfDataUrl
+        ? `<iframe src="${p.pdfDataUrl}" title="PDF preview for ${escapeHtml(p.title)}" class="proposal-pdf-frame"></iframe>
+           <div class="proposal-pdf-actions">
+             <a href="${p.pdfDataUrl}" download="${escapeHtml(p.pdfName || 'letter-request.pdf')}" class="btn btn-small proposal-download-btn">⬇ Download PDF</a>
+             <a href="${p.pdfDataUrl}" target="_blank" class="btn btn-small btn-secondary proposal-view-btn">↗ Open in New Tab</a>
+           </div>`
+        : '<p class="empty-state">No PDF attached.</p>';
 
       return `
       <article class="proposal-card" data-id="${escapeHtml(p.id)}">
@@ -386,12 +515,8 @@ function renderProposals() {
           ${p.status === "rejected" && p.rejectionReason ? `<p class="event-reject-reason"><strong>Rejection Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>` : ""}
         </div>
         <div class="proposal-pdf-preview">
-          <div class="proposal-pdf-label">Letter Request Preview</div>
-          ${
-            p.pdfDataUrl
-              ? `<iframe src="${p.pdfDataUrl}" title="PDF preview for ${escapeHtml(p.title)}" class="proposal-pdf-frame"></iframe>`
-              : '<p class="empty-state">No PDF attached.</p>'
-          }
+          <div class="proposal-pdf-label">Letter Request</div>
+          ${pdfSection}
         </div>
         <div class="proposal-card-actions">
           ${p.status === "pending" ? `
@@ -414,28 +539,23 @@ function renderProposals() {
     })
     .join("");
 
+  // Wire up Accept/Reject buttons
   grid.querySelectorAll(".proposal-accept-btn").forEach((btn) => {
     btn.addEventListener("click", () => acceptProposal(btn.dataset.id));
   });
   grid.querySelectorAll(".proposal-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document
-        .getElementById(`reject-form-${btn.dataset.id}`)
-        ?.classList.remove("hidden");
+      document.getElementById(`reject-form-${btn.dataset.id}`)?.classList.remove("hidden");
     });
   });
   grid.querySelectorAll(".proposal-cancel-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document
-        .getElementById(`reject-form-${btn.dataset.id}`)
-        ?.classList.add("hidden");
+      document.getElementById(`reject-form-${btn.dataset.id}`)?.classList.add("hidden");
     });
   });
   grid.querySelectorAll(".proposal-confirm-reject-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const reason = document
-        .getElementById(`reject-reason-${btn.dataset.id}`)
-        ?.value.trim();
+      const reason = document.getElementById(`reject-reason-${btn.dataset.id}`)?.value.trim();
       if (!reason) {
         alert("Please provide a reason for rejection.");
         return;
@@ -452,10 +572,7 @@ function acceptProposal(id) {
 
   proposal.status = "accepted";
   saveProposals(proposals);
-  addNotification(
-    `Proposal "${proposal.title}" has been accepted.`,
-    "Just now",
-  );
+  addNotification(`Proposal "${proposal.title}" has been accepted.`, "Just now");
   renderProposals();
   renderFacultySchedule();
   updateDashboardStats();
@@ -469,14 +586,15 @@ function rejectProposal(id, reason) {
   proposal.status = "rejected";
   proposal.rejectionReason = reason;
   saveProposals(proposals);
-  addNotification(
-    `Proposal "${proposal.title}" has been rejected.`,
-    "Just now",
-  );
+  addNotification(`Proposal "${proposal.title}" has been rejected.`, "Just now");
   renderProposals();
   renderFacultySchedule();
   updateDashboardStats();
 }
+
+// =============================================
+// Venue Photo Upload Zone
+// =============================================
 
 function initializeVenuePhotoZone() {
   const zone = document.getElementById("venuePhotoZone");
@@ -490,80 +608,49 @@ function initializeVenuePhotoZone() {
   });
 }
 
+// =============================================
+// DOMContentLoaded — Faculty Dashboard Init
+// =============================================
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Sidebar navigation
   document.querySelectorAll(".menu-item").forEach((item) => {
     item.addEventListener("click", () => switchView(item.dataset.view, item));
   });
 
-  document
-    .getElementById("calendarPrevMonth")
-    ?.addEventListener("click", () => shiftCalendarMonth(-1));
-  document
-    .getElementById("calendarNextMonth")
-    ?.addEventListener("click", () => shiftCalendarMonth(1));
+  // Calendar navigation
+  document.getElementById("calendarPrevMonth")?.addEventListener("click", () => shiftCalendarMonth(-1));
+  document.getElementById("calendarNextMonth")?.addEventListener("click", () => shiftCalendarMonth(1));
 
-  document
-    .getElementById("addVenueForm")
-    ?.addEventListener("submit", handleAddVenueSubmit);
-  document
-    .getElementById("closeAddVenueBtn")
-    ?.addEventListener("click", closeAddVenueModal);
-  document
-    .getElementById("cancelAddVenueBtn")
-    ?.addEventListener("click", closeAddVenueModal);
+  // Add/Edit Venue modal
+  document.getElementById("addVenueForm")?.addEventListener("submit", handleAddVenueSubmit);
+  document.getElementById("closeAddVenueBtn")?.addEventListener("click", closeAddVenueModal);
+  document.getElementById("cancelAddVenueBtn")?.addEventListener("click", closeAddVenueModal);
   document.getElementById("addVenueModal")?.addEventListener("click", (e) => {
     if (e.target.id === "addVenueModal") closeAddVenueModal();
   });
 
-  document
-    .getElementById("deleteVenueBtn")
-    ?.addEventListener("click", () => {
-      if (activeVenue) {
-        deleteVenue(activeVenue);
-      }
-    });
+  // Venue detail — Delete and Edit buttons
+  document.getElementById("deleteVenueBtn")?.addEventListener("click", () => {
+    if (activeVenue) deleteVenue(activeVenue);
+  });
+  document.getElementById("editVenueBtn")?.addEventListener("click", () => {
+    if (activeVenue) openEditVenueModal(activeVenue);
+  });
 
-  document
-    .getElementById("notificationBell")
-    ?.addEventListener("click", toggleNotificationPopup);
+  // Notification bell
+  document.getElementById("notificationBell")?.addEventListener("click", toggleNotificationPopup);
 
-  function initializeProfileMenu() {
-    const profileButton = document.getElementById("profileButton");
-    const viewProfileBtn = document.getElementById("viewProfileBtn");
-    const accountSettingsBtn = document.getElementById("accountSettingsBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    
-    if (profileButton) {
-      profileButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        toggleProfileDropdown();
-      });
-    }
+  // Profile dropdown
+  document.getElementById("profileButton")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleProfileDropdown();
+  });
 
-    if (viewProfileBtn) {
-      viewProfileBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        alert("View Profile page not yet implemented.");
-      });
-    }
+  // Profile & Settings modals (shared logic from shared.js)
+  initializeProfileAndSettingsModals("faculty");
 
-    if (accountSettingsBtn) {
-      accountSettingsBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        alert("Account Settings page not yet implemented.");
-      });
-    }
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        window.location.href = "index.html";
-      });
-    }
-  }
-
-  initializeProfileMenu();
-  // Initialize theme toggle inside profile dropdown (faculty)
+  // Theme toggle inside profile dropdown (faculty)
   (function initThemeToggleFaculty() {
     const toggle = document.getElementById("themeToggleFaculty");
     if (!toggle || typeof loadTheme !== "function") return;
@@ -576,9 +663,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (typeof applyTheme === "function") applyTheme(next);
     });
   })();
+
+  // Close dropdown on outside click
   document.addEventListener("click", (e) => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
   });
+
+  // Initialize all
   initializeVenuePhotoZone();
   renderFacultyVenueGrid();
   renderFacultySchedule();
@@ -586,6 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDashboardStats();
   updateNotificationBadge();
 
+  // Listen for cross-tab updates
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEYS.PROPOSALS) {
       renderProposals();

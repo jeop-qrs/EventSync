@@ -474,20 +474,94 @@
         </div>
       </div>
 
-      <div class="modal hidden" id="successModal">
-        <div class="modal-overlay" id="successModalOverlay"></div>
-        <div class="modal-content modal-content--success">
-          <div class="modal-body">
+      <!-- Success Modal (absolute center of screen) -->
+      <div class="modal-overlay hidden" id="successModal">
+        <div class="modal-overlay-bg" id="successModalOverlay"></div>
+        <div class="modal-card modal-card--success">
+          <div class="modal-body-center">
             <div class="success-icon">✓</div>
             <h2>Booking Request Submitted</h2>
             <p>Booking request successfully submitted to the faculty.</p>
-            <div class="form-actions">
+            <div class="form-actions" style="justify-content:center;">
               <button type="button" class="btn" id="successModalBtn">Got It</button>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- View Profile Modal -->
+      <div class="modal-overlay hidden" id="profileModal">
+        <div class="modal-overlay-bg" id="profileModalOverlay"></div>
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>View Profile</h3>
+            <button type="button" class="modal-close" id="profileModalClose">&times;</button>
+          </div>
+          <form id="profileForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="profileDisplayName">Display Name <span class="required-indicator" aria-label="required">*</span></label>
+              <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Juan Dela Cruz" />
+            </div>
+            <div class="form-group">
+              <label for="profileEmail">Email Address</label>
+              <input type="email" id="profileEmail" class="form-control" placeholder="e.g., juan@email.com" />
+            </div>
+            <div class="form-group">
+              <label for="profileIdNumber">Student Number</label>
+              <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., 2021001234" />
+            </div>
+            <div class="form-group" id="profileDeptGroup" style="display:none;">
+              <label for="profileDepartment">Department</label>
+              <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn" id="profileModalSave">Save Profile</button>
+              <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div class="modal-overlay hidden" id="settingsModal">
+        <div class="modal-overlay-bg" id="settingsModalOverlay"></div>
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>Settings</h3>
+            <button type="button" class="modal-close" id="settingsModalClose">&times;</button>
+          </div>
+          <form id="settingsForm" onsubmit="return false;">
+            <div class="form-group">
+              <label class="settings-toggle-row">
+                <span>Enable Notifications</span>
+                <input type="checkbox" id="settingsNotifications" checked />
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="settingsLanguage">Language Preference</label>
+              <select id="settingsLanguage" class="form-control">
+                <option value="en">English</option>
+                <option value="fil">Filipino</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
+              <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-notification hidden" id="profileSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Profile saved successfully.</div>
+    </div>
+    <div class="toast-notification hidden" id="settingsSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Settings saved successfully.</div>
+    </div>
 
     <script src="/frontend/assets/js/shared.js"></script>
     <script src="/frontend/assets/js/student.js"></script>

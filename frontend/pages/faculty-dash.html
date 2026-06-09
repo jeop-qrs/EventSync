@@ -173,9 +173,12 @@
             <aside class="venue-detail-panel">
               <div class="detail-sidebar-inner">
                 <div class="venue-info">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <h3 id="detailVenueName">Select a Venue</h3>
-                    <button type="button" id="deleteVenueBtn" class="btn btn-danger" style="display: none;" aria-label="Delete venue">Delete</button>
+                    <div style="display:flex;gap:8px;">
+                      <button type="button" id="editVenueBtn" class="btn btn-small" style="display: none;" aria-label="Edit venue">Edit</button>
+                      <button type="button" id="deleteVenueBtn" class="btn btn-danger btn-small" style="display: none;" aria-label="Delete venue">Delete</button>
+                    </div>
                   </div>
                   <p id="venueDescription">
                     Pick a venue from the directory to view its details and
@@ -334,6 +337,23 @@
             ></textarea>
           </div>
           <div class="form-group">
+            <label>Daily Time Slots (3 per day) <span class="required-indicator" aria-label="required">*</span></label>
+            <div class="schedule-slots-editor">
+              <div class="schedule-slot-row">
+                <label for="venueSlot1">Slot 1</label>
+                <input type="text" id="venueSlot1" class="form-control" value="08:00 - 11:00" required />
+              </div>
+              <div class="schedule-slot-row">
+                <label for="venueSlot2">Slot 2</label>
+                <input type="text" id="venueSlot2" class="form-control" value="12:00 - 15:00" required />
+              </div>
+              <div class="schedule-slot-row">
+                <label for="venueSlot3">Slot 3</label>
+                <input type="text" id="venueSlot3" class="form-control" value="16:00 - 19:00" required />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
             <label for="venuePhotoInput">Photo Upload</label>
             <div class="photo-upload-zone" id="venuePhotoZone">
               <span>Click or drag an image here</span>
@@ -347,7 +367,7 @@
             />
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn">Add Venue</button>
+            <button type="submit" class="btn" id="addVenueSubmitBtn">Add Venue</button>
             <button
               type="button"
               class="btn btn-secondary"
@@ -358,6 +378,79 @@
           </div>
         </form>
       </div>
+    </div>
+
+    <!-- View Profile Modal -->
+    <div class="modal-overlay hidden" id="profileModal">
+      <div class="modal-overlay-bg" id="profileModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>View Profile</h3>
+          <button type="button" class="modal-close" id="profileModalClose">&times;</button>
+        </div>
+        <form id="profileForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="profileDisplayName">Display Name <span class="required-indicator" aria-label="required">*</span></label>
+            <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Dr. Santos" />
+          </div>
+          <div class="form-group">
+            <label for="profileEmail">Email Address</label>
+            <input type="email" id="profileEmail" class="form-control" placeholder="e.g., santos@university.edu" />
+          </div>
+          <div class="form-group">
+            <label for="profileIdNumber">Faculty ID</label>
+            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., FAC-2024-001" />
+          </div>
+          <div class="form-group" id="profileDeptGroup">
+            <label for="profileDepartment">Department</label>
+            <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" id="profileModalSave">Save Profile</button>
+            <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal-overlay-bg" id="settingsModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button type="button" class="modal-close" id="settingsModalClose">&times;</button>
+        </div>
+        <form id="settingsForm" onsubmit="return false;">
+          <div class="form-group">
+            <label class="settings-toggle-row">
+              <span>Enable Notifications</span>
+              <input type="checkbox" id="settingsNotifications" checked />
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="settingsLanguage">Language Preference</label>
+            <select id="settingsLanguage" class="form-control">
+              <option value="en">English</option>
+              <option value="fil">Filipino</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
+            <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-notification hidden" id="profileSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Profile saved successfully.</div>
+    </div>
+    <div class="toast-notification hidden" id="settingsSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Settings saved successfully.</div>
     </div>
 
     <script src="/frontend/assets/js/shared.js"></script>

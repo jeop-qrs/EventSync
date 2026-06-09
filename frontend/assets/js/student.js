@@ -1,4 +1,9 @@
-// DEFAULT_VENUES removed: student will only show faculty-provided venues
+// =============================================
+// student.js — Student Dashboard (index.html)
+// Handles venue browsing, calendar interaction with 3-slot-per-day
+// time logic, event application form, and proposal management.
+// Depends on shared.js being loaded first.
+// =============================================
 
 let activeVenue = null;
 let viewCalendarMonth = new Date().getMonth();
@@ -10,6 +15,16 @@ let notifications = [];
 let unreadNotifications = 0;
 let cancelEventId = null;
 
+// =============================================
+// Venue Data — Read from Faculty-managed localStorage
+// =============================================
+
+/**
+ * loadFacultyVenues()
+ * Reads venues array from localStorage. These are created/managed by faculty.
+ * Each venue: { id, name, address, description, availability, photoDataUrl,
+ *               calendarAvailability, timeSlots }
+ */
 function loadFacultyVenues() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.VENUES);
@@ -29,6 +44,10 @@ function buildVenueMap(venues) {
   return map;
 }
 
+// =============================================
+// View Navigation
+// =============================================
+
 function switchView(viewId, element) {
   document.querySelectorAll(".view-section").forEach((v) => v.classList.remove("active-view"));
   document.getElementById(viewId)?.classList.add("active-view");
@@ -46,13 +65,20 @@ function switchView(viewId, element) {
   }
 }
 
+// =============================================
+// Session Start
+// =============================================
+
 function startSession() {
   document.getElementById("landingOverlay").style.display = "none";
   document.querySelector(".sidebar")?.classList.remove("hidden");
   document.querySelector(".main-workspace")?.classList.remove("hidden");
-  document.querySelector(".role-simulator")?.classList.remove("hidden");
   refreshAll();
 }
+
+// =============================================
+// Dashboard Stats
+// =============================================
 
 function updateStudentStats() {
   const proposals = loadProposals();
@@ -63,6 +89,10 @@ function updateStudentStats() {
   document.getElementById("countPending").textContent = pending;
   document.getElementById("countVenues").textContent = getAllVenues().length;
 }
+
+// =============================================
+// My Submitted Events List
+// =============================================
 
 function renderMyEvents() {
   const list = document.getElementById("myEventsList");
@@ -118,13 +148,13 @@ function renderMyEvents() {
   });
 }
 
+// =============================================
+// Cancel Event Flow
+// =============================================
+
 function cancelEvent(id) {
   cancelEventId = id;
   document.getElementById("cancelReason").value = "";
-  document.getElementById("cancelReasonModal").classList.remove("hidden");
-}
-
-function openCancelReasonModal() {
   document.getElementById("cancelReasonModal").classList.remove("hidden");
 }
 
@@ -150,6 +180,10 @@ function confirmCancellation() {
   closeCancelReasonModal();
   refreshAll();
 }
+
+// =============================================
+// Venue Grid Rendering
+// =============================================
 
 function renderStudentVenueGrid() {
   const grid = document.getElementById("studentVenueGrid");
@@ -206,6 +240,10 @@ function populateVenueSelect(venues) {
   if (current) select.value = current;
 }
 
+// =============================================
+// Venue Detail Panel
+// =============================================
+
 function displayVenueDetail(venueId) {
   const venue = studentVenueData[venueId];
   if (!venue) return;
@@ -225,52 +263,106 @@ function displayVenueDetail(venueId) {
   renderVenueCalendar(venueId);
 }
 
-function getDayAvailabilityStatus(dayAvailability) {
-  if (!dayAvailability) return "neutral";
-  if (dayAvailability.booked) return "booked";
-  if (dayAvailability.times?.length) return "available";
-  return "neutral";
+// =============================================
+// Calendar — 3-Slot-Per-Day Time Logic
+// =============================================
+
+/**
+ * getDayAvailabilityStatus(venueId, day)
+ * Determines the status of a calendar day for a given venue by checking
+ * how many of the 3 time slots are booked.
+ * Returns: "booked" (all 3 taken), "available" (some free), "neutral" (no data)
+ */
+function getDayAvailabilityStatus(venueId, day) {
+  const venue = studentVenueData[venueId];
+  if (!venue) return "neutral";
+
+  const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
+  const bookedCount = slots.filter((s) => s.booked).length;
+  const totalSlots = slots.length;
+
+  if (totalSlots === 0) return "neutral";
+  if (bookedCount >= totalSlots) return "booked";
+  if (bookedCount > 0) return "partial";
+  return "available";
 }
 
-function updateCalendarDayDetail(venueId, day, dayAvailability) {
+/**
+ * updateCalendarDayDetail(venueId, day)
+ * Shows the time slot detail panel below the calendar grid.
+ * Each slot is rendered as a clickable item (if available) or a disabled
+ * item showing "Booked" with the reserved time.
+ */
+function updateCalendarDayDetail(venueId, day) {
   const detailPanel = document.getElementById("calendarDayDetail");
   const detailTitle = document.getElementById("calendarDayDetailTitle");
   const detailTimes = document.getElementById("calendarDayTimes");
   if (!detailPanel || !detailTitle || !detailTimes) return;
 
-  if (!day || !dayAvailability) {
+  if (!day || !studentVenueData[venueId]) {
     detailPanel.hidden = true;
     return;
   }
 
-  const status = getDayAvailabilityStatus(dayAvailability);
+  const venue = studentVenueData[venueId];
+  const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
+  const bookedCount = slots.filter((s) => s.booked).length;
+
   detailPanel.hidden = false;
 
-  if (status === "booked") {
+  if (bookedCount >= slots.length) {
     detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear} — Fully booked`;
-    detailTimes.innerHTML = '<li class="calendar-day-times-empty">This date is fully booked.</li>';
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">All 3 time slots are booked for this date.</li>';
     return;
   }
-  if (status === "available") {
-    detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear} — Available times`;
-    detailTimes.innerHTML = dayAvailability.times.map((t) => `<li>${escapeHtml(t)}</li>`).join("");
-    return;
-  }
-  detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear}`;
-  detailTimes.innerHTML = '<li class="calendar-day-times-empty">No availability listed for this date.</li>';
+
+  const heading = bookedCount > 0 ? "Limited availability" : "Available times";
+  detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear} — ${heading}`;
+
+  // Render each slot as interactive list item
+  detailTimes.innerHTML = slots.map((slot) => {
+    if (slot.booked) {
+      return `
+        <li class="time-slot-item time-slot-item--booked" aria-disabled="true">
+          <span class="time-slot-time">${escapeHtml(slot.time)}</span>
+          <span class="time-slot-badge time-slot-badge--booked">Booked</span>
+        </li>`;
+    }
+    const isSelected = selectedCalendarTime === slot.time;
+    return `
+      <li class="time-slot-item time-slot-item--available${isSelected ? " time-slot-item--selected" : ""}"
+          data-time="${escapeHtml(slot.time)}" tabindex="0" role="button">
+        <span class="time-slot-time">${escapeHtml(slot.time)}</span>
+        <span class="time-slot-badge time-slot-badge--available">${isSelected ? "✓ Selected" : "Available"}</span>
+      </li>`;
+  }).join("");
+
+  // Attach click handlers to available slots
+  detailTimes.querySelectorAll(".time-slot-item--available").forEach((item) => {
+    item.addEventListener("click", () => {
+      selectedCalendarTime = item.dataset.time;
+      // Re-render to update selected state
+      updateCalendarDayDetail(venueId, day);
+    });
+    item.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectedCalendarTime = item.dataset.time;
+        updateCalendarDayDetail(venueId, day);
+      }
+    });
+  });
 }
 
 function selectCalendarDay(venueId, day) {
   selectedCalendarDay = day;
-  const venue = studentVenueData[venueId];
-  const dayAvailability = venue?.calendarAvailability?.[day];
-  selectedCalendarTime = dayAvailability?.times?.[0] || "";
+  selectedCalendarTime = ""; // Reset time when changing day
 
   document.querySelectorAll("#venueCalendarDates .calendar-date[data-day]").forEach((cell) => {
     cell.classList.toggle("is-selected", Number(cell.dataset.day) === day);
   });
 
-  updateCalendarDayDetail(venueId, day, dayAvailability);
+  updateCalendarDayDetail(venueId, day);
 }
 
 function renderVenueCalendar(venueId) {
@@ -283,7 +375,6 @@ function renderVenueCalendar(venueId) {
     monthLabel.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${viewCalendarYear}`;
   }
 
-  const availability = venue.calendarAvailability || {};
   const firstDay = new Date(viewCalendarYear, viewCalendarMonth, 1).getDay();
   const daysInMonth = new Date(viewCalendarYear, viewCalendarMonth + 1, 0).getDate();
 
@@ -293,16 +384,18 @@ function renderVenueCalendar(venueId) {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const dayAvailability = availability[day];
-    const status = getDayAvailabilityStatus(dayAvailability);
-    const times = dayAvailability?.times || [];
+    const status = getDayAvailabilityStatus(venueId, day);
     const isSelected = selectedCalendarDay === day;
-    const slotsHTML =
-      status === "available"
-        ? `<div class="day-times">${formatCalendarDaySlots(times)}</div>`
-        : status === "booked"
-          ? '<span class="day-status-label">Booked</span>'
-          : "";
+    const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
+    const availableSlots = slots.filter((s) => !s.booked);
+    const bookedSlots = slots.filter((s) => s.booked);
+
+    let slotsHTML = "";
+    if (status === "booked") {
+      slotsHTML = '<span class="day-status-label">Booked</span>';
+    } else if (status === "available" || status === "partial") {
+      slotsHTML = `<div class="day-times">${formatCalendarDaySlots(availableSlots.map(s => s.time))}</div>`;
+    }
 
     html += `
       <button type="button" class="calendar-date ${status}${isSelected ? " is-selected" : ""}" data-day="${day}">
@@ -317,6 +410,15 @@ function renderVenueCalendar(venueId) {
   calendarDates.querySelectorAll(".calendar-date[data-day]").forEach((cell) => {
     cell.addEventListener("click", () => selectCalendarDay(venueId, Number(cell.dataset.day)));
   });
+
+  // Restore selection if within valid range
+  if (selectedCalendarDay && selectedCalendarDay <= daysInMonth && selectedCalendarDay >= 1) {
+    updateCalendarDayDetail(venueId, selectedCalendarDay);
+  } else {
+    selectedCalendarDay = null;
+    const detailPanel = document.getElementById("calendarDayDetail");
+    if (detailPanel) detailPanel.hidden = true;
+  }
 }
 
 function shiftCalendarMonth(delta) {
@@ -328,38 +430,50 @@ function shiftCalendarMonth(delta) {
   if (activeVenue) renderVenueCalendar(activeVenue);
 }
 
-function formatCalendarInputDate(year, month, day) {
-  const paddedMonth = String(month + 1).padStart(2, "0");
-  const paddedDay = String(day).padStart(2, "0");
-  return `${year}-${paddedMonth}-${paddedDay}`;
-}
+// =============================================
+// Book Now — Calendar → Form Population
+// =============================================
 
+/**
+ * openReservationWithVenue(venueName)
+ * Called when "Book Now" is clicked. Populates the event application form
+ * with the selected venue, date, and time slot from the calendar.
+ */
 function openReservationWithVenue(venueName) {
   const select = document.getElementById("eventVenue");
   const dateInput = document.getElementById("eventDate");
   const timeInput = document.getElementById("eventTime");
+
+  // Set the venue dropdown
   if (select) select.value = venueName;
+
+  // Set the date from the calendar selection
   if (dateInput && selectedCalendarDay) {
-    dateInput.value = formatCalendarInputDate(viewCalendarYear, viewCalendarMonth, selectedCalendarDay);
+    dateInput.value = formatDateString(viewCalendarYear, viewCalendarMonth, selectedCalendarDay);
   }
+
+  // Set the time from the selected slot (use the start time for the time input)
   if (timeInput && selectedCalendarTime) {
     const normalizedTime = selectedCalendarTime.split(" - ")[0];
     timeInput.value = normalizedTime;
   }
+
   switchView("schedule-view", document.querySelector('[data-view="schedule-view"]'));
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+// =============================================
+// Form Submission — Save to localStorage
+// =============================================
 
+/**
+ * handleFormSubmission(e)
+ * Intercepts form submit (preventDefault), validates all fields,
+ * converts the PDF to a base64 data URL, and saves the proposal
+ * to localStorage so the Faculty dashboard can read it.
+ */
 async function handleFormSubmission(e) {
-  e.preventDefault();
+  e.preventDefault(); // Prevent page reload
+
   const form = document.getElementById("scheduleForm");
   if (form && !form.checkValidity()) {
     form.reportValidity();
@@ -380,8 +494,13 @@ async function handleFormSubmission(e) {
     return;
   }
 
+  // Convert PDF to base64 data URL so faculty can download it from localStorage
   const pdfDataUrl = await readFileAsDataUrl(pdfFile);
 
+  /**
+   * Build the proposal object and prepend it to the proposals array.
+   * This data is the bridge between Student and Faculty POVs.
+   */
   const proposals = loadProposals();
   proposals.unshift({
     id: `proposal-${Date.now()}`,
@@ -392,16 +511,21 @@ async function handleFormSubmission(e) {
     time,
     attendees,
     pdfName: pdfFile.name,
-    pdfDataUrl,
+    pdfDataUrl,           // Base64 PDF for faculty to view/download
     status: "pending",
     rejectionReason: "",
     submittedAt: new Date().toISOString(),
   });
 
+  // Write to localStorage — faculty-dash.js reads this same key
   saveProposals(proposals);
   addNotification(`Proposal "${title}" submitted. Awaiting faculty review.`, "Just now");
   showSuccessModal();
 }
+
+// =============================================
+// Success Modal (Centered)
+// =============================================
 
 function showSuccessModal() {
   document.getElementById("successModal")?.classList.remove("hidden");
@@ -415,17 +539,27 @@ function closeSuccessModal() {
   refreshAll();
 }
 
+// =============================================
+// Refresh All UI
+// =============================================
+
 function refreshAll() {
   updateStudentStats();
   renderMyEvents();
   renderStudentVenueGrid();
 }
 
+// =============================================
+// DOMContentLoaded — Student Dashboard Init
+// =============================================
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Sidebar navigation
   document.querySelectorAll(".menu-item").forEach((item) => {
     item.addEventListener("click", () => switchView(item.dataset.view, item));
   });
 
+  // Landing page role buttons
   document.getElementById("student-btn")?.addEventListener("click", () => {
     window.location.href = "users.html";
   });
@@ -433,10 +567,12 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "faculty.html";
   });
 
+  // Dashboard "Book Now" CTA → go to venues view
   document.getElementById("dashboardBookNowBtn")?.addEventListener("click", () => {
     switchView("venues-view", document.querySelector('[data-view="venues-view"]'));
   });
 
+  // Venue detail "Book Now" button → populate form and go to schedule view
   document.getElementById("bookNowBtn")?.addEventListener("click", () => {
     if (!activeVenue) {
       alert("Please select a venue before booking.");
@@ -446,54 +582,29 @@ document.addEventListener("DOMContentLoaded", () => {
     openReservationWithVenue(venue?.name || "");
   });
 
+  // Form submit
   document.getElementById("scheduleForm")?.addEventListener("submit", handleFormSubmission);
   document.getElementById("scheduleCancelBtn")?.addEventListener("click", () => {
     switchView("dashboard-view", document.querySelector('[data-view="dashboard-view"]'));
   });
 
+  // Calendar navigation
   document.getElementById("calendarPrevMonth")?.addEventListener("click", () => shiftCalendarMonth(-1));
   document.getElementById("calendarNextMonth")?.addEventListener("click", () => shiftCalendarMonth(1));
 
+  // Notification bell
   document.getElementById("notificationBell")?.addEventListener("click", toggleNotificationPopup);
 
-  function initializeProfileMenu() {
-    const profileButton = document.getElementById("profileButton");
-    const viewProfileBtn = document.getElementById("viewProfileBtn");
-    const accountSettingsBtn = document.getElementById("accountSettingsBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    
-    if (profileButton) {
-      profileButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        toggleProfileDropdown();
-      });
-    }
+  // Profile dropdown
+  document.getElementById("profileButton")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleProfileDropdown();
+  });
 
-    if (viewProfileBtn) {
-      viewProfileBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        alert("View Profile page not yet implemented.");
-      });
-    }
+  // Profile & Settings modals (shared logic from shared.js)
+  initializeProfileAndSettingsModals("student");
 
-    if (accountSettingsBtn) {
-      accountSettingsBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        alert("Account Settings page not yet implemented.");
-      });
-    }
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        closeProfileDropdown();
-        window.location.href = "index.html";
-      });
-    }
-  }
-
-  initializeProfileMenu();
-
-  // Initialize theme toggle inside profile dropdown (student)
+  // Theme toggle inside profile dropdown
   (function initThemeToggleStudent() {
     const toggle = document.getElementById("themeToggleStudent");
     if (!toggle || typeof loadTheme !== "function") return;
@@ -507,10 +618,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
+  // Close dropdown on outside click
   document.addEventListener("click", (e) => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
   });
 
+  // Initialize PDF dropzone
   initializePdfDropzone();
   updateNotificationBadge();
 
@@ -523,14 +636,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cancelReasonCancel")?.addEventListener("click", closeCancelReasonModal);
   document.getElementById("cancelReasonOverlay")?.addEventListener("click", closeCancelReasonModal);
 
+  // Success modal handlers
   document.getElementById("successModalBtn")?.addEventListener("click", closeSuccessModal);
   document.getElementById("successModalOverlay")?.addEventListener("click", closeSuccessModal);
 
+  // Auto-start session if redirected from login
   const params = new URLSearchParams(window.location.search);
   if (params.get("role") === "Student") {
     startSession();
   }
 
+  // Listen for cross-tab localStorage changes to stay in sync
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEYS.PROPOSALS || e.key === STORAGE_KEYS.VENUES) refreshAll();
   });
