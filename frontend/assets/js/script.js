@@ -695,4 +695,301 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // =============================================
+  // Auth Panel Toggle (Login ↔ Sign Up)
+  // =============================================
+  initializeAuthPanels();
+  initializePasswordToggles();
+  initializeStudentSignUp();
+  initializeFacultySignUp();
 });
+
+// =============================================
+// Auth Panel Toggle Logic
+// =============================================
+function initializeAuthPanels() {
+  const showSignUpBtn = document.getElementById("showSignUpBtn");
+  const showLoginBtn = document.getElementById("showLoginBtn");
+  const signUpBackBtn = document.getElementById("signUpBackBtn");
+
+  if (showSignUpBtn) {
+    showSignUpBtn.addEventListener("click", () => switchAuthPanel("signup"));
+  }
+
+  if (showLoginBtn) {
+    showLoginBtn.addEventListener("click", () => switchAuthPanel("login"));
+  }
+
+  if (signUpBackBtn) {
+    signUpBackBtn.addEventListener("click", () => switchAuthPanel("login"));
+  }
+}
+
+function switchAuthPanel(mode) {
+  const loginPanel = document.getElementById("loginPanel");
+  const signUpPanel = document.getElementById("signUpPanel");
+  const subtitle = document.getElementById("authSubtitle");
+  const title = document.getElementById("authTitle");
+  const copy = document.getElementById("authCopy");
+  const terms = document.getElementById("authTerms");
+
+  if (!loginPanel || !signUpPanel) return;
+
+  // Detect which portal we are on
+  const pathname = window.location.pathname || "";
+  const isFacultyPage =
+    pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
+  const portalLabel = isFacultyPage ? "Faculty" : "Student";
+
+  if (mode === "signup") {
+    loginPanel.classList.add("auth-panel--hidden");
+    signUpPanel.classList.remove("auth-panel--hidden");
+
+    // Re-trigger animation
+    signUpPanel.style.animation = "none";
+    signUpPanel.offsetHeight; // force reflow
+    signUpPanel.style.animation = "";
+
+    if (subtitle) subtitle.textContent = `${portalLabel.toUpperCase()} REGISTRATION`;
+    if (title) title.textContent = `Create Your Account`;
+    if (copy) copy.textContent = `Fill in the details below to get started`;
+    if (terms) terms.textContent = `By creating an account, you agree to the EventSync Terms of Use and Privacy Statement.`;
+  } else {
+    signUpPanel.classList.add("auth-panel--hidden");
+    loginPanel.classList.remove("auth-panel--hidden");
+
+    // Re-trigger animation
+    loginPanel.style.animation = "none";
+    loginPanel.offsetHeight;
+    loginPanel.style.animation = "";
+
+    if (subtitle) subtitle.textContent = `${portalLabel.toUpperCase()} LOGIN`;
+    if (title) title.textContent = `${portalLabel} Portal`;
+    if (copy) copy.textContent = `Please sign in with your account`;
+    if (terms) {
+      terms.textContent = isFacultyPage
+        ? `Use your faculty credentials to log in.`
+        : `Use your institutional credentials to log in.`;
+    }
+  }
+}
+
+// =============================================
+// Password Visibility Toggle
+// =============================================
+function initializePasswordToggles() {
+  document.querySelectorAll(".password-toggle").forEach((toggleBtn) => {
+    toggleBtn.addEventListener("click", () => {
+      const targetId = toggleBtn.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+
+      // Toggle eye icons
+      const openIcon = toggleBtn.querySelector(".eye-open");
+      const closedIcon = toggleBtn.querySelector(".eye-closed");
+      if (openIcon && closedIcon) {
+        openIcon.style.display = isPassword ? "none" : "block";
+        closedIcon.style.display = isPassword ? "block" : "none";
+      }
+
+      // Update aria label
+      toggleBtn.setAttribute(
+        "aria-label",
+        isPassword ? "Hide password" : "Show password"
+      );
+    });
+  });
+}
+
+// =============================================
+// Student Sign Up
+// =============================================
+function initializeStudentSignUp() {
+  const form = document.getElementById("studentSignUpForm");
+  if (!form) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    // Clear previous errors
+    clearFormErrors(form);
+
+    const studentNumber = document.getElementById("signUpStudentNumber").value.trim();
+    const fullName = document.getElementById("signUpFullName").value.trim();
+    const password = document.getElementById("signUpPassword").value;
+    const confirmPassword = document.getElementById("signUpConfirmPassword").value;
+
+    // Validate
+    let hasError = false;
+
+    if (password.length < 8) {
+      showFieldError("signUpPassword", "Password must be at least 8 characters.");
+      hasError = true;
+    }
+
+    if (password !== confirmPassword) {
+      showFieldError("signUpConfirmPassword", "Passwords do not match.");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    // Store user in localStorage (front-end demo)
+    const users = loadStudentUsers();
+    const existing = users.find((u) => u.studentNumber === studentNumber);
+    if (existing) {
+      showFieldError("signUpStudentNumber", "This student number is already registered.");
+      return;
+    }
+
+    users.push({
+      studentNumber,
+      fullName,
+      password, // In production, this should be hashed server-side
+      createdAt: new Date().toISOString(),
+    });
+    saveStudentUsers(users);
+
+    // Reset form and switch back to login
+    form.reset();
+    switchAuthPanel("login");
+    showToast();
+  });
+}
+
+function loadStudentUsers() {
+  try {
+    const raw = localStorage.getItem("eventsync_student_users");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStudentUsers(users) {
+  localStorage.setItem("eventsync_student_users", JSON.stringify(users));
+}
+
+// =============================================
+// Faculty Sign Up
+// =============================================
+function initializeFacultySignUp() {
+  const form = document.getElementById("facultySignUpForm");
+  if (!form) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    clearFormErrors(form);
+
+    const username = document.getElementById("signUpFacultyUsername").value.trim();
+    const password = document.getElementById("signUpFacultyPassword").value;
+    const confirmPassword = document.getElementById("signUpFacultyConfirmPassword").value;
+
+    let hasError = false;
+
+    if (password.length < 8) {
+      showFieldError("signUpFacultyPassword", "Password must be at least 8 characters.");
+      hasError = true;
+    }
+
+    if (password !== confirmPassword) {
+      showFieldError("signUpFacultyConfirmPassword", "Passwords do not match.");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const users = loadFacultyUsers();
+    const existing = users.find((u) => u.username === username);
+    if (existing) {
+      showFieldError("signUpFacultyUsername", "This username is already registered.");
+      return;
+    }
+
+    users.push({
+      username,
+      password,
+      createdAt: new Date().toISOString(),
+    });
+    saveFacultyUsers(users);
+
+    form.reset();
+    switchAuthPanel("login");
+    showToast();
+  });
+}
+
+function loadFacultyUsers() {
+  try {
+    const raw = localStorage.getItem("eventsync_faculty_users");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFacultyUsers(users) {
+  localStorage.setItem("eventsync_faculty_users", JSON.stringify(users));
+}
+
+// =============================================
+// Form Validation Helpers
+// =============================================
+function showFieldError(fieldId, message) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+
+  input.classList.add("input-error");
+
+  // Find the parent form-group and append error message
+  const formGroup = input.closest(".form-group");
+  if (formGroup) {
+    const errorEl = document.createElement("small");
+    errorEl.className = "form-error-text";
+    errorEl.textContent = message;
+    formGroup.appendChild(errorEl);
+  }
+
+  // Remove error on input
+  input.addEventListener(
+    "input",
+    () => {
+      input.classList.remove("input-error");
+      const existing = formGroup?.querySelector(".form-error-text");
+      if (existing) existing.remove();
+    },
+    { once: true }
+  );
+}
+
+function clearFormErrors(form) {
+  if (!form) return;
+  form.querySelectorAll(".input-error").forEach((el) => el.classList.remove("input-error"));
+  form.querySelectorAll(".form-error-text").forEach((el) => el.remove());
+}
+
+// =============================================
+// Toast Notification
+// =============================================
+function showToast() {
+  const toast = document.getElementById("signUpToast");
+  if (!toast) return;
+
+  toast.classList.remove("hidden");
+
+  // Force reflow for transition
+  toast.offsetHeight;
+  toast.classList.add("visible");
+
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => {
+      toast.classList.add("hidden");
+    }, 400);
+  }, 3500);
+}
