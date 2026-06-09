@@ -3,11 +3,11 @@
 // Purpose: Handles user registration and login requests
 // ------------------------------------------------------------
 
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-
+using System.Security.Claims;
 using backend.DTO;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace backend.Controllers
@@ -17,7 +17,7 @@ namespace backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService) // Constructor
         {
             _authService = authService;
         }
@@ -45,9 +45,20 @@ namespace backend.Controllers
         // api/auth/refresh
         [Authorize]
         [HttpPost("refresh")]
-        public async Task<IActionResult> Refresh(RefreshRequest req)
+        public async Task<IActionResult> Refresh(AuthRefreshRequest req)
         {
-            var result = await _authService.Refresh(req);
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim == null) return Unauthorized("No userId found from token");
+            if (!int.TryParse(idClaim.Value, out var userId))
+            {
+                return BadRequest(new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Invalid userId from token"
+                }
+                );
+            }
+            var result = await _authService.Refresh(req, userId);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
@@ -57,7 +68,21 @@ namespace backend.Controllers
         [HttpPost("logout")]
         public async Task<ActionResult> Logout()
         {
-            var result = await _authService.Logout();
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim == null) return Unauthorized("No userId found from token");
+
+            if (!int.TryParse(idClaim.Value, out var userId))
+            {
+                return Unauthorized(
+                    new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Invalid userId from token"
+                    }
+                );
+            }
+
+            var result = await _authService.Logout(userId);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
