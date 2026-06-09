@@ -2,11 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-
 using backend.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace backend.Helpers
@@ -27,13 +26,14 @@ namespace backend.Helpers
 
             var userClaims = new[]
             {
-                new Claim("user", user.Username),
-                new Claim("role", user.Role)
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Username ?? ""),
+                new Claim(ClaimTypes.Role, user.Role ?? "")
             };
-            
+
             var expiryMinutes = _config.GetValue<int>("Jwt:ExpiryMinutes");
             var expiryTime = DateTime.UtcNow.AddMinutes(expiryMinutes);
-            
+
             var jwtKey = _config["Jwt:Key"]
             ?? throw new InvalidOperationException("Missing Jwt:Key configuration");
 
@@ -46,8 +46,8 @@ namespace backend.Helpers
                 securityKey,
                 SecurityAlgorithms.HmacSha256
             );
-            
-            // 6. Build the token structure
+
+            // Build the token structure
             var token = new JwtSecurityToken
             (
                 issuer: iss,
