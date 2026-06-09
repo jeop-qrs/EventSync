@@ -10,21 +10,12 @@ namespace backend.DTO
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-    }   
-    public class AuthResponse
-    {
-        public bool Success { get; set; } = false;
-        public string BackendMessage { get; set; } = string.Empty;
-        public ObjectResponse? Data { get; set; }
     }
-
-    public class RefreshRequest
+    public class AuthRefreshRequest
     {
-        public string Username { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
     }
-
-    public class ObjectResponse
+    public class AuthDataObjectResponse
     {
         public string? Username { get; set; }
         public string? Role { get; set; }

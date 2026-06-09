@@ -10,7 +10,7 @@ POST {{baseUrl1}}/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "{{testUsername}}",
+    "username": "{{testUsername}}", 
     "password": "{{testPassword}}",
     "role": "{{testRole}}"
 }
@@ -18,7 +18,7 @@ Content-Type: application/json
 ###
 # @name login
 POST {{baseUrl1}}/api/auth/login
-Content-Type: application/json
+Content-Type: application/json 
 
 {
     "username": "{{testUsername}}",
@@ -32,7 +32,6 @@ Content-Type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-    "username": "{{testUsername}}",
     "refreshToken": "{{refreshToken}}"
 }
 
@@ -41,8 +40,3 @@ Authorization: Bearer {{accessToken}}
 POST {{baseUrl1}}/api/auth/logout
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
-
-{
-    "username": "{{testUsername}}",
-    "role": "{{testRole}}"
-}
