@@ -1,0 +1,338 @@
+/* Faculty Portal Styling */
+
+:root {
+  --bg-primary: #f4f6f9;
+  --sidebar-bg: #1e293b;
+  --accent-color: #4f46e5;
+  --accent-hover: #4338ca;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Landing / Login overlay background */
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url("/frontend/assets/img/URS.svg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.landing-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
+}
+
+.landing-card {
+  width: 40%;
+  height: 100%;
+  background: rgba(250, 249, 246, 0.7);
+  border-radius: 15px;
+  padding: 80px 56px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: -1;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.landing-subtitle {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  letter-spacing: 1.75px;
+  font-weight: 700;
+  color: var(--text-main);
+  position: relative;
+}
+
+.landing-title {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-main);
+  letter-spacing: -1px;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.landing-copy {
+  margin: 20px auto 32px;
+  color: var(--text-main);
+  font-weight: 600;
+  position: relative;
+}
+
+/* Form Controls */
+.form-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: var(--accent-color);
+}
+
+.form-card {
+  max-width: 480px;
+  margin: 16px auto;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+/* Action UI Buttons */
+.btn {
+  background-color: var(--accent-color);
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  flex: 1;
+}
+
+.btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e5e5;
+}
+
+.landing-terms {
+  margin-top: 18px;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* ========================================
+   Auth Panel Transitions & Sign Up Styles
+   ======================================== */
+
+/* Auth panels – smooth slide / fade */
+.auth-panel {
+  animation: authFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.auth-panel--hidden {
+  display: none !important;
+}
+
+@keyframes authFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Auth switch (login ↔ signup link) */
+.auth-switch {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.auth-switch-link {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.auth-switch-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(79, 70, 229, 0.25);
+}
+
+/* Password visibility toggle */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .form-control {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: var(--accent-color);
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Required indicator */
+.required-indicator {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Form hint text */
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Toast notification */
+.toast-notification {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.toast-notification.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.toast-notification.hidden {
+  display: flex;
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+
+.toast-icon {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  line-height: 1.4;
+}
+
+/* Form validation error state */
+.form-control.input-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.form-error-text {
+  color: #ef4444;
+  font-size: 0.78rem;
+  margin-top: 4px;
+  display: block;
+}

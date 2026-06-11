@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="/frontend/assets/img/EventSync logo.webp"
+      type="image/png"
+      sizes="192x192"
+    />
+    <title>EventSync - Faculty Dashboard</title>
+    <link rel="stylesheet" href="/frontend/assets/css/faculty-dash.css" />
+  </head>
+  <body data-page="faculty">
+    <nav class="sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <img
+            src="/frontend/assets/img/EventSync logo.webp"
+            alt="EventSync logo"
+            class="sidebar-logo"
+          />
+          <h2>EventSync</h2>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="menu-item active" data-view="dashboard-view">
+            <h4>Dashboard Overview</h4>
+          </li>
+          <li class="menu-item" data-view="venues-view">
+            <h4>Venue Directory</h4>
+          </li>
+          <li class="menu-item" data-view="proposals-view">
+            <h4>Proposed Events</h4>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="main-workspace">
+      <header class="navbar">
+        <div class="page-title">
+          <h1 id="workspaceTitle">Dashboard Overview</h1>
+        </div>
+        <div class="nav-controls">
+          <div class="notification-bell" id="notificationBell">
+            <svg
+              class="bell-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Notifications"
+            >
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z"
+              />
+            </svg>
+            <span class="bell-dot" id="notificationCount">0</span>
+          </div>
+          <div class="notification-popup hidden" id="notificationPopup">
+            <div class="notification-popup-header">Notifications</div>
+            <div
+              class="notification-popup-list"
+              id="notificationPopupList"
+            ></div>
+          </div>
+          
+          <div class="profile-menu" id="profileMenu">
+            <button
+              class="profile-button"
+              id="profileButton"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <span class="profile-avatar">FAH</span>
+              <span class="profile-name">Faculty</span>
+            </button>
+            <div
+              class="profile-dropdown hidden"
+              id="profileDropdown"
+              aria-label="Profile actions"
+            >
+              <button class="profile-option" type="button" id="viewProfileBtn">
+                View Profile
+              </button>
+              <button
+                class="profile-option"
+                type="button"
+                id="accountSettingsBtn"
+              >
+                Settings
+              </button>
+              <div class="profile-setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;">
+                <label for="themeToggleFaculty" class="profile-setting-label" style="margin:0;color:inherit;">Dark mode</label>
+                <input type="checkbox" id="themeToggleFaculty" class="profile-setting-toggle" aria-label="Toggle dark mode" />
+              </div>
+              <div class="profile-dropdown-separator"></div>
+              <button
+                class="profile-option profile-option--logout"
+                type="button"
+                id="logoutBtn"
+              >
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="content-container">
+        <!-- Dashboard -->
+        <div id="dashboard-view" class="view-section active-view">
+          <div class="stats-grid stats-grid--four">
+            <div class="stat-card">
+              <div class="stat-label">Total Active Events</div>
+              <div class="stat-value" id="countActive">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Pending Approval</div>
+              <div class="stat-value stat-value--warning" id="countPending">
+                0
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Available Venues Today</div>
+              <div class="stat-value stat-value--success" id="countVenues">
+                4
+              </div>
+            </div>
+            <div class="stat-card stat-card--rejected">
+              <div class="stat-label">Rejected</div>
+              <div class="stat-value stat-value--danger" id="countRejected">
+                0
+              </div>
+            </div>
+          </div>
+
+          <div class="schedule-tracker">
+            <div class="section-header-inline">
+              <h3>Live Tracking &amp; Schedules</h3>
+              <span class="section-badge" id="scheduleTrackerCount"
+                >0 events</span
+              >
+            </div>
+            <div class="schedule-card-list" id="facultyScheduleList">
+              <p class="empty-state">No scheduled events to display yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue Directory -->
+        <div id="venues-view" class="view-section">
+          <div class="venue-dashboard">
+            <section class="venue-list">
+              <div class="section-header-inline">
+                <h3>Venue Directory</h3>
+              </div>
+              <div class="venue-grid" id="facultyVenueGrid">
+                <button
+                  type="button"
+                  class="venue-card venue-card--add"
+                  id="openAddVenueBtn"
+                  aria-label="Add a new venue"
+                >
+                  <span class="add-venue-icon">+</span>
+                  <span class="add-venue-label">Add Venue</span>
+                </button>
+              </div>
+            </section>
+
+            <aside class="venue-detail-panel">
+              <div class="detail-sidebar-inner">
+                <div class="venue-info">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <h3 id="detailVenueName">Select a Venue</h3>
+                    <div style="display:flex;gap:8px;">
+                      <button type="button" id="editVenueBtn" class="btn btn-small" style="display: none;" aria-label="Edit venue">Edit</button>
+                      <button type="button" id="deleteVenueBtn" class="btn btn-danger btn-small" style="display: none;" aria-label="Delete venue">Delete</button>
+                    </div>
+                  </div>
+                  <p id="venueDescription">
+                    Pick a venue from the directory to view its details and
+                    availability.
+                  </p>
+                  <div class="venue-meta">
+                    <p>
+                      <strong>Address:</strong>
+                      <span id="venueAddress">-</span>
+                    </p>
+                    <p>
+                      <strong>Availability:</strong>
+                      <span id="venueAvailabilityText">-</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="detail-section venue-calendar-section">
+                  <div class="section-header-inline">
+                    <h4>Availability Calendar</h4>
+                  </div>
+                  <div class="venue-calendar" id="venueCalendar">
+                    <div class="calendar-toolbar">
+                      <button
+                        type="button"
+                        id="calendarPrevMonth"
+                        class="calendar-nav-btn"
+                        aria-label="Previous month"
+                      >
+                        ‹
+                      </button>
+                      <h5
+                        id="calendarMonthLabel"
+                        class="calendar-month-title"
+                      ></h5>
+                      <button
+                        type="button"
+                        id="calendarNextMonth"
+                        class="calendar-nav-btn"
+                        aria-label="Next month"
+                      >
+                        ›
+                      </button>
+                    </div>
+                    <div class="calendar-weekdays" aria-hidden="true">
+                      <span>Sun</span>
+                      <span>Mon</span>
+                      <span>Tue</span>
+                      <span>Wed</span>
+                      <span>Thu</span>
+                      <span>Fri</span>
+                      <span>Sat</span>
+                    </div>
+                    <div
+                      class="calendar-dates"
+                      id="venueCalendarDates"
+                      role="grid"
+                      aria-labelledby="calendarMonthLabel"
+                    ></div>
+                    <div
+                      id="calendarDayDetail"
+                      class="calendar-day-detail"
+                      hidden
+                    >
+                      <p class="calendar-day-detail-heading">
+                        <span id="calendarDayDetailTitle"></span>
+                      </p>
+                      <ul
+                        id="calendarDayTimes"
+                        class="calendar-day-times-list"
+                      ></ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <!-- Proposed Events -->
+        <div id="proposals-view" class="view-section">
+          <div class="section-header-inline">
+            <h3>Proposed Events</h3>
+            <span class="section-badge" id="proposalsCount">0 proposals</span>
+          </div>
+          <p class="note-text">
+            Review student-submitted event applications. Accept or reject each
+            proposal below.
+          </p>
+          <div class="proposals-grid" id="proposalsGrid">
+            <p class="empty-state">No student proposals yet.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Add Venue Modal -->
+    <div
+      class="modal-overlay hidden"
+      id="addVenueModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="addVenueModalTitle"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="addVenueModalTitle">Add New Venue</h3>
+          <button
+            type="button"
+            class="modal-close"
+            id="closeAddVenueBtn"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="addVenueForm">
+          <div class="form-group">
+            <label for="venueNameInput">Venue Name <span class="required-indicator" aria-label="required">*</span></label>
+            <input
+              type="text"
+              id="venueNameInput"
+              class="form-control"
+              required
+              placeholder="e.g., Bamboo Building"
+            />
+          </div>
+          <div class="form-group">
+            <label for="venueAddressInput">Address <span class="required-indicator" aria-label="required">*</span></label>
+            <input
+              type="text"
+              id="venueAddressInput"
+              class="form-control"
+              required
+              placeholder="e.g., Main Campus, Building A"
+            />
+          </div>
+          <div class="form-group">
+            <label for="venueDescInput">Venue Description <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea
+              id="venueDescInput"
+              class="form-control"
+              rows="3"
+              required
+              placeholder="Describe the venue features and capacity..."
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="venueAvailInput">Availability <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea
+              id="venueAvailInput"
+              class="form-control"
+              rows="2"
+              required
+              placeholder="e.g., Mon–Fri 8:00 AM – 6:00 PM"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label>Daily Time Slots (3 per day) <span class="required-indicator" aria-label="required">*</span></label>
+            <div class="schedule-slots-editor">
+              <div class="schedule-slot-row">
+                <label for="venueSlot1">Slot 1</label>
+                <input type="text" id="venueSlot1" class="form-control" value="08:00 - 11:00" required />
+              </div>
+              <div class="schedule-slot-row">
+                <label for="venueSlot2">Slot 2</label>
+                <input type="text" id="venueSlot2" class="form-control" value="12:00 - 15:00" required />
+              </div>
+              <div class="schedule-slot-row">
+                <label for="venueSlot3">Slot 3</label>
+                <input type="text" id="venueSlot3" class="form-control" value="16:00 - 19:00" required />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="venuePhotoInput">Photo Upload</label>
+            <div class="photo-upload-zone" id="venuePhotoZone">
+              <span>Click or drag an image here</span>
+              <small id="venuePhotoName">No file selected</small>
+            </div>
+            <input
+              type="file"
+              id="venuePhotoInput"
+              accept="image/*"
+              class="file-input-hidden"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" id="addVenueSubmitBtn">Add Venue</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelAddVenueBtn"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- View Profile Modal -->
+    <div class="modal-overlay hidden" id="profileModal">
+      <div class="modal-overlay-bg" id="profileModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>View Profile</h3>
+          <button type="button" class="modal-close" id="profileModalClose">&times;</button>
+        </div>
+        <form id="profileForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="profileDisplayName">Display Name <span class="required-indicator" aria-label="required">*</span></label>
+            <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Dr. Santos" />
+          </div>
+          <div class="form-group">
+            <label for="profileEmail">Email Address</label>
+            <input type="email" id="profileEmail" class="form-control" placeholder="e.g., santos@university.edu" />
+          </div>
+          <div class="form-group">
+            <label for="profileIdNumber">Faculty ID</label>
+            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., FAC-2024-001" />
+          </div>
+          <div class="form-group" id="profileDeptGroup">
+            <label for="profileDepartment">Department</label>
+            <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" id="profileModalSave">Save Profile</button>
+            <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal-overlay-bg" id="settingsModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button type="button" class="modal-close" id="settingsModalClose">&times;</button>
+        </div>
+        <form id="settingsForm" onsubmit="return false;">
+          <div class="form-group">
+            <label class="settings-toggle-row">
+              <span>Enable Notifications</span>
+              <input type="checkbox" id="settingsNotifications" checked />
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="settingsLanguage">Language Preference</label>
+            <select id="settingsLanguage" class="form-control">
+              <option value="en">English</option>
+              <option value="fil">Filipino</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
+            <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-notification hidden" id="profileSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Profile saved successfully.</div>
+    </div>
+    <div class="toast-notification hidden" id="settingsSavedToast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Settings saved successfully.</div>
+    </div>
+
+    <script src="/frontend/assets/js/shared.js"></script>
+    <script src="/frontend/assets/js/faculty-dash.js"></script>
+  </body>
+</html>
