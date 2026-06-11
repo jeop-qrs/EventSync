@@ -10,7 +10,7 @@ namespace backend.Models
         public int EventId { get; set; }
 
         // Organizer (Student)
-        [ForeignKey("User")] // Foreign Key -> Users(UserId)
+        [ForeignKey("Organizer")]
         public int OrganizerId { get; set; }
         public User? Organizer { get; set; }
 

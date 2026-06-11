@@ -9,10 +9,16 @@ using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+// POST = [HttpPost]
+// GET = [HttpGet]
+// PUT = [HttpPut]
+// DELETE = [HttpDelete]
+// PATCH = [HttpPatch]
 
 namespace backend.Controllers
 {
     [ApiController]
+    // api/[controller] == api/auth
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {

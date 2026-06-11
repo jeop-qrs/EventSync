@@ -35,9 +35,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<JwtGenerator>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ReminderService>();
+builder.Services.AddScoped<DashboardService>();
 
 // Configure DbContext with MySQL ConnectionStrings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

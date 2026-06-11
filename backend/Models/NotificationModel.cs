@@ -14,7 +14,10 @@ namespace backend.Models
         public int UserId { get; set; }
         public User? User { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        [ForeignKey("Event")]
+        public int EventId { get; set; }
+        public Event? Event { get; set; }
+
         public string Message { get; set; } = string.Empty;
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -30,7 +33,7 @@ namespace backend.Models
         public User? User { get; set; }
 
         public bool NotifyOneDayBefore { get; set; } = true;
-        public bool NotifyOneWeekBefore { get; set; } = false;
+        public bool NotifyOneWeekBefore { get; set; } = true;
         public bool NotifyOnStatusChange { get; set; } = true;
         public DateTime LastUpdated { get; set; }
     }

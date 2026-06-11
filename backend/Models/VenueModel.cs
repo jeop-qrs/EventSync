@@ -11,7 +11,7 @@ namespace backend.Models
         public string Name { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public int Capacity { get; set; }
-        public string? Status { get; set; } // Available, Not Available (based on current capacity)
+        public string? Status { get; set; } // Available, Not Available (based on current capacity of Venue)
     }
 
     public class VenueBooking
@@ -28,7 +28,7 @@ namespace backend.Models
         public Venue? Venue { get; set; }
 
         [ForeignKey("Faculty")] // Reviewer (Faculty) that reviews the venue booking request
-        public int FacultyId { get; set; }
+        public int? FacultyId { get; set; }
         public User? Faculty { get; set; }
 
         public string? Status { get; set; } // Pending | Approved | Rejected | Cancelled

@@ -1,47 +1,48 @@
 # API Contract - EventSync
 
 **Version:** 1.1.0  
-**Base URL:** `http://localhost:5108` (TBD)  
+**Base URL:** `http://localhost:5108` (TBD)
 
 ---
 
 ## Common HTTP Status Codes
 
-| Status | Meaning | Method |
-|--------|---------|--------|
-| `200` | Success + Payload (optional) | `return Ok(optionalmessage);` |
-| `201` | Resource created | `return Created("", );` |
-| `204` | Success + No message | `return NoContent();` |
-| `400` | Bad Request — validation failed | `return BadRequest(error);` |
-| `401` | Unauthorized — not authenticated | `return Unauthorized();` |
-| `403` | Forbidden — authenticated but not allowed | `return Forbid();` |
-| `404` | Not Found — resource doesn't exist | `return NotFound();` |
-| `409` | Conflict — duplicate or constraint violation | `return Conflict(message);` |
-| `500` | Server Error — something broke on our end | `return StatusCode(500, message);` |
+| Status | Meaning                                      | Method                             |
+| ------ | -------------------------------------------- | ---------------------------------- |
+| `200`  | Success + Payload (optional)                 | `return Ok(optionalmessage);`      |
+| `201`  | Resource created                             | `return Created("", );`            |
+| `204`  | Success + No message                         | `return NoContent();`              |
+| `400`  | Bad Request — validation failed              | `return BadRequest(error);`        |
+| `401`  | Unauthorized — not authenticated             | `return Unauthorized();`           |
+| `403`  | Forbidden — authenticated but not allowed    | `return Forbid();`                 |
+| `404`  | Not Found — resource doesn't exist           | `return NotFound();`               |
+| `409`  | Conflict — duplicate or constraint violation | `return Conflict(message);`        |
+| `500`  | Server Error — something broke on our end    | `return StatusCode(500, message);` |
 
 ---
 
 ## Legend - Access Level
 
-| Symbol | Meaning |
-|--------|---------|
-| [PUB] | Public — no login/auth required |
+| Symbol | Meaning                                     |
+| ------ | ------------------------------------------- |
+| [PUB]  | Public — no login/auth required             |
 | [AUTH] | Protected — login needed/requires valid JWT |
 
 ---
 
 ## Roles Overview
 
-| Role | Who | What they can do |
-|------|-----|-----------------|
-| `admin` | System administrator | Manage users, manage venues, full system access |
-| `faculty` | Faculty member | Approve or reject event and venue reservation requests |
-| `student` | Student organizer | Create events, reserve venues, view own requests |
+| Role      | Who               | What they can do                                                                                                                                                |
+| --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `faculty` | Faculty member    | Approve or reject event and venue reservation requests, create venues, view all events and venues, edit event, cancel event, view dashboard, view notifications |
+| `student` | Student organizer | Create events, reserve venues, view own requests, cancel event, view dashboard, manage notifications, view own notification, view all events and venues         |
 
 ---
 
 ## Response Pattern
+
 **Response `123 nameOfHttpCode` (What role/s)**
+
 ```json
 {
   "success": true or false,
@@ -64,7 +65,6 @@
 - [3. Venue Reservation](#3-venue-reservation)
 - [4. Notification System](#4-notification-system)
 - [5. Dashboard Overview](#5-dashboard-overview)
-- [6. Role and Endpoint Access Summary](#6-role-and-endpoint-access-summary)
 
 ---
 
@@ -81,6 +81,7 @@
 Register a new user account.
 
 **Header**
+
 ```json
 {
   "Content-Type": "application/json"
@@ -88,6 +89,7 @@ Register a new user account.
 ```
 
 **Request Body**
+
 ```json
 {
   "username": "juandelacruz",
@@ -97,10 +99,11 @@ Register a new user account.
 ```
 
 **Response `200 OK` (No roles)**
+
 ```json
 {
   "success": true,
-  "backendMessage": "Register successful. Log in again.",
+  "backendMessage": "Register successful. Log in again."
 }
 ```
 
@@ -111,6 +114,7 @@ Register a new user account.
 Authenticate a user and return JWT tokens.
 
 **Header**
+
 ```json
 {
   "Content-Type": "application/json"
@@ -118,6 +122,7 @@ Authenticate a user and return JWT tokens.
 ```
 
 **Request Body**
+
 ```json
 {
   "username": "juandelacruz",
@@ -126,6 +131,7 @@ Authenticate a user and return JWT tokens.
 ```
 
 **Response `200 OK` (No roles)**
+
 ```json
 {
   "success": true,
@@ -148,6 +154,7 @@ Rotate the accessToken and refreshToken (generate new tokens).
 Must automatically trigger when client's current access token expired.
 
 **Header**
+
 ```json
 {
   "Content-Type": "application/json",
@@ -156,6 +163,7 @@ Must automatically trigger when client's current access token expired.
 ```
 
 **Request Body**
+
 ```json
 {
   "refreshToken": "refreshToken..."
@@ -163,6 +171,7 @@ Must automatically trigger when client's current access token expired.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -184,6 +193,7 @@ Must automatically trigger when client's current access token expired.
 Invalidate the current session and stored refresh token.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -191,6 +201,7 @@ Invalidate the current session and stored refresh token.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -221,8 +232,7 @@ Verify user's email address using the token sent on registration.
 ## 2) Event Scheduling
 
 > Events are created by **Students** as reservation requests.  
-> **Faculty** reviews and approves or rejects them.  
-> **Admin** has full visibility and override access.
+> **Faculty** reviews and approves or rejects them.
 
 ---
 
@@ -231,6 +241,7 @@ Verify user's email address using the token sent on registration.
 Get all events (approved, rejected, cancelled, pending, etc.).
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -238,6 +249,7 @@ Get all events (approved, rejected, cancelled, pending, etc.).
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -281,6 +293,7 @@ Get all events (approved, rejected, cancelled, pending, etc.).
 Get all specific events only. {status} could be "pending", "approved", "rejected", or "cancelled"
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -288,6 +301,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -320,6 +334,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 - Create new event (only by student)
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -327,6 +342,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Request Body**
+
 ```json
 {
   "title": "Event Title",
@@ -340,6 +356,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Student)**
+
 ```json
 {
   "success": true,
@@ -363,6 +380,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 -Delete event (only by student)
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -370,6 +388,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Request Body**
+
 ```json
 {
   "reason": null or "reason"
@@ -377,6 +396,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Student)**
+
 ```json
 {
   "success": true,
@@ -401,6 +421,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 -Cancel event (only by student)
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -408,6 +429,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Request Body**
+
 ```json
 {
   "status": "approved | rejected | cancelled",
@@ -416,6 +438,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Faculty)**
+
 ```json
 {
   "success": true,
@@ -433,8 +456,8 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 }
 ```
 
-
 **Response `200 OK` (Student)**
+
 ```json
 {
   "success": true,
@@ -461,11 +484,12 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 
 ---
 
-### [AUTH] GET `/api/venues`
+### [AUTH] GET `/api/venue`
 
 - Get all venues (available or not)
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -473,6 +497,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Faculty or Student)**
+
 ```json
 {
   "success": true,
@@ -498,11 +523,12 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 
 ---
 
-### [AUTH] GET `/api/venues/{venueId}`
+### [AUTH] GET `/api/venue/{venueId}`
 
 -Get specific venue's details.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -510,6 +536,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Faculty or Student)**
+
 ```json
 {
   "success": true,
@@ -540,6 +567,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 - Add new venue (only by faculty)
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -547,6 +575,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Request Body**
+
 ```json
 {
   "name": "West Auditorium",
@@ -556,6 +585,7 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 ```
 
 **Response `200 OK` (Faculty)**
+
 ```json
 {
   "success": true,
@@ -569,7 +599,6 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 }
 ```
 
-
 ---
 
 ## 4) Notification System
@@ -580,12 +609,13 @@ Get all specific events only. {status} could be "pending", "approved", "rejected
 
 ---
 
-### [AUTH] GET `/api/notifications`
+### [AUTH] GET `/api/notification`
 
 Get all notifications for the currently logged-in user.  
 Ordered by newest first.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -593,6 +623,7 @@ Ordered by newest first.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -602,18 +633,19 @@ Ordered by newest first.
     "notifications": [
       {
         "notificationId": 1,
-        "message": "Your event 'JS Seminar' is tomorrow.",
+        "message": "Your event 'Bug Hunting' is happening tomorrow.",
         "isRead": false,
         "eventId": 1,
         "createdAt": "2026-07-09T09:00:00Z"
       },
       {
         "notificationId": 2,
-        "message": "Your event 'Math Workshop' has been approved.",
+        "message": "Your event 'IT Week' has been approved.",
         "isRead": true,
         "eventId": 2,
         "createdAt": "2026-07-08T14:00:00Z"
       }
+      // More notifications...
     ]
   }
 }
@@ -626,6 +658,7 @@ Ordered by newest first.
 Mark a single notification as read.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -633,6 +666,7 @@ Mark a single notification as read.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -646,11 +680,12 @@ Mark a single notification as read.
 
 ---
 
-### [AUTH] PATCH `/api/notifications/read-all`
+### [AUTH] PATCH `/api/notification/read-all`
 
 Mark all of the logged-in user's notifications as read at once.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -658,6 +693,7 @@ Mark all of the logged-in user's notifications as read at once.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -667,11 +703,12 @@ Mark all of the logged-in user's notifications as read at once.
 
 ---
 
-### [AUTH] GET `/api/notifications/preferences`
+### [AUTH] GET `/api/notification/preference`
 
 Get the logged-in user's current notification preferences.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
@@ -679,6 +716,7 @@ Get the logged-in user's current notification preferences.
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -693,12 +731,12 @@ Get the logged-in user's current notification preferences.
 
 ---
 
-### [AUTH] PUT `/api/notifications/preferences`
+### [AUTH] PUT `/api/notification/preference`
 
-Update the logged-in user's notification preferences.  
-Creates the preference record if it doesn't exist yet (upsert).
+Update the logged-in user's notification preferences.
 
 **Header**
+
 ```json
 {
   "Content-Type": "application/json",
@@ -707,6 +745,7 @@ Creates the preference record if it doesn't exist yet (upsert).
 ```
 
 **Request Body (All roles)**
+
 ```json
 {
   "notifyOneDayBefore": true,
@@ -716,6 +755,7 @@ Creates the preference record if it doesn't exist yet (upsert).
 ```
 
 **Response `200 OK` (All roles)**
+
 ```json
 {
   "success": true,
@@ -733,129 +773,23 @@ Get the current user's dashboard summary.
 Response shape varies by role.
 
 **Header**
+
 ```json
 {
   "Authorization": "Bearer accessToken..."
 }
 ```
 
-**Response `200 OK` (Admin)**
-```json
-{
-  "success": true,
-  "backendMessage": "Dashboard loaded.",
-  "data": {
-    "totalUsers": 42,
-    "totalVenues": 8,
-    "events": {
-      "total": 30,
-      "pending": 5,
-      "approved": 22,
-      "rejected": 3
-    },
-    "unreadNotifications": 2,
-    "upcomingEvents": [
-      {
-        "eventId": 1,
-        "title": "JS Seminar",
-        "eventDate": "2026-07-10",
-        "eventTime": "09:00",
-        "venueName": "Function Hall A",
-        "status": "approved"
-      }
-    ],
-    "pendingRequests": [
-      {
-        "eventId": 5,
-        "title": "Campus Fest Planning",
-        "eventDate": "2026-07-15",
-        "submittedBy": "juandelacruz",
-        "submittedAt": "2026-06-20T10:00:00Z"
-      }
-    ]
-  }
-}
-```
+**Response `200 OK` (All roles)**
 
-**Response `200 OK` (Faculty)**
 ```json
 {
   "success": true,
   "backendMessage": "Dashboard loaded.",
   "data": {
-    "pendingForReview": 3,
-    "unreadNotifications": 1,
-    "pendingRequests": [
-      {
-        "eventId": 5,
-        "title": "Campus Fest Planning",
-        "eventDate": "2026-07-15",
-        "eventTime": "13:00",
-        "venueName": "Open Grounds",
-        "submittedBy": "juandelacruz",
-        "submittedAt": "2026-06-20T10:00:00Z"
-      }
-    ],
-    "recentActivity": [
-      {
-        "eventId": 3,
-        "title": "Math Workshop",
-        "action": "approved",
-        "actedAt": "2026-06-18T09:00:00Z"
-      }
-    ]
-  }
-}
-```
-
-**Response `200 OK` (Student)**
-```json
-{
-  "success": true,
-  "backendMessage": "Dashboard loaded.",
-  "data": {
-    "unreadNotifications": 2,
-    "myEvents": {
-      "total": 4,
-      "pending": 1,
-      "approved": 2,
-      "rejected": 1
-    },
-    "upcomingEvents": [
-      {
-        "eventId": 1,
-        "title": "JS Seminar",
-        "eventDate": "2026-07-10",
-        "eventTime": "09:00",
-        "venueName": "Function Hall A",
-        "status": "approved"
-      }
-    ],
-    "recentNotifications": [
-      {
-        "notificationId": 1,
-        "message": "Your event 'JS Seminar' is tomorrow.",
-        "isRead": false,
-        "createdAt": "2026-07-09T09:00:00Z"
-      }
-    ]
+    // TODO
   }
 }
 ```
 
 ---
-
-## 6) Role and Endpoint Access Summary
-
-| Endpoint | Admin | Faculty | Student |
-|----------|-------|---------|---------|
-| POST `/auth/register` | ✅ | ✅ | ✅ |
-| POST `/auth/login` | ✅ | ✅ | ✅ |
-| POST `/auth/refresh` | ✅ | ✅ | ✅ |
-| POST `/auth/logout` | ✅ | ✅ | ✅ |
-| GET `/notifications` | Own only | Own only | Own only |
-| PATCH `/notifications/{notificationId}/read` | ✅ | ✅ | ✅ |
-| PATCH `/notifications/read-all` | ✅ | ✅ | ✅ |
-| GET `/notifications/preferences` | ✅ | ✅ | ✅ |
-| PUT `/notifications/preferences` | ✅ | ✅ | ✅ |
-| GET `/dashboard/me` | Full view | Review view | Own view |
