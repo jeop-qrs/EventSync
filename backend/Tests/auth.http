@@ -1,32 +1,68 @@
 @baseUrl1 = http://localhost:5108
 @baseUrl2 = https://localhost:7248
-@accessToken = {{login.response.body.data.accessToken}}
-@refreshToken = {{login.response.body.data.refreshToken}}
-@testUsername = appuser123
-@testPassword = password123
-@testRole = student
 
+
+
+@studentNumber = R2024-02383
+@studentPassword = password123
+@studentRole = student
+### Register for student
 POST {{baseUrl1}}/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "{{testUsername}}", 
-    "password": "{{testPassword}}",
-    "role": "{{testRole}}"
+    "studentNumber": "{{studentNumber}}", 
+    "password": "{{studentPassword}}",
+    "role": "{{studentRole}}"
 }
 
 ###
-# @name login
+@facultyUsername = appuser123
+@facultyPassword = password123
+@facultyRole = faculty
+### Register for faculty
+POST {{baseUrl1}}/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "{{facultyUsername}}", 
+    "password": "{{facultyPassword}}",
+    "role": "{{facultyRole}}"
+}
+
+
+
+### Login for student
+# @name loginStudent
 POST {{baseUrl1}}/api/auth/login
 Content-Type: application/json 
 
 {
-    "username": "{{testUsername}}",
-    "password": "{{testPassword}}"
+    "studentNumber": "{{studentNumber}}",
+    "password": "{{studentPassword}}"
 }
 
-###
 
+
+### Login for faculty
+# @name loginFaculty
+POST {{baseUrl1}}/api/auth/login
+Content-Type: application/json 
+
+{
+    "username": "{{facultyUsername}}",
+    "password": "{{facultyPassword}}"
+}
+
+
+###
+@accessToken = {{loginStudent.response.body.data.accessToken}}
+@refreshToken = {{loginStudent.response.body.data.refreshToken}}
+@accessToken = {{loginFaculty.response.body.data.accessToken}}
+@refreshToken = {{loginFaculty.response.body.data.refreshToken}}
+
+
+### Refresh Token
 POST {{baseUrl1}}/api/auth/refresh
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
@@ -35,8 +71,9 @@ Authorization: Bearer {{accessToken}}
     "refreshToken": "{{refreshToken}}"
 }
 
-###
 
+
+### Logout
 POST {{baseUrl1}}/api/auth/logout
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}

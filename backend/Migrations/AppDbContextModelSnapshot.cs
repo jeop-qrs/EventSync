@@ -30,33 +30,36 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("EventId"));
 
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Department")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("EndDateTime")
+                    b.Property<DateTime>("EventDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("ExpectedAttendees")
                         .HasColumnType("int");
 
+                    b.Property<int?>("FacultyId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OrganizerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ReasonForCancel")
+                    b.Property<string>("Reason")
+                        .HasColumnType("longtext");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("StartDateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Status")
+                    b.Property<string>("SubmitLetterPath")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -64,10 +67,19 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("VenueId")
                         .HasColumnType("int");
 
                     b.HasKey("EventId");
+
+                    b.HasIndex("FacultyId");
+
+                    b.HasIndex("OrganizerId");
+
+                    b.HasIndex("VenueId");
 
                     b.ToTable("Events");
                 });
@@ -83,6 +95,9 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsRead")
                         .HasColumnType("tinyint(1)");
 
@@ -90,18 +105,14 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("NotificationId");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
                 });
@@ -113,15 +124,6 @@ namespace backend.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationPreferenceId"));
-
-                    b.Property<bool>("EnableInApp")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("EnablePush")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("EnableSMS")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime(6)");
@@ -139,6 +141,8 @@ namespace backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("NotificationPreferenceId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("NotificationPreferences");
                 });
@@ -172,7 +176,6 @@ namespace backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("UserId");
@@ -188,15 +191,30 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VenueId"));
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Availability")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.Property<string>("Location")
+                    b.PrimitiveCollection<string>("DailyTimeSlots")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhotoPath")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Status")
@@ -208,56 +226,15 @@ namespace backend.Migrations
                     b.ToTable("Venues");
                 });
 
-            modelBuilder.Entity("backend.Models.VenueBooking", b =>
-                {
-                    b.Property<int>("VenueBookingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VenueBookingId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("EndDateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("FacultyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VenueId")
-                        .HasColumnType("int");
-
-                    b.HasKey("VenueBookingId");
-
-                    b.HasIndex("FacultyId");
-
-                    b.HasIndex("StudentId");
-
-                    b.HasIndex("VenueId");
-
-                    b.ToTable("VenueBookings");
-                });
-
-            modelBuilder.Entity("backend.Models.VenueBooking", b =>
+            modelBuilder.Entity("backend.Models.Event", b =>
                 {
                     b.HasOne("backend.Models.User", "Faculty")
                         .WithMany()
                         .HasForeignKey("FacultyId");
 
-                    b.HasOne("backend.Models.User", "Student")
+                    b.HasOne("backend.Models.User", "Organizer")
                         .WithMany()
-                        .HasForeignKey("StudentId")
+                        .HasForeignKey("OrganizerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -269,9 +246,39 @@ namespace backend.Migrations
 
                     b.Navigation("Faculty");
 
-                    b.Navigation("Student");
+                    b.Navigation("Organizer");
 
                     b.Navigation("Venue");
+                });
+
+            modelBuilder.Entity("backend.Models.Notification", b =>
+                {
+                    b.HasOne("backend.Models.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("backend.Models.NotificationPreference", b =>
+                {
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

@@ -20,9 +20,9 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            // Get user ID from JWT token
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            var userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+            if (userId == 0 && userRole == string.Empty)
             {
                 return Unauthorized(new GlobalResponse
                 {
@@ -31,8 +31,7 @@ namespace backend.Controllers
                     Data = null
                 });
             }
-            var userId = int.Parse(userIdClaim.Value);
-            var result = await _dashboardService.Get(userId);
+            var result = await _dashboardService.Get(userId, userRole);
             return Ok(result);
         }
     }

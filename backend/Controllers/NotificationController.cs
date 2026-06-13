@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]s")]
     public class NotificationController : ControllerBase
     {
         private readonly NotificationService _notificationService;
@@ -46,7 +46,7 @@ namespace backend.Controllers
         }
 
         [Authorize]
-        [HttpPost("mark-all-read")]
+        [HttpPost("read-all")]
         public async Task<IActionResult> MarkAllAsRead()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);

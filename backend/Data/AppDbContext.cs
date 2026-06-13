@@ -20,7 +20,6 @@ namespace backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<Venue> Venues { get; set; }
-        public DbSet<VenueBooking> VenueBookings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     }

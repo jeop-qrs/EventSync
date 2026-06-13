@@ -54,7 +54,7 @@ public class NotificationService
             var preference = await _context.NotificationPreferences
                 .FirstOrDefaultAsync(p => p.UserId == @event.OrganizerId);
             if (preference == null) continue;
-            var timeToEvent = @event.StartDateTime - now;
+            var timeToEvent = @event.EventDate - now;
             if (timeToEvent.TotalHours is >= 23 and <= 25 && preference.NotifyOneDayBefore)
                 await SaveNotification(@event.OrganizerId,
                     @event.EventId,

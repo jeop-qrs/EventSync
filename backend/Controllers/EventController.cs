@@ -3,17 +3,16 @@
 // Purpose: Handles CRUD operations for events
 // ------------------------------------------------------------
 
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims; // Required to read the logged-in user's ID/Role
-
 using backend.DTO;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Routes to /api/event (consider changing to "events" per your spec!)
+    [Route("api/[controller]s")]
     public class EventController : ControllerBase
     {
         private readonly EventService _eventService;
@@ -23,60 +22,39 @@ namespace backend.Controllers
             _eventService = eventService;
         }
 
-        // GET: api/event
-        [Authorize]
         [HttpGet]
-        public async Task<ActionResult> GetAll()
-        {
-            var result = await _eventService.GetAllEvents();
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
-        }
-
-        // GET: api/event/filter?filter=pending
         [Authorize]
-        [HttpGet("filter")]
-        public async Task<ActionResult> GetByFilter([FromQuery] string filter) 
+        public async Task<ActionResult> GetEvents([FromQuery] string status)
         {
-            var result = await _eventService.GetEventsByFilter(filter);
-            if (!result.Success) return NotFound(result);
-            return Ok(result);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            var userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+            if (userRole == "student" || userRole == "faculty")
+            {
+                var result = await _eventService.GetEvents(userId, userRole, status);
+                if (!result.Success) return BadRequest(result);
+                return Ok(result);
+            }
+            return Unauthorized(new GlobalResponse { Success = false, BackendMessage = "Invalid role" });
         }
 
-        // POST: api/event
-        [Authorize(Roles = "Student")] // Optional but recommended: lock this at the routing level
         [HttpPost]
-        public async Task<ActionResult> Create([FromForm] EventCreateRequest req) // Added [FromForm] for PDF
+        [Authorize(Roles = "Student")]
+        public async Task<ActionResult> Create([FromForm] EventCreateRequest req)
         {
-            // Extract the user ID from the JWT Token
             int studentId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-
+            if (studentId == 0) return Unauthorized(new GlobalResponse { Success = false, BackendMessage = "Invalid user" });
             var result = await _eventService.CreateEvent(req, studentId);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
 
-        // PATCH: api/event/{id}/status
+        [HttpPatch("{id}/status")]
         [Authorize]
-        [HttpPatch("{id}/status")] // Changed from PUT to PATCH to match your spec
-        public async Task<ActionResult> UpdateStatus(int id, [FromBody] EventStatusUpdateRequest req)
+        public async Task<ActionResult> UpdateStatus([FromRoute] int eventId, [FromBody] EventStatusUpdateRequest req)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
             string userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-
-            var result = await _eventService.UpdateEventStatus(id, req, userId, userRole);
-            if (!result.Success) return BadRequest(result);
-            return Ok(result);
-        }
-
-        // DELETE: api/event/{id}
-        [Authorize(Roles = "Student")]
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            int studentId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-
-            var result = await _eventService.DeleteEvent(id, studentId);
+            var result = await _eventService.UpdateEventStatus(eventId, userId, userRole, req);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }

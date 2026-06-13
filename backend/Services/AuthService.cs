@@ -32,7 +32,7 @@ namespace backend.Services
             // Check if user already exists
             // SQL Query: SELECT * FROM Users WHERE Username = req.Username;
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == req.Username);
+                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
             if (existingUser != null)
             {
                 return new GlobalResponse
@@ -42,55 +42,47 @@ namespace backend.Services
                 };
             }
             // Check if Username is empty
-            if (string.IsNullOrEmpty(req.Username))
+            if (string.IsNullOrEmpty(req.Username) || string.IsNullOrEmpty(req.StudentNumber))
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Username cannot be empty"
+                    BackendMessage = "Username and Student Number cannot be empty"
                 };
             }
             // Check if Username contains no spaces
-            if (req.Username.Contains(' '))
+            if (req.Username.Contains(' ') || req.StudentNumber.Contains(' '))
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Username may not contain spaces"
+                    BackendMessage = "Username and Student Number may not contain spaces"
                 };
             }
             // Check Username Length
-            if (req.Username.Length <= 8)
+            if (req.Username.Length <= 8 || req.StudentNumber.Length <= 8)
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Username must be at least 8 characters long"
+                    BackendMessage = "Username and Student Number must be at least 8 characters long"
                 };
             }
-            if (req.Username.Length >= 20)
+            if (req.Username.Length >= 20 || req.StudentNumber.Length >= 20)
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Username may only be 20 characters long"
+                    BackendMessage = "Username and Student Number may only be 20 characters long"
                 };
             }
             // Check Password Length
-            if (req.Password.Length <= 8)
+            if (req.Password.Length <= 8 || req.Password.Length >= 20)
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Password must be at least 8 characters long"
-                };
-            }
-            if (req.Password.Length >= 20)
-            {
-                return new GlobalResponse
-                {
-                    Success = false,
-                    BackendMessage = "Password may only be 20 characters long"
+                    BackendMessage = "Password must be at least 8 characters long and at most 20 characters long"
                 };
             }
 
@@ -118,13 +110,13 @@ namespace backend.Services
         {
             // Check if user exists
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == req.Username);
+                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
             if (user == null)
             {
                 return new GlobalResponse
                 {
                     Success = false,
-                    BackendMessage = "Username not found"
+                    BackendMessage = "User not found"
                 };
             }
 

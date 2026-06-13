@@ -19,7 +19,7 @@ namespace backend.Models
         public Event? Event { get; set; }
 
         public string Message { get; set; } = string.Empty;
-        public bool IsRead { get; set; }
+        public bool IsRead { get; set; } = false; // Default value is false
         public DateTime CreatedAt { get; set; }
     }
 

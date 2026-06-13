@@ -38,6 +38,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<JwtGenerator>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<DashboardService>();

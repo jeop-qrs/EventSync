@@ -9,29 +9,12 @@ namespace backend.Models
         [Key] // Primary Key
         public int VenueId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Location { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
         public int Capacity { get; set; }
-        public string? Status { get; set; } // Available, Not Available (based on current capacity of Venue)
-    }
-
-    public class VenueBooking
-    {
-        [Key] // Primary Key
-        public int VenueBookingId { get; set; }
-
-        [ForeignKey("Event")] // Event that requested the venue
-        public int EventId { get; set; }
-        public Event? Event { get; set; }
-
-        [ForeignKey("Venue")] // Venue that was requested
-        public int VenueId { get; set; }
-        public Venue? Venue { get; set; }
-
-        [ForeignKey("Faculty")] // Reviewer (Faculty) that reviews the venue booking request
-        public int? FacultyId { get; set; }
-        public User? Faculty { get; set; }
-
-        public string? Status { get; set; } // Pending | Approved | Rejected | Cancelled
-        public DateTime? CreatedAt { get; set; } // When the Venue Booking Request was created
+        public string Description { get; set; } = string.Empty;
+        public string Availability { get; set; } = string.Empty; // List of days that the venue is available (e.g., Monday, Tuesday, etc.)
+        public List<string> DailyTimeSlots { get; set; } = []; // Max of 3 time slots each day (with max of 3 hours occupancy per slot)
+        public string Status { get; set; } = "available"; // Available, Not Available (based on capacity, avai)
+        public string? PhotoPath { get; set; } // Path to the photo of the venue
     }
 }
