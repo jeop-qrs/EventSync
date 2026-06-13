@@ -30,10 +30,7 @@ namespace backend.Services
         public async Task<GlobalResponse> Register(AuthRegisterRequest req)
         {
             // Check if user already exists
-            // SQL Query: SELECT * FROM Users WHERE Username = req.Username;
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
-            if (existingUser != null)
+            if (await _context.Users.AnyAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber))
             {
                 return new GlobalResponse
                 {
@@ -41,8 +38,26 @@ namespace backend.Services
                     BackendMessage = "User already registered"
                 };
             }
+            // Check which identifier is used based on role
+            string identifier;
+            if (req.Role == "student" && req.StudentNumber != null)
+            {
+                identifier = req.StudentNumber;
+            }
+            else if (req.Role == "faculty" && req.Username != null)
+            {
+                identifier = req.Username;
+            }
+            else
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Invalid Role"
+                };
+            }
             // Check if Username is empty
-            if (string.IsNullOrEmpty(req.Username) || string.IsNullOrEmpty(req.StudentNumber))
+            if (string.IsNullOrEmpty(identifier))
             {
                 return new GlobalResponse
                 {
@@ -51,7 +66,7 @@ namespace backend.Services
                 };
             }
             // Check if Username contains no spaces
-            if (req.Username.Contains(' ') || req.StudentNumber.Contains(' '))
+            if (identifier.Contains(' '))
             {
                 return new GlobalResponse
                 {
@@ -60,7 +75,7 @@ namespace backend.Services
                 };
             }
             // Check Username Length
-            if (req.Username.Length <= 8 || req.StudentNumber.Length <= 8)
+            if (identifier.Length <= 8)
             {
                 return new GlobalResponse
                 {
@@ -68,7 +83,7 @@ namespace backend.Services
                     BackendMessage = "Username and Student Number must be at least 8 characters long"
                 };
             }
-            if (req.Username.Length >= 20 || req.StudentNumber.Length >= 20)
+            if (identifier.Length >= 20)
             {
                 return new GlobalResponse
                 {
@@ -85,8 +100,7 @@ namespace backend.Services
                     BackendMessage = "Password must be at least 8 characters long and at most 20 characters long"
                 };
             }
-
-            // Create object for newUser and initial AccessToken
+            // Create object for newUser
             var newUser = new User
             {
                 Username = req.Username,
@@ -120,7 +134,7 @@ namespace backend.Services
                 };
             }
 
-            // Check if password is correct via hashed password
+            // Check if password input is correct
             if (!_hasher.VerifyHashedPassword(user, user.PasswordHash, req.Password).Equals(PasswordVerificationResult.Success))
             {
                 return new GlobalResponse
