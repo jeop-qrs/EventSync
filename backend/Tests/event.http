@@ -1,0 +1,55 @@
+@baseUrl1 = http://localhost:5108
+@baseUrl2 = https://localhost:7248
+
+@testUsername = appuser123
+@testPassword = password123
+@testStatus = approved
+
+
+
+### Get access token
+# @name login
+POST {{baseUrl1}}/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "{{testUsername}}",
+    "password": "{{testPassword}}"
+}
+
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+
+
+### Get all events based on filter
+GET {{baseUrl1}}/api/events?status={{testStatus}}
+Authorization: Bearer {{accessToken}}
+
+
+
+### Create event
+# @name create
+POST {{baseUrl1}}/api/events
+Authorization: Bearer {{accessToken}}
+
+title: Test Event
+department: COMMITS
+venueId: 1
+eventDate: 2026-11-05
+startTime: 13:00
+endTime: 17:00
+expectedAttendees: 100
+submitLetter: @test-files/sampol.pdf
+
+
+
+### Update event status
+# @name updateStatus
+PATCH {{baseUrl1}}/api/events/{{create.response.body.data.eventId}}/status
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+    "status": "approved"
+}

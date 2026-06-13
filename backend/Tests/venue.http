@@ -1,0 +1,47 @@
+@baseUrl1 = http://localhost:5108
+@baseUrl2 = https://localhost:7248
+
+@testUsername = appuser123
+@testPassword = password123
+@testStatus = available
+
+
+
+### Get access token
+# @name login
+POST {{baseUrl1}}/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "{{testUsername}}",
+    "password": "{{testPassword}}"
+}
+
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+
+
+### Get all venues
+GET {{baseUrl1}}/api/venues
+Authorization: Bearer {{accessToken}}
+
+
+
+### Get venues with filter
+GET {{baseUrl1}}/api/venues?status={{testStatus}}
+Authorization: Bearer {{accessToken}}
+
+
+
+### Create venue
+# @name createVenue
+POST {{baseUrl1}}/api/venues
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+name: "Test Venue"
+address: "123 sample street"
+capacity: 200
+description: "test description"
+availability: "Mon - Sat"
