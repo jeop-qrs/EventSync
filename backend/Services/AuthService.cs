@@ -30,7 +30,9 @@ namespace backend.Services
         public async Task<GlobalResponse> Register(AuthRegisterRequest req)
         {
             // Check if user already exists
-            if (await _context.Users.AnyAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber))
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
+            if (user != null)
             {
                 return new GlobalResponse
                 {
