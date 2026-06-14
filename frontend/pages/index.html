@@ -143,9 +143,12 @@
                 Settings
               </button>
 
-              <div class="profile-setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;">
-                <label for="themeToggleStudent" class="profile-setting-label" style="margin:0;color:inherit;">Dark mode</label>
-                <input type="checkbox" id="themeToggleStudent" class="profile-setting-toggle" aria-label="Toggle dark mode" />
+              <div class="profile-setting-row">
+                <span class="profile-setting-label">Dark mode</span>
+                <label class="toggle-switch" for="themeToggleStudent">
+                  <input type="checkbox" id="themeToggleStudent" aria-label="Toggle dark mode" />
+                  <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
               </div>
 
               <div class="profile-dropdown-separator"></div>
@@ -234,6 +237,11 @@
 
                   <div class="venue-meta">
                     <p>
+                      <strong>Capacity:</strong>
+                      <span id="venueCapacity">-</span>
+                    </p>
+
+                    <p>
                       <strong>Address:</strong>
 
                       <span id="venueAddress">-</span>
@@ -318,17 +326,15 @@
                   </div>
 
                   <div class="calendar-legend">
-                    <span class="legend-item legend-available"
-                      ><span></span>Available slots</span
-                    >
-
-                    <span class="legend-item legend-booked"
-                      ><span></span>Fully booked</span
-                    >
-
-                    <span class="legend-item legend-neutral"
-                      ><span></span>No schedule data</span
-                    >
+                    <span class="legend-item legend-available">
+                      <span></span>Available
+                    </span>
+                    <span class="legend-item legend-partial">
+                      <span></span>Limited slots
+                    </span>
+                    <span class="legend-item legend-booked">
+                      <span></span>Fully Booked
+                    </span>
                   </div>
                 </div>
               </div>
