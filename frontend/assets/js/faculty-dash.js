@@ -126,7 +126,7 @@ function renderFacultySchedule() {
               <span class="schedule-card-divider">•</span>
               <span>${escapeHtml(p.venue)}</span>
             </p>
-            <p class="schedule-card-datetime">${escapeHtml(p.date)} · ${escapeHtml(p.time)}</p>
+            <p class="schedule-card-datetime">${escapeHtml(p.date)} · ${escapeHtml(formatTime12h(p.time))}</p>
           </div>
           <div class="schedule-card-status">
             <span class="status-pill ${st.cls}">${st.label}</span>
@@ -206,6 +206,7 @@ function displayVenueDetail(venueId) {
 
   document.getElementById("detailVenueName").textContent = venue.name;
   document.getElementById("venueDescription").textContent = venue.description;
+  document.getElementById("venueCapacity").textContent = venue.capacity || "Not specified";
   document.getElementById("venueAddress").textContent = venue.address;
   document.getElementById("venueAvailabilityText").textContent = venue.availability;
 
@@ -247,10 +248,53 @@ function resetVenueDetailPanel() {
   document.getElementById("detailVenueName").textContent = "Select a Venue";
   document.getElementById("venueDescription").textContent =
     "Pick a venue from the directory to view its details and availability.";
+  document.getElementById("venueCapacity").textContent = "-";
   document.getElementById("venueAddress").textContent = "-";
   document.getElementById("venueAvailabilityText").textContent = "-";
   document.getElementById("deleteVenueBtn").style.display = "none";
   document.getElementById("editVenueBtn").style.display = "none";
+}
+
+// =============================================
+// Dynamic Slot Editor Helpers
+// =============================================
+
+function renderDynamicSlots(containerId, slots) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  if (!slots || slots.length === 0) slots = ["8:00 AM - 11:00 AM"];
+
+  slots.forEach((slotTime) => {
+    const row = document.createElement("div");
+    row.className = "dynamic-slot-row";
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-control dynamic-slot-input";
+    // Auto-convert any legacy 24h slots in local storage to 12h
+    input.value = formatTime12h(slotTime);
+    input.placeholder = "e.g. 8:00 AM - 11:00 AM";
+    input.required = true;
+    
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "dynamic-slot-remove";
+    removeBtn.innerHTML = "×";
+    removeBtn.ariaLabel = "Remove slot";
+    removeBtn.onclick = () => row.remove();
+    
+    row.appendChild(input);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+  });
+}
+
+function getDynamicSlots(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  const inputs = container.querySelectorAll(".dynamic-slot-input");
+  return Array.from(inputs).map(input => input.value.trim()).filter(v => v);
 }
 
 // =============================================
@@ -265,12 +309,7 @@ function openAddVenueModal() {
   document.getElementById("venuePhotoName").textContent = "No file selected";
 
   // Reset schedule editor
-  const s1 = document.getElementById("venueSlot1");
-  const s2 = document.getElementById("venueSlot2");
-  const s3 = document.getElementById("venueSlot3");
-  if (s1) s1.value = DEFAULT_TIME_SLOTS[0];
-  if (s2) s2.value = DEFAULT_TIME_SLOTS[1];
-  if (s3) s3.value = DEFAULT_TIME_SLOTS[2];
+  renderDynamicSlots("venueSlotsContainer", DEFAULT_TIME_SLOTS);
 
   document.getElementById("addVenueModal")?.classList.remove("hidden");
 }
@@ -290,18 +329,14 @@ function openEditVenueModal(venueId) {
   // Pre-fill form fields
   document.getElementById("venueNameInput").value = venue.name;
   document.getElementById("venueAddressInput").value = venue.address;
+  document.getElementById("venueCapacityInput").value = venue.capacity || "";
   document.getElementById("venueDescInput").value = venue.description;
   document.getElementById("venueAvailInput").value = venue.availability;
   document.getElementById("venuePhotoName").textContent = venue.photoDataUrl ? "Current photo loaded" : "No file selected";
 
   // Pre-fill time slots
   const slots = venue.timeSlots || DEFAULT_TIME_SLOTS;
-  const s1 = document.getElementById("venueSlot1");
-  const s2 = document.getElementById("venueSlot2");
-  const s3 = document.getElementById("venueSlot3");
-  if (s1) s1.value = slots[0] || DEFAULT_TIME_SLOTS[0];
-  if (s2) s2.value = slots[1] || DEFAULT_TIME_SLOTS[1];
-  if (s3) s3.value = slots[2] || DEFAULT_TIME_SLOTS[2];
+  renderDynamicSlots("venueSlotsContainer", slots);
 
   document.getElementById("addVenueModal")?.classList.remove("hidden");
 }
@@ -326,17 +361,15 @@ async function handleAddVenueSubmit(e) {
 
   const name = document.getElementById("venueNameInput").value.trim();
   const address = document.getElementById("venueAddressInput").value.trim();
+  const capacity = document.getElementById("venueCapacityInput").value.trim();
   const description = document.getElementById("venueDescInput").value.trim();
   const availability = document.getElementById("venueAvailInput").value.trim();
   const photoInput = document.getElementById("venuePhotoInput");
   const photoFile = photoInput?.files?.[0];
 
-  // Read time slot values from the schedule editor
-  const timeSlots = [
-    document.getElementById("venueSlot1")?.value.trim() || DEFAULT_TIME_SLOTS[0],
-    document.getElementById("venueSlot2")?.value.trim() || DEFAULT_TIME_SLOTS[1],
-    document.getElementById("venueSlot3")?.value.trim() || DEFAULT_TIME_SLOTS[2],
-  ];
+  // Read time slot values from the dynamic schedule editor
+  let timeSlots = getDynamicSlots("venueSlotsContainer");
+  if (timeSlots.length === 0) timeSlots = [DEFAULT_TIME_SLOTS[0]]; // fallback
 
   const venues = loadVenues();
 
@@ -347,6 +380,7 @@ async function handleAddVenueSubmit(e) {
 
     venues[venueIndex].name = name;
     venues[venueIndex].address = address;
+    venues[venueIndex].capacity = capacity;
     venues[venueIndex].description = description;
     venues[venueIndex].availability = availability;
     venues[venueIndex].timeSlots = timeSlots;
@@ -372,6 +406,7 @@ async function handleAddVenueSubmit(e) {
       id: `venue-${Date.now()}`,
       name,
       address,
+      capacity,
       description,
       availability,
       photoDataUrl,
@@ -419,26 +454,98 @@ function renderVenueCalendar(venueId) {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, day);
+    const isPast = isDateInPast(day, viewCalendarMonth, viewCalendarYear);
+    const isBlackedOut = isVenueBlackedOut(venue, dateStr);
     const dayAvailability = availability[day];
     const status = getDayAvailabilityStatus(dayAvailability);
-    const times = dayAvailability?.times || [];
     const isSelected = selectedCalendarDay === day;
-    const slotsHTML =
-      status === "available"
-        ? `<div class="day-times">${formatCalendarDaySlots(times)}</div>`
-        : status === "booked"
-          ? '<span class="day-status-label">Booked</span>'
-          : "";
+
+    let cellClass;
+    let isDisabled = false;
+
+    if (isPast) {
+      cellClass = "calendar-date past";
+      isDisabled = true;
+    } else if (isBlackedOut) {
+      cellClass = "calendar-date blackout";
+      // Intentionally NOT disabled so faculty can click to un-blackout
+    } else {
+      cellClass = `calendar-date ${status}`;
+    }
+
+    if (isSelected && !isDisabled) cellClass += " is-selected";
 
     html += `
-      <button type="button" class="calendar-date ${status}${isSelected ? " is-selected" : ""}" data-day="${day}">
+      <button type="button" class="${cellClass}" data-day="${day}"${isDisabled ? " disabled" : ""}>
         <span class="day-number">${day}</span>
-        ${slotsHTML}
       </button>
     `;
   }
 
   calendarDates.innerHTML = html;
+
+  calendarDates.querySelectorAll(".calendar-date[data-day]:not([disabled])").forEach((cell) => {
+    cell.addEventListener("click", () => selectFacultyDay(venueId, Number(cell.dataset.day)));
+  });
+
+  // Restore selection if within valid range
+  if (selectedCalendarDay && selectedCalendarDay <= daysInMonth && selectedCalendarDay >= 1) {
+    const selectedCell = calendarDates.querySelector(`.calendar-date[data-day="${selectedCalendarDay}"]`);
+    if (selectedCell) {
+      selectFacultyDay(venueId, selectedCalendarDay);
+    } else {
+      selectedCalendarDay = null;
+      const detailPanel = document.getElementById("calendarDayDetail");
+      if (detailPanel) detailPanel.hidden = true;
+    }
+  } else {
+    selectedCalendarDay = null;
+    const detailPanel = document.getElementById("calendarDayDetail");
+    if (detailPanel) detailPanel.hidden = true;
+  }
+}
+
+function selectFacultyDay(venueId, day) {
+  const venue = facultyVenueData[venueId];
+  if (!venue) return;
+
+  selectedCalendarDay = day;
+
+  // Highlight selected cell
+  document.querySelectorAll(".calendar-date").forEach((c) => c.classList.remove("is-selected"));
+  const selectedCell = document.querySelector(`.calendar-date[data-day="${day}"]`);
+  if (selectedCell) selectedCell.classList.add("is-selected");
+
+  // Show day detail strip
+  const detailPanel = document.getElementById("calendarDayDetail");
+  const detailTitle = document.getElementById("calendarDayDetailTitle");
+  const detailTimes = document.getElementById("calendarDayTimes");
+  const editDayBtn = document.getElementById("editDayBtn");
+  if (!detailPanel || !detailTitle || !detailTimes) return;
+
+  const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, day);
+  const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
+  const bookedCount = slots.filter((s) => s.booked).length;
+  const isBlackedOut = isVenueBlackedOut(venue, dateStr);
+
+  detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear}`;
+
+  if (isBlackedOut) {
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">Marked as unavailable by faculty.</li>';
+  } else if (!slots.length) {
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">No time slots configured for this date.</li>';
+  } else {
+    detailTimes.innerHTML = slots.map((slot) =>
+      slot.booked
+        ? `<li class="fac-slot-item fac-slot-booked"><span>${escapeHtml(formatTime12h(slot.time))}</span><span class="fac-slot-badge fac-slot-badge--booked">Booked</span></li>`
+        : `<li class="fac-slot-item fac-slot-available"><span>${escapeHtml(formatTime12h(slot.time))}</span><span class="fac-slot-badge fac-slot-badge--available">Available</span></li>`
+    ).join("");
+  }
+
+  if (editDayBtn) editDayBtn.dataset.venueId = venueId;
+  if (editDayBtn) editDayBtn.dataset.day = day;
+  detailPanel.hidden = false;
 }
 
 function shiftCalendarMonth(delta) {
@@ -451,7 +558,91 @@ function shiftCalendarMonth(delta) {
     viewCalendarYear += 1;
   }
   selectedCalendarDay = null;
+  closeDayManager();
+  const detailPanel = document.getElementById("calendarDayDetail");
+  if (detailPanel) detailPanel.hidden = true;
   if (activeVenue) renderVenueCalendar(activeVenue);
+}
+
+// =============================================
+// Day Manager Panel
+// =============================================
+
+let dayManagerVenueId = null;
+let dayManagerDay = null;
+
+function openDayManager(venueId, day) {
+  const venue = facultyVenueData[venueId];
+  if (!venue) return;
+
+  dayManagerVenueId = venueId;
+  dayManagerDay = day;
+
+  const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, day);
+  const isBlackedOut = isVenueBlackedOut(venue, dateStr);
+
+  // Update modal title
+  document.getElementById("dayManagerTitle").textContent =
+    `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear}`;
+
+  // Set blackout toggle
+  const blackoutToggle = document.getElementById("blackoutToggle");
+  if (blackoutToggle) blackoutToggle.checked = isBlackedOut;
+
+  // Render dynamic slots
+  const currentSlots = getDayTimeSlots(venue, dateStr);
+  renderDynamicSlots("dayManagerSlotsContainer", currentSlots);
+
+  // Toggle slot section based on blackout state
+  const slotSection = document.getElementById("slotManagerSection");
+  if (slotSection) slotSection.style.opacity = isBlackedOut ? "0.4" : "1";
+  if (slotSection) slotSection.style.pointerEvents = isBlackedOut ? "none" : "auto";
+
+  // Show modal
+  const modal = document.getElementById("dayManagerModal");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeDayManager() {
+  dayManagerVenueId = null;
+  dayManagerDay = null;
+  const modal = document.getElementById("dayManagerModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function saveDayManager() {
+  if (!dayManagerVenueId || !dayManagerDay) return;
+
+  const venues = loadVenues();
+  const venue = venues.find((v) => v.id === dayManagerVenueId);
+  if (!venue) return;
+
+  const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, dayManagerDay);
+  const isBlackedOut = document.getElementById("blackoutToggle")?.checked || false;
+  const allSlots = venue.timeSlots || DEFAULT_TIME_SLOTS;
+
+  // Persist blackout
+  if (!venue.blackoutDates) venue.blackoutDates = [];
+  const blackoutIdx = venue.blackoutDates.indexOf(dateStr);
+  if (isBlackedOut && blackoutIdx === -1) venue.blackoutDates.push(dateStr);
+  if (!isBlackedOut && blackoutIdx !== -1) venue.blackoutDates.splice(blackoutIdx, 1);
+
+  // Persist slot override
+  if (!venue.daySlotOverrides) venue.daySlotOverrides = {};
+  const editedSlots = getDynamicSlots("dayManagerSlotsContainer");
+  
+  // Compare array content to check if it's different from default
+  if (JSON.stringify(editedSlots) !== JSON.stringify(allSlots)) {
+    venue.daySlotOverrides[dateStr] = editedSlots;
+  } else {
+    delete venue.daySlotOverrides[dateStr];
+  }
+
+  saveVenues(venues);
+  facultyVenueData[dayManagerVenueId] = venue;
+  renderVenueCalendar(dayManagerVenueId);
+  addNotification(`Schedule for ${MONTH_NAMES[viewCalendarMonth]} ${dayManagerDay} updated.`, "Just now");
+  closeDayManager();
 }
 
 // =============================================
@@ -497,7 +688,6 @@ function renderProposals() {
         ? `<iframe src="${p.pdfDataUrl}" title="PDF preview for ${escapeHtml(p.title)}" class="proposal-pdf-frame"></iframe>
            <div class="proposal-pdf-actions">
              <a href="${p.pdfDataUrl}" download="${escapeHtml(p.pdfName || 'letter-request.pdf')}" class="btn btn-small proposal-download-btn">⬇ Download PDF</a>
-             <a href="${p.pdfDataUrl}" target="_blank" class="btn btn-small btn-secondary proposal-view-btn">↗ Open in New Tab</a>
            </div>`
         : '<p class="empty-state">No PDF attached.</p>';
 
@@ -510,7 +700,7 @@ function renderProposals() {
         <div class="proposal-card-body">
           <p><strong>Organization:</strong> ${escapeHtml(p.org)}</p>
           <p><strong>Venue:</strong> ${escapeHtml(p.venue)}</p>
-          <p><strong>Date &amp; Time:</strong> ${escapeHtml(p.date)} · ${escapeHtml(p.time)}</p>
+          <p><strong>Date &amp; Time:</strong> ${escapeHtml(p.date)} · ${escapeHtml(formatTime12h(p.time))}</p>
           <p><strong>Attendance:</strong> ${escapeHtml(String(p.attendees || "-"))}</p>
           ${p.status === "rejected" && p.rejectionReason ? `<p class="event-reject-reason"><strong>Rejection Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>` : ""}
         </div>
@@ -637,6 +827,47 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("editVenueBtn")?.addEventListener("click", () => {
     if (activeVenue) openEditVenueModal(activeVenue);
   });
+
+  // Day Manager panel controls
+  document.getElementById("dayManagerClose")?.addEventListener("click", closeDayManager);
+  document.getElementById("dayManagerCancel")?.addEventListener("click", closeDayManager);
+  document.getElementById("dayManagerSave")?.addEventListener("click", saveDayManager);
+  document.getElementById("dayManagerOverlay")?.addEventListener("click", closeDayManager);
+
+  // Edit Day button in day detail strip
+  document.getElementById("editDayBtn")?.addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const venueId = btn.dataset.venueId;
+    const day = Number(btn.dataset.day);
+    if (venueId && day) openDayManager(venueId, day);
+  });
+
+  const setupAddSlotBtn = (btnId, containerId) => {
+    document.getElementById(btnId)?.addEventListener("click", () => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const row = document.createElement("div");
+      row.className = "dynamic-slot-row";
+      row.innerHTML = `
+        <input type="text" class="form-control dynamic-slot-input" placeholder="e.g. 8:00 AM - 11:00 AM" required />
+        <button type="button" class="dynamic-slot-remove" aria-label="Remove slot">×</button>
+      `;
+      row.querySelector(".dynamic-slot-remove").onclick = () => row.remove();
+      container.appendChild(row);
+    });
+  };
+
+  setupAddSlotBtn("venueAddSlotBtn", "venueSlotsContainer");
+  setupAddSlotBtn("dayManagerAddSlotBtn", "dayManagerSlotsContainer");
+
+  document.getElementById("blackoutToggle")?.addEventListener("change", (e) => {
+    const slotSection = document.getElementById("slotManagerSection");
+    if (slotSection) {
+      slotSection.style.opacity = e.target.checked ? "0.4" : "1";
+      slotSection.style.pointerEvents = e.target.checked ? "none" : "auto";
+    }
+  });
+
 
   // Notification bell
   document.getElementById("notificationBell")?.addEventListener("click", toggleNotificationPopup);
