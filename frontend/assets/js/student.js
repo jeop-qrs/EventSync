@@ -131,7 +131,7 @@ function renderMyEvents() {
         <article class="my-event-card" data-id="${escapeHtml(p.id)}">
           <div class="my-event-card-main">
             <h4>${escapeHtml(p.title)}</h4>
-            <p class="my-event-meta">${escapeHtml(p.venue)} · ${escapeHtml(p.date)} · ${escapeHtml(p.time)}</p>
+            <p class="my-event-meta">${escapeHtml(p.venue)} · ${escapeHtml(p.date)} · ${escapeHtml(formatTime12h(p.time))}</p>
             ${rejectNote}
           </div>
           <div class="my-event-card-actions">
@@ -234,7 +234,7 @@ function populateVenueSelect(venues) {
   venues.forEach((v) => {
     const opt = document.createElement("option");
     opt.value = v.name;
-    opt.textContent = v.name;
+    opt.textContent = `${v.name} (Capacity: ${v.capacity || 'Not specified'})`;
     select.appendChild(opt);
   });
   if (current) select.value = current;
@@ -256,6 +256,7 @@ function displayVenueDetail(venueId) {
 
   document.getElementById("detailVenueName").textContent = venue.name;
   document.getElementById("venueDescription").textContent = venue.description;
+  if (document.getElementById("venueCapacity")) document.getElementById("venueCapacity").textContent = venue.capacity || "Not specified";
   document.getElementById("venueAddress").textContent = venue.address;
   document.getElementById("venueAvailabilityText").textContent = venue.availability;
 
@@ -305,14 +306,30 @@ function updateCalendarDayDetail(venueId, day) {
   }
 
   const venue = studentVenueData[venueId];
+  const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, day);
+
+  // Show unavailable message for past or blacked-out dates
+  if (isDateInPast(day, viewCalendarMonth, viewCalendarYear)) {
+    detailPanel.hidden = false;
+    detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear}`;
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">This date has already passed and cannot be booked.</li>';
+    return;
+  }
+  if (isVenueBlackedOut(venue, dateStr)) {
+    detailPanel.hidden = false;
+    detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear}`;
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">This date has been marked as unavailable by the faculty.</li>';
+    return;
+  }
+
   const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
   const bookedCount = slots.filter((s) => s.booked).length;
 
   detailPanel.hidden = false;
 
   if (bookedCount >= slots.length) {
-    detailTitle.textContent = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear} — Fully booked`;
-    detailTimes.innerHTML = '<li class="calendar-day-times-empty">All 3 time slots are booked for this date.</li>';
+    detailTitle.innerHTML = `${MONTH_NAMES[viewCalendarMonth]} ${day}, ${viewCalendarYear} — <span class="fully-booked-label">Fully Booked</span>`;
+    detailTimes.innerHTML = '<li class="calendar-day-times-empty">All time slots are booked for this date.</li>';
     return;
   }
 
@@ -324,7 +341,7 @@ function updateCalendarDayDetail(venueId, day) {
     if (slot.booked) {
       return `
         <li class="time-slot-item time-slot-item--booked" aria-disabled="true">
-          <span class="time-slot-time">${escapeHtml(slot.time)}</span>
+          <span class="time-slot-time">${escapeHtml(formatTime12h(slot.time))}</span>
           <span class="time-slot-badge time-slot-badge--booked">Booked</span>
         </li>`;
     }
@@ -332,7 +349,7 @@ function updateCalendarDayDetail(venueId, day) {
     return `
       <li class="time-slot-item time-slot-item--available${isSelected ? " time-slot-item--selected" : ""}"
           data-time="${escapeHtml(slot.time)}" tabindex="0" role="button">
-        <span class="time-slot-time">${escapeHtml(slot.time)}</span>
+        <span class="time-slot-time">${escapeHtml(formatTime12h(slot.time))}</span>
         <span class="time-slot-badge time-slot-badge--available">${isSelected ? "✓ Selected" : "Available"}</span>
       </li>`;
   }).join("");
@@ -384,36 +401,50 @@ function renderVenueCalendar(venueId) {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = formatDateString(viewCalendarYear, viewCalendarMonth, day);
+    const isPast = isDateInPast(day, viewCalendarMonth, viewCalendarYear);
+    const isBlackedOut = isVenueBlackedOut(venue, dateStr);
     const status = getDayAvailabilityStatus(venueId, day);
     const isSelected = selectedCalendarDay === day;
-    const slots = getVenueTimeSlotsForDay(venue, day, viewCalendarMonth, viewCalendarYear);
-    const availableSlots = slots.filter((s) => !s.booked);
-    const bookedSlots = slots.filter((s) => s.booked);
 
-    let slotsHTML = "";
-    if (status === "booked") {
-      slotsHTML = '<span class="day-status-label">Booked</span>';
-    } else if (status === "available" || status === "partial") {
-      slotsHTML = `<div class="day-times">${formatCalendarDaySlots(availableSlots.map(s => s.time))}</div>`;
+    let cellClass = `calendar-date ${status}`;
+    let isDisabled = false;
+
+    if (isPast) {
+      cellClass = "calendar-date past";
+      isDisabled = true;
+    } else if (isBlackedOut) {
+      cellClass = "calendar-date blackout";
+      isDisabled = true;
+    } else if (status === "booked") {
+      isDisabled = true;
     }
 
+    if (isSelected && !isDisabled) cellClass += " is-selected";
+
     html += `
-      <button type="button" class="calendar-date ${status}${isSelected ? " is-selected" : ""}" data-day="${day}">
+      <button type="button" class="${cellClass}" data-day="${day}"${isDisabled ? " disabled" : ""}>
         <span class="day-number">${day}</span>
-        ${slotsHTML}
       </button>
     `;
   }
 
   calendarDates.innerHTML = html;
 
-  calendarDates.querySelectorAll(".calendar-date[data-day]").forEach((cell) => {
+  calendarDates.querySelectorAll(".calendar-date[data-day]:not([disabled])").forEach((cell) => {
     cell.addEventListener("click", () => selectCalendarDay(venueId, Number(cell.dataset.day)));
   });
 
-  // Restore selection if within valid range
+  // Restore selection if within valid range and not disabled
   if (selectedCalendarDay && selectedCalendarDay <= daysInMonth && selectedCalendarDay >= 1) {
-    updateCalendarDayDetail(venueId, selectedCalendarDay);
+    const selectedCell = calendarDates.querySelector(`.calendar-date[data-day="${selectedCalendarDay}"]`);
+    if (selectedCell && !selectedCell.disabled) {
+      updateCalendarDayDetail(venueId, selectedCalendarDay);
+    } else {
+      selectedCalendarDay = null;
+      const detailPanel = document.getElementById("calendarDayDetail");
+      if (detailPanel) detailPanel.hidden = true;
+    }
   } else {
     selectedCalendarDay = null;
     const detailPanel = document.getElementById("calendarDayDetail");
@@ -454,7 +485,18 @@ function openReservationWithVenue(venueName) {
 
   // Set the time from the selected slot (use the start time for the time input)
   if (timeInput && selectedCalendarTime) {
-    const normalizedTime = selectedCalendarTime.split(" - ")[0];
+    let normalizedTime = selectedCalendarTime.split(" - ")[0].trim();
+    
+    // Convert "8:00 AM" or "2:00 PM" back to "HH:mm" for the <input type="time">
+    const match = normalizedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match) {
+      let [_, h, m, ampm] = match;
+      let hour = parseInt(h, 10);
+      if (ampm.toUpperCase() === "PM" && hour < 12) hour += 12;
+      if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
+      normalizedTime = `${String(hour).padStart(2, "0")}:${m}`;
+    }
+    
     timeInput.value = normalizedTime;
   }
 
