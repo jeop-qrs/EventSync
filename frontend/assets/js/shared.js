@@ -43,9 +43,9 @@ const STORAGE_KEYS = {
  * when a venue is first created.
  */
 const DEFAULT_TIME_SLOTS = [
-  "08:00 - 11:00",
-  "12:00 - 15:00",
-  "16:00 - 19:00",
+  "8:00 AM - 11:00 AM",
+  "12:00 PM - 3:00 PM",
+  "4:00 PM - 7:00 PM",
 ];
 
 // =============================================
@@ -249,9 +249,36 @@ function initializePdfDropzone() {
 function formatCalendarDaySlots(times) {
   if (!times?.length) return "";
   return times
-    .map((slot) => `<span class="calendar-time-slot">${escapeHtml(slot)}</span>`)
+    .map((slot) => `<span class="calendar-time-slot">${escapeHtml(formatTime12h(slot))}</span>`)
     .join("");
 }
+
+/**
+ * formatTime12h(timeStr)
+ * Converts a 24-hour time string (or range) to 12-hour AM/PM format.
+ * Examples:
+ *   "08:00"          → "8:00 AM"
+ *   "14:00"          → "2:00 PM"
+ *   "08:00 - 11:00"  → "8:00 AM - 11:00 AM"
+ *   "12:00 - 15:00"  → "12:00 PM - 3:00 PM"
+ */
+function formatTime12h(timeStr) {
+  if (!timeStr) return timeStr;
+  
+  // If the string already contains AM or PM, it's already in 12-hour format
+  // or was manually typed by the user. Just return it to avoid "AM AM".
+  if (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM")) {
+    return timeStr;
+  }
+
+  return timeStr.replace(/\b(\d{1,2}):(\d{2})\b/g, (_, h, m) => {
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+  });
+}
+
 
 // =============================================
 // Notification System
@@ -504,8 +531,8 @@ function getBookedSlotsForDate(venueName, dateStr) {
  * Returns: [{ time: "08:00 - 11:00", booked: false, bookedBy: null }, ...]
  */
 function getVenueTimeSlotsForDay(venue, day, month, year) {
-  const slots = venue.timeSlots || DEFAULT_TIME_SLOTS;
   const dateStr = formatDateString(year, month, day);
+  const slots = getDayTimeSlots(venue, dateStr);
   const bookedTimes = getBookedSlotsForDate(venue.name, dateStr);
 
   return slots.map((slot) => {
@@ -528,6 +555,53 @@ function formatDateString(year, month, day) {
   const paddedMonth = String(month + 1).padStart(2, "0");
   const paddedDay = String(day).padStart(2, "0");
   return `${year}-${paddedMonth}-${paddedDay}`;
+}
+
+/**
+ * isDateInPast(day, month, year)
+ * Returns true if the given calendar date is strictly before today (local time).
+ * Today itself is NOT considered past.
+ */
+function isDateInPast(day, month, year) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(year, month, day);
+  return target < today;
+}
+
+/**
+ * isVenueBlackedOut(venue, dateStr)
+ * Returns true if the faculty has manually marked this date as unavailable.
+ * venue.blackoutDates is an array of "YYYY-MM-DD" strings.
+ */
+function isVenueBlackedOut(venue, dateStr) {
+  if (!venue?.blackoutDates?.length) return false;
+  return venue.blackoutDates.includes(dateStr);
+}
+
+/**
+ * getDayTimeSlots(venue, dateStr)
+ * Returns the array of available time slot strings for a specific date.
+ * Faculty can override the slots per day via venue.daySlotOverrides.
+ */
+function getDayTimeSlots(venue, dateStr) {
+  const defaultSlots = venue.timeSlots || DEFAULT_TIME_SLOTS;
+  if (!venue?.daySlotOverrides) return defaultSlots;
+  const override = venue.daySlotOverrides[dateStr];
+  
+  if (override === undefined) return defaultSlots;
+  
+  // Backwards compatibility with old integer-based overrides
+  if (typeof override === "number") {
+    return defaultSlots.slice(0, Math.max(0, override));
+  }
+  
+  // New array-based override
+  if (Array.isArray(override)) {
+    return override;
+  }
+  
+  return defaultSlots;
 }
 
 // =============================================
