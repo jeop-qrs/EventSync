@@ -92,9 +92,12 @@
               >
                 Settings
               </button>
-              <div class="profile-setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;">
-                <label for="themeToggleFaculty" class="profile-setting-label" style="margin:0;color:inherit;">Dark mode</label>
-                <input type="checkbox" id="themeToggleFaculty" class="profile-setting-toggle" aria-label="Toggle dark mode" />
+              <div class="profile-setting-row">
+                <span class="profile-setting-label">Dark Mode</span>
+                <label class="toggle-switch" for="themeToggleFaculty">
+                  <input type="checkbox" id="themeToggleFaculty" aria-label="Toggle dark mode" />
+                  <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
               </div>
               <div class="profile-dropdown-separator"></div>
               <button
@@ -154,9 +157,6 @@
         <div id="venues-view" class="view-section">
           <div class="venue-dashboard">
             <section class="venue-list">
-              <div class="section-header-inline">
-                <h3>Venue Directory</h3>
-              </div>
               <div class="venue-grid" id="facultyVenueGrid">
                 <button
                   type="button"
@@ -173,9 +173,9 @@
             <aside class="venue-detail-panel">
               <div class="detail-sidebar-inner">
                 <div class="venue-info">
-                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <div class="venue-info-header">
                     <h3 id="detailVenueName">Select a Venue</h3>
-                    <div style="display:flex;gap:8px;">
+                    <div class="venue-action-btns">
                       <button type="button" id="editVenueBtn" class="btn btn-small" style="display: none;" aria-label="Edit venue">Edit</button>
                       <button type="button" id="deleteVenueBtn" class="btn btn-danger btn-small" style="display: none;" aria-label="Delete venue">Delete</button>
                     </div>
@@ -185,6 +185,10 @@
                     availability.
                   </p>
                   <div class="venue-meta">
+                    <p>
+                      <strong>Capacity:</strong>
+                      <span id="venueCapacity">-</span>
+                    </p>
                     <p>
                       <strong>Address:</strong>
                       <span id="venueAddress">-</span>
@@ -243,9 +247,12 @@
                       class="calendar-day-detail"
                       hidden
                     >
-                      <p class="calendar-day-detail-heading">
-                        <span id="calendarDayDetailTitle"></span>
-                      </p>
+                      <div class="calendar-day-detail-header">
+                        <p class="calendar-day-detail-heading">
+                          <span id="calendarDayDetailTitle"></span>
+                        </p>
+                        <button type="button" id="editDayBtn" class="btn btn-small btn-edit-day">Edit Day</button>
+                      </div>
                       <ul
                         id="calendarDayTimes"
                         class="calendar-day-times-list"
@@ -255,15 +262,54 @@
                 </div>
               </div>
             </aside>
+
+          </div>
+        </div>
+
+        <!-- Day Manager Modal -->
+        <div class="modal-overlay hidden" id="dayManagerModal" role="dialog" aria-modal="true" aria-labelledby="dayManagerTitle">
+          <div class="modal-overlay-bg" id="dayManagerOverlay"></div>
+          <div class="modal-card day-manager-modal-card">
+            <div class="modal-header">
+              <h3 class="modal-header-title" id="dayManagerTitle">Manage Date</h3>
+              <button type="button" class="modal-close" id="dayManagerClose" aria-label="Close">×</button>
+            </div>
+
+            <div class="modal-body day-manager-body">
+              <!-- Blackout Toggle -->
+              <div class="day-manager-section">
+                <div class="day-manager-row">
+                  <div>
+                    <span class="day-manager-label">Mark as Unavailable</span>
+                    <p class="day-manager-sublabel">Block all bookings for this date (holidays, breaks, etc.)</p>
+                  </div>
+                  <label class="toggle-switch" for="blackoutToggle">
+                    <input type="checkbox" id="blackoutToggle" />
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Dynamic Slot Editor -->
+              <div class="day-manager-section" id="slotManagerSection">
+                <span class="day-manager-label">Available Time Slots</span>
+                <p class="day-manager-sublabel">Add, remove, or edit time slots for this specific date</p>
+                <div id="dayManagerSlotsContainer" class="dynamic-slots-container">
+                  <!-- Inputs injected via JS -->
+                </div>
+                <button type="button" class="btn btn-secondary btn-small" id="dayManagerAddSlotBtn" style="align-self: flex-start; margin-top: 8px;">+ Add Time Slot</button>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" id="dayManagerCancel">Cancel</button>
+              <button type="button" class="btn" id="dayManagerSave">Save Changes</button>
+            </div>
           </div>
         </div>
 
         <!-- Proposed Events -->
         <div id="proposals-view" class="view-section">
-          <div class="section-header-inline">
-            <h3>Proposed Events</h3>
-            <span class="section-badge" id="proposalsCount">0 proposals</span>
-          </div>
           <p class="note-text">
             Review student-submitted event applications. Accept or reject each
             proposal below.
@@ -317,6 +363,16 @@
             />
           </div>
           <div class="form-group">
+            <label for="venueCapacityInput">Capacity <span class="required-indicator" aria-label="required">*</span></label>
+            <input
+              type="text"
+              id="venueCapacityInput"
+              class="form-control"
+              required
+              placeholder="e.g., 50 people"
+            />
+          </div>
+          <div class="form-group">
             <label for="venueDescInput">Venue Description <span class="required-indicator" aria-label="required">*</span></label>
             <textarea
               id="venueDescInput"
@@ -337,21 +393,11 @@
             ></textarea>
           </div>
           <div class="form-group">
-            <label>Daily Time Slots (3 per day) <span class="required-indicator" aria-label="required">*</span></label>
-            <div class="schedule-slots-editor">
-              <div class="schedule-slot-row">
-                <label for="venueSlot1">Slot 1</label>
-                <input type="text" id="venueSlot1" class="form-control" value="08:00 - 11:00" required />
-              </div>
-              <div class="schedule-slot-row">
-                <label for="venueSlot2">Slot 2</label>
-                <input type="text" id="venueSlot2" class="form-control" value="12:00 - 15:00" required />
-              </div>
-              <div class="schedule-slot-row">
-                <label for="venueSlot3">Slot 3</label>
-                <input type="text" id="venueSlot3" class="form-control" value="16:00 - 19:00" required />
-              </div>
+            <label>Default Daily Time Slots <span class="required-indicator" aria-label="required">*</span></label>
+            <div id="venueSlotsContainer" class="dynamic-slots-container">
+              <!-- Inputs injected via JS -->
             </div>
+            <button type="button" class="btn btn-secondary btn-small" id="venueAddSlotBtn" style="align-self: flex-start; margin-top: 8px;">+ Add Time Slot</button>
           </div>
           <div class="form-group">
             <label for="venuePhotoInput">Photo Upload</label>
