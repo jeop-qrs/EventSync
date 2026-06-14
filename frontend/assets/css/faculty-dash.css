@@ -98,7 +98,7 @@ body {
   flex-grow: 1;
 }
 
-.sidebar-menu h4{
+.sidebar-menu h4 {
   font-weight: 500;
 }
 
@@ -239,6 +239,71 @@ body {
   height: 1px;
   margin: 4px 0;
   background-color: var(--border);
+}
+
+/* Dark Mode Toggle Row */
+.profile-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.profile-setting-label {
+  font-size: 0.95rem;
+  color: var(--text-main);
+  font-weight: 400;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch-track {
+  width: 38px;
+  height: 22px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch-thumb {
+  position: absolute;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-switch input:checked+.toggle-switch-track {
+  background: var(--accent-color);
+}
+
+.toggle-switch input:checked+.toggle-switch-track .toggle-switch-thumb {
+  left: calc(100% - 19px);
+}
+
+.toggle-switch:focus-within .toggle-switch-track {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .notification-bell {
@@ -412,7 +477,7 @@ body.dark-mode {
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
-  --border: rgba(255,255,255,0.06);
+  --border: rgba(255, 255, 255, 0.06);
   background-color: var(--bg-primary);
   color: var(--text-main);
 }
@@ -567,7 +632,6 @@ body.dark-mode .notification-bell:hover {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,6 +644,8 @@ body.dark-mode .notification-bell:hover {
 }
 
 .modal-card {
+  position: relative;
+  z-index: 10;
   width: min(520px, 100%);
   max-height: 90vh;
   overflow-y: auto;
@@ -912,7 +978,7 @@ td {
   gap: 6px;
 }
 
-.venue-address h5{
+.venue-address h5 {
   color: var(--text-muted);
   font-size: 0.92rem;
   font-weight: 500;
@@ -1050,20 +1116,21 @@ td {
   width: 100%;
   min-height: 0;
   border-radius: 10px;
-  padding: 6px 4px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   border: 2px solid transparent;
-  background: #fff;
-  color: var(--text-main);
-  text-align: left;
+  background: #d3d3d3;
+  color: #555;
+  text-align: center;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -1083,59 +1150,40 @@ td {
 }
 
 .day-number {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  line-height: 1.2;
-  align-self: flex-start;
+  line-height: 1;
+  text-align: center;
 }
 
 .day-status-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  align-self: flex-start;
+  display: none;
 }
 
 .day-times {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  display: none;
 }
 
 .calendar-time-slot {
-  display: block;
-  font-size: 0.6rem;
-  font-weight: 600;
-  line-height: 1.25;
-  padding: 2px 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.65);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none;
 }
 
 .calendar-date.neutral {
-  background: #f1f5f9;
-  color: var(--text-muted);
+  background: #d3d3d3;
+  color: #555;
   cursor: default;
 }
 
 .calendar-date.available {
-  background: linear-gradient(160deg, #fff7ed 0%, #fed7aa 100%) !important;
-  color: #92400e !important;
-  border-color: #fbbf24 !important;
+  background: #d3d3d3 !important;
+  color: #555 !important;
+  border-color: transparent !important;
 }
 
 .calendar-date.partial {
-  background: linear-gradient(160deg, #fff7ed 0%, #fed7aa 100%) !important;
-  color: #92400e !important;
-  border-color: #fbbf24 !important;
+  background: #f97316 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
 }
 
 .calendar-date.booked:hover,
@@ -1146,7 +1194,7 @@ td {
 }
 
 .calendar-date.booked:hover {
-  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.18);
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.25);
   border-color: #ef4444;
 }
 
@@ -1157,7 +1205,7 @@ td {
 }
 
 .calendar-date.booked .day-status-label {
-  color: #b91c1c;
+  display: none;
 }
 
 .calendar-date.is-selected {
@@ -1171,6 +1219,66 @@ td {
   border-radius: 10px;
   background: #fff;
   border: 1px solid var(--border);
+}
+
+/* Day detail header with Edit Day button */
+.calendar-day-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.calendar-day-detail-header .calendar-day-detail-heading {
+  margin-bottom: 0;
+}
+
+.btn-edit-day {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+}
+
+/* Slot status items inside faculty day detail */
+.fac-slot-item {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.fac-slot-available {
+  background: #f0fdf4;
+  color: #047857;
+}
+
+.fac-slot-booked {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.fac-slot-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.fac-slot-badge--available {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.fac-slot-badge--booked {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .calendar-day-detail-heading {
@@ -1213,7 +1321,7 @@ td {
   font-size: 0.82rem;
 }
 
-.legend-item > span:first-child {
+.legend-item>span:first-child {
   width: 12px;
   height: 12px;
   border-radius: 4px;
@@ -1222,15 +1330,15 @@ td {
 }
 
 
-.legend-available > span:first-child {
+.legend-available>span:first-child {
   background-color: #fbbf24 !important;
 }
 
-.legend-partial > span:first-child {
-  background-color: #cbd5e1 !important;
+.legend-partial>span:first-child {
+  background-color: #f97316 !important;
 }
 
-.legend-booked > span:first-child {
+.legend-booked>span:first-child {
   background-color: #fca5a5;
 }
 
@@ -1675,6 +1783,9 @@ td {
 
 .proposal-pdf-actions {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid var(--border);
@@ -1685,6 +1796,9 @@ td {
   text-decoration: none;
   font-size: 0.78rem;
   padding: 6px 12px;
+  margin: 0 auto;
+  display: block;
+  width: fit-content;
 }
 
 /* =============================================
@@ -1712,3 +1826,233 @@ body.dark-mode .modal-body-center .success-icon {
   color: var(--danger);
 }
 
+/* =============================================
+   Calendar: Past & Blackout States
+   ============================================= */
+
+.calendar-date.past {
+  background: #e8e8e8 !important;
+  color: #aaa !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.calendar-date.blackout {
+  background: #e8e8e8 !important;
+  color: #aaa !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+button.calendar-date[disabled] {
+  pointer-events: none;
+}
+
+.fully-booked-label {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* =============================================
+   Venue Info Header Row
+   ============================================= */
+
+.venue-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.venue-action-btns {
+  display: flex;
+  gap: 8px;
+}
+
+/* =============================================
+   Venue Dashboard Layout with Day Manager
+   ============================================= */
+
+.venue-dashboard {
+  position: relative;
+}
+
+/* =============================================
+   Day Manager Modal Inner Layout
+   ============================================= */
+
+.day-manager-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.day-manager-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.day-manager-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.day-manager-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.day-manager-sublabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+/* Slot Count Stepper */
+.slot-count-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slot-count-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.slot-count-btn:hover {
+  background: var(--accent-color);
+  color: #fff;
+  border-color: var(--accent-color);
+}
+
+.slot-count-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  min-width: 28px;
+  text-align: center;
+}
+
+.slot-count-max {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Slot Preview */
+.slot-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.slot-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  background: var(--bg-primary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.slot-preview-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--accent-color);
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.slot-preview-none {
+  font-size: 0.82rem;
+  color: var(--danger);
+  font-style: italic;
+}
+
+.day-manager-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Dark mode for Day Manager */
+body.dark-mode .dynamic-slot-input {
+  background: var(--bg-primary);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+/* =============================================
+   Dynamic Time Slot Editor
+   ============================================= */
+
+.dynamic-slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dynamic-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dynamic-slot-input {
+  flex: 1;
+}
+
+.dynamic-slot-remove {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.dynamic-slot-remove:hover {
+  background: #fef2f2;
+  border-color: var(--danger);
+}
