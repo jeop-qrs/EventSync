@@ -79,11 +79,11 @@ function updateDashboardStats() {
   const venues = loadVenues();
   const active = proposals.filter((p) => p.status === "accepted").length;
   const pending = proposals.filter((p) => p.status === "pending").length;
-  const rejected = proposals.filter((p) => p.status === "rejected").length;
+  const pendingReviewed = proposals.filter((p) => p.status === "pending_reviewed").length;
 
   document.getElementById("countActive").textContent = active;
   document.getElementById("countPending").textContent = pending;
-  document.getElementById("countRejected").textContent = rejected;
+  document.getElementById("countPendingReviewed").textContent = pendingReviewed;
   document.getElementById("countVenues").textContent = venues.length;
 }
 
@@ -96,7 +96,7 @@ function renderFacultySchedule() {
   const countBadge = document.getElementById("scheduleTrackerCount");
   if (!list) return;
 
-  const proposals = loadProposals().filter((p) => p.status !== "rejected" && p.status !== "cancelled");
+  const proposals = loadProposals().filter((p) => p.status !== "pending_reviewed" && p.status !== "cancelled");
 
   if (countBadge) {
     countBadge.textContent = `${proposals.length} event${proposals.length === 1 ? "" : "s"}`;
@@ -110,7 +110,7 @@ function renderFacultySchedule() {
   const statusMap = {
     pending: { label: "Pending Review", cls: "status-pending" },
     accepted: { label: "Accepted", cls: "status-approved" },
-    rejected: { label: "Rejected", cls: "status-rejected" },
+    pending_reviewed: { label: "Pending Reviewed", cls: "status-rejected" },
     cancelled: { label: "Cancelled", cls: "status-cancelled" },
   };
 
@@ -674,12 +674,12 @@ function renderProposals() {
     .map((p) => {
       const statusClass =
         p.status === "accepted" ? "status-approved"
-        : p.status === "rejected" ? "status-rejected"
+        : p.status === "pending_reviewed" ? "status-rejected"
         : p.status === "cancelled" ? "status-cancelled"
         : "status-pending";
       const statusLabel =
         p.status === "accepted" ? "Accepted"
-        : p.status === "rejected" ? "Rejected"
+        : p.status === "pending_reviewed" ? "Pending Reviewed"
         : p.status === "cancelled" ? "Cancelled"
         : "Pending Review";
 
@@ -699,10 +699,11 @@ function renderProposals() {
         </div>
         <div class="proposal-card-body">
           <p><strong>Organization:</strong> ${escapeHtml(p.org)}</p>
+          <p><strong>Student No.:</strong> ${escapeHtml(p.studentNumber || "Unknown")}</p>
           <p><strong>Venue:</strong> ${escapeHtml(p.venue)}</p>
           <p><strong>Date &amp; Time:</strong> ${escapeHtml(p.date)} · ${escapeHtml(formatTime12h(p.time))}</p>
           <p><strong>Attendance:</strong> ${escapeHtml(String(p.attendees || "-"))}</p>
-          ${p.status === "rejected" && p.rejectionReason ? `<p class="event-reject-reason"><strong>Rejection Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>` : ""}
+          ${p.status === "pending_reviewed" && p.rejectionReason ? `<p class="event-reject-reason"><strong>Review Comments:</strong> ${escapeHtml(p.rejectionReason)}</p>` : ""}
         </div>
         <div class="proposal-pdf-preview">
           <div class="proposal-pdf-label">Letter Request</div>
@@ -711,15 +712,15 @@ function renderProposals() {
         <div class="proposal-card-actions">
           ${p.status === "pending" ? `
             <button type="button" class="btn btn-success proposal-accept-btn" data-id="${escapeHtml(p.id)}">Accept</button>
-            <button type="button" class="btn btn-danger proposal-reject-btn" data-id="${escapeHtml(p.id)}">Reject</button>
+            <button type="button" class="btn btn-danger proposal-reject-btn" data-id="${escapeHtml(p.id)}">Pending Reviewed</button>
           ` : ""}
         </div>
         ${p.status === "pending" ? `
           <div class="proposal-reject-form hidden" id="reject-form-${escapeHtml(p.id)}">
-            <label for="reject-reason-${escapeHtml(p.id)}">Reason for rejection <span class="required-indicator" aria-label="required">*</span></label>
-            <textarea id="reject-reason-${escapeHtml(p.id)}" class="form-control" rows="2" required placeholder="Provide a reason for the student..."></textarea>
+            <label for="reject-reason-${escapeHtml(p.id)}">Review Comments <span class="required-indicator" aria-label="required">*</span></label>
+            <textarea id="reject-reason-${escapeHtml(p.id)}" class="form-control" rows="2" required placeholder="Provide comments for the student to revise..."></textarea>
             <div class="form-actions">
-              <button type="button" class="btn btn-danger proposal-confirm-reject-btn" data-id="${escapeHtml(p.id)}">Confirm Reject</button>
+              <button type="button" class="btn btn-danger proposal-confirm-reject-btn" data-id="${escapeHtml(p.id)}">Submit Comments</button>
               <button type="button" class="btn btn-secondary proposal-cancel-reject-btn" data-id="${escapeHtml(p.id)}">Cancel</button>
             </div>
           </div>
@@ -747,7 +748,7 @@ function renderProposals() {
     btn.addEventListener("click", () => {
       const reason = document.getElementById(`reject-reason-${btn.dataset.id}`)?.value.trim();
       if (!reason) {
-        alert("Please provide a reason for rejection.");
+        alert("Please provide review comments.");
         return;
       }
       rejectProposal(btn.dataset.id, reason);
@@ -773,10 +774,10 @@ function rejectProposal(id, reason) {
   const proposal = proposals.find((p) => p.id === id);
   if (!proposal) return;
 
-  proposal.status = "rejected";
+  proposal.status = "pending_reviewed";
   proposal.rejectionReason = reason;
   saveProposals(proposals);
-  addNotification(`Proposal "${proposal.title}" has been rejected.`, "Just now");
+  addNotification(`Proposal "${proposal.title}" has been marked as pending reviewed.`, "Just now");
   renderProposals();
   renderFacultySchedule();
   updateDashboardStats();

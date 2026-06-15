@@ -14,6 +14,7 @@ let studentVenueData = {};
 let notifications = [];
 let unreadNotifications = 0;
 let cancelEventId = null;
+let editingProposalId = null;
 
 // =============================================
 // Venue Data — Read from Faculty-managed localStorage
@@ -113,18 +114,21 @@ function renderMyEvents() {
   const statusMap = {
     pending: { label: "Pending Review", cls: "status-pending" },
     accepted: { label: "Accepted", cls: "status-approved" },
-    rejected: { label: "Rejected", cls: "status-rejected" },
+    pending_reviewed: { label: "Pending Reviewed", cls: "status-rejected" },
     cancelled: { label: "Cancelled", cls: "status-rejected" },
   };
 
   list.innerHTML = proposals
     .map((p) => {
       const st = statusMap[p.status] || statusMap.pending;
-      const rejectNote = p.status === "rejected" && p.rejectionReason
-        ? `<p class="event-reject-reason"><strong>Reason:</strong> ${escapeHtml(p.rejectionReason)}</p>`
+      const rejectNote = p.status === "pending_reviewed" && p.rejectionReason
+        ? `<p class="event-reject-reason"><strong>Review Comments:</strong> ${escapeHtml(p.rejectionReason)}</p>`
         : "";
       const cancelBtn = (p.status === "accepted" || p.status === "pending")
         ? `<button type="button" class="btn btn-secondary btn-small cancel-event-btn" data-id="${escapeHtml(p.id)}">Cancel Request</button>`
+        : "";
+      const editBtn = p.status === "pending_reviewed"
+        ? `<button type="button" class="btn btn-secondary btn-small edit-event-btn" data-id="${escapeHtml(p.id)}">Edit Request</button>`
         : "";
 
       return `
@@ -136,6 +140,7 @@ function renderMyEvents() {
           </div>
           <div class="my-event-card-actions">
             <span class="status-pill ${st.cls}">${st.label}</span>
+            ${editBtn}
             ${cancelBtn}
           </div>
         </article>
@@ -146,6 +151,51 @@ function renderMyEvents() {
   list.querySelectorAll(".cancel-event-btn").forEach((btn) => {
     btn.addEventListener("click", () => cancelEvent(btn.dataset.id));
   });
+
+  list.querySelectorAll(".edit-event-btn").forEach((btn) => {
+    btn.addEventListener("click", () => editEvent(btn.dataset.id));
+  });
+}
+
+// =============================================
+// Edit Event Flow
+// =============================================
+
+function editEvent(id) {
+  const proposals = loadProposals();
+  const proposal = proposals.find((p) => p.id === id);
+  if (!proposal) return;
+
+  editingProposalId = id;
+  
+  // Pre-fill the form
+  document.getElementById("eventTitle").value = proposal.title || "";
+  document.getElementById("StudOrg").value = proposal.org || "";
+  document.getElementById("eventDate").value = proposal.date || "";
+  document.getElementById("eventTime").value = proposal.time || "";
+  document.getElementById("attendees").value = proposal.attendees || "";
+  
+  // Update venue options so we can select it
+  const venueSelect = document.getElementById("eventVenue");
+  if (venueSelect) {
+    const opts = Array.from(venueSelect.options);
+    if (!opts.find(o => o.value === proposal.venue)) {
+       const o = document.createElement("option");
+       o.value = proposal.venue;
+       o.text = proposal.venue;
+       venueSelect.appendChild(o);
+    }
+    venueSelect.value = proposal.venue;
+  }
+  
+  // Remove required attribute from PDF if they already have one
+  const pdfInput = document.getElementById("eventPdf");
+  if (pdfInput && proposal.pdfDataUrl) {
+    pdfInput.required = false;
+    document.getElementById("pdfFileName").textContent = `Current: ${proposal.pdfName || "letter-request.pdf"}`;
+  }
+  switchView("schedule-view", document.querySelector('[data-view="schedule-view"]'));
+  document.getElementById("workspaceTitle").textContent = "Edit Event Application";
 }
 
 // =============================================
@@ -154,19 +204,21 @@ function renderMyEvents() {
 
 function cancelEvent(id) {
   cancelEventId = id;
-  document.getElementById("cancelReason").value = "";
-  document.getElementById("cancelReasonModal").classList.remove("hidden");
+  const reasonSelect = document.getElementById("cancelReason");
+  if (reasonSelect) reasonSelect.value = "";
+  document.getElementById("cancelReasonModal")?.classList.remove("hidden");
 }
 
 function closeCancelReasonModal() {
-  document.getElementById("cancelReasonModal").classList.add("hidden");
+  document.getElementById("cancelReasonModal")?.classList.add("hidden");
   cancelEventId = null;
 }
 
 function confirmCancellation() {
   if (!cancelEventId) return;
 
-  const reason = document.getElementById("cancelReason").value.trim();
+  const reasonSelect = document.getElementById("cancelReason");
+  const reason = reasonSelect ? reasonSelect.value : "";
   const proposals = loadProposals();
   const proposal = proposals.find((p) => p.id === cancelEventId);
   if (!proposal) return;
@@ -531,38 +583,64 @@ async function handleFormSubmission(e) {
   const pdfInput = document.getElementById("eventPdf");
   const pdfFile = pdfInput.files[0];
 
-  if (!pdfFile) {
+  if (!pdfFile && !editingProposalId) {
     alert("Please attach a letter request PDF before submitting.");
     return;
   }
 
   // Convert PDF to base64 data URL so faculty can download it from localStorage
-  const pdfDataUrl = await readFileAsDataUrl(pdfFile);
+  let pdfDataUrl = null;
+  let pdfName = null;
+  if (pdfFile) {
+    pdfDataUrl = await readFileAsDataUrl(pdfFile);
+    pdfName = pdfFile.name;
+  }
 
-  /**
-   * Build the proposal object and prepend it to the proposals array.
-   * This data is the bridge between Student and Faculty POVs.
-   */
   const proposals = loadProposals();
-  proposals.unshift({
-    id: `proposal-${Date.now()}`,
-    title,
-    org,
-    venue,
-    date,
-    time,
-    attendees,
-    pdfName: pdfFile.name,
-    pdfDataUrl,           // Base64 PDF for faculty to view/download
-    status: "pending",
-    rejectionReason: "",
-    submittedAt: new Date().toISOString(),
-  });
 
-  // Write to localStorage — faculty-dash.js reads this same key
-  saveProposals(proposals);
-  addNotification(`Proposal "${title}" submitted. Awaiting faculty review.`, "Just now");
-  showSuccessModal();
+  if (editingProposalId) {
+    const idx = proposals.findIndex((p) => p.id === editingProposalId);
+    if (idx !== -1) {
+      proposals[idx].title = title;
+      proposals[idx].org = org;
+      proposals[idx].venue = venue;
+      proposals[idx].date = date;
+      proposals[idx].time = time;
+      proposals[idx].attendees = attendees;
+      if (pdfDataUrl) {
+        proposals[idx].pdfDataUrl = pdfDataUrl;
+        proposals[idx].pdfName = pdfName;
+      }
+      proposals[idx].status = "pending";
+      proposals[idx].rejectionReason = "";
+      proposals[idx].submittedAt = new Date().toISOString();
+      
+      saveProposals(proposals);
+      addNotification(`Proposal "${title}" updated. Awaiting faculty review.`, "Just now");
+      showSuccessModal();
+    }
+    editingProposalId = null;
+  } else {
+    proposals.unshift({
+      id: `proposal-${Date.now()}`,
+      title,
+      org,
+      studentNumber: getAuthSession().identifier || "Unknown",
+      venue,
+      date,
+      time,
+      attendees,
+      pdfName,
+      pdfDataUrl,           // Base64 PDF for faculty to view/download
+      status: "pending",
+      rejectionReason: "",
+      submittedAt: new Date().toISOString(),
+    });
+
+    saveProposals(proposals);
+    addNotification(`Proposal "${title}" submitted. Awaiting faculty review.`, "Just now");
+    showSuccessModal();
+  }
 }
 
 // =============================================
@@ -576,6 +654,10 @@ function showSuccessModal() {
 function closeSuccessModal() {
   document.getElementById("successModal")?.classList.add("hidden");
   document.getElementById("scheduleForm")?.reset();
+  
+  const pdfInput = document.getElementById("eventPdf");
+  if (pdfInput) pdfInput.required = true;
+  
   updatePdfFileDisplay();
   switchView("dashboard-view", document.querySelector('[data-view="dashboard-view"]'));
   refreshAll();
@@ -626,7 +708,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Form submit
   document.getElementById("scheduleForm")?.addEventListener("submit", handleFormSubmission);
+
+  // Form interactions
   document.getElementById("scheduleCancelBtn")?.addEventListener("click", () => {
+    document.getElementById("scheduleForm")?.reset();
+    
+    const pdfInput = document.getElementById("eventPdf");
+    if (pdfInput) pdfInput.required = true;
+    
+    updatePdfFileDisplay();
+    editingProposalId = null;
     switchView("dashboard-view", document.querySelector('[data-view="dashboard-view"]'));
   });
 

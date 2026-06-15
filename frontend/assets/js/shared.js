@@ -713,21 +713,154 @@ function initializeProfileAndSettingsModals(role) {
   document.getElementById("settingsModalSave")?.addEventListener("click", () => saveSettingsFromModal(role));
 
   // Logout
-  document.getElementById("logoutBtn")?.addEventListener("click", () => {
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     closeProfileDropdown();
-    window.location.href = "index.html";
+    try {
+      await apiFetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Logout request failed:", e);
+    } finally {
+      clearAuthSession();
+      window.location.href = "index.html";
+    }
   });
 }
 
 // =============================================
-// Initialization on DOMContentLoaded
+// Auth Session & Fetch Helpers
 // =============================================
 
-// Expose theme utilities for page scripts
+const AUTH_KEYS = {
+  ACCESS_TOKEN: "eventsync_access_token",
+  REFRESH_TOKEN: "eventsync_refresh_token",
+  USER_ROLE: "eventsync_user_role",
+  USER_IDENTIFIER: "eventsync_user_identifier",
+  EXPIRES_AT: "eventsync_expires_at",
+};
+
+function saveAuthSession(authData) {
+  if (!authData) return;
+  localStorage.setItem(AUTH_KEYS.ACCESS_TOKEN, authData.accessToken || "");
+  localStorage.setItem(AUTH_KEYS.REFRESH_TOKEN, authData.refreshToken || "");
+  localStorage.setItem(AUTH_KEYS.USER_ROLE, authData.role || "");
+  const identifier = authData.role === "faculty" ? authData.username : (authData.studentNumber || authData.studNo);
+  localStorage.setItem(AUTH_KEYS.USER_IDENTIFIER, identifier || "");
+  const expiresAtMs = Date.now() + (authData.expiresAt || authData.expiresIn || 3600) * 1000;
+  localStorage.setItem(AUTH_KEYS.EXPIRES_AT, String(expiresAtMs));
+
+  // Auto-populate profile idNumber if it's a student
+  if (authData.role && authData.role.toLowerCase() === "student" && identifier) {
+    const profile = loadProfile("student");
+    if (!profile.idNumber) {
+      profile.idNumber = identifier;
+      saveProfile("student", profile);
+    }
+  }
+}
+
+function getAuthSession() {
+  return {
+    accessToken: localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN),
+    refreshToken: localStorage.getItem(AUTH_KEYS.REFRESH_TOKEN),
+    role: localStorage.getItem(AUTH_KEYS.USER_ROLE),
+    identifier: localStorage.getItem(AUTH_KEYS.USER_IDENTIFIER),
+    expiresAt: Number(localStorage.getItem(AUTH_KEYS.EXPIRES_AT) || 0),
+  };
+}
+
+function clearAuthSession() {
+  localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN);
+  localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN);
+  localStorage.removeItem(AUTH_KEYS.USER_ROLE);
+  localStorage.removeItem(AUTH_KEYS.USER_IDENTIFIER);
+  localStorage.removeItem(AUTH_KEYS.EXPIRES_AT);
+}
+
+function checkAuthAndRedirect(requiredRole) {
+  const session = getAuthSession();
+  const pathname = window.location.pathname || "";
+  const isAuthPage = pathname.endsWith("users.html") || pathname.endsWith("faculty.html");
+  
+  if (isAuthPage) {
+    if (session.accessToken && session.role) {
+      if (session.role.toLowerCase() === "student") {
+        window.location.href = "index.html?role=Student";
+      } else if (session.role.toLowerCase() === "faculty") {
+        window.location.href = "faculty-dash.html";
+      }
+    }
+    return;
+  }
+
+  if (!session.accessToken || !session.role || session.role.toLowerCase() !== requiredRole.toLowerCase()) {
+    clearAuthSession();
+    if (requiredRole.toLowerCase() === "student") {
+      window.location.href = "users.html";
+    } else {
+      window.location.href = "faculty.html";
+    }
+  }
+}
+
+async function apiFetch(url, options = {}) {
+  const baseUrl = "http://localhost:5108";
+  const absoluteUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+  
+  let session = getAuthSession();
+  
+  // If access token is expired, try to refresh it
+  if (session.accessToken && session.refreshToken && Date.now() >= session.expiresAt - 10000) {
+    try {
+      const refreshResponse = await fetch(`${baseUrl}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.accessToken}`
+        },
+        body: JSON.stringify({ refreshToken: session.refreshToken })
+      });
+      if (refreshResponse.ok) {
+        const result = await refreshResponse.json();
+        if (result.success && result.data) {
+          saveAuthSession(result.data);
+          session = getAuthSession();
+        }
+      } else {
+        clearAuthSession();
+        window.location.href = session.role === "faculty" ? "faculty.html" : "users.html";
+        throw new Error("Session expired. Please log in again.");
+      }
+    } catch (err) {
+      console.error("Token refresh failed:", err);
+    }
+  }
+  
+  options.headers = options.headers || {};
+  if (session.accessToken) {
+    options.headers["Authorization"] = `Bearer ${session.accessToken}`;
+  }
+  
+  let response = await fetch(absoluteUrl, options);
+  
+  if (response.status === 401) {
+    clearAuthSession();
+    window.location.href = session.role === "faculty" ? "faculty.html" : "users.html";
+    throw new Error("Unauthorized access. Redirecting to login.");
+  }
+  
+  return response;
+}
+
+// Expose theme and auth utilities for page scripts
 window.loadTheme = loadTheme;
 window.saveTheme = saveTheme;
 window.applyTheme = applyTheme;
 window.toggleTheme = toggleTheme;
+window.saveAuthSession = saveAuthSession;
+window.getAuthSession = getAuthSession;
+window.clearAuthSession = clearAuthSession;
+window.checkAuthAndRedirect = checkAuthAndRedirect;
+window.apiFetch = apiFetch;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Apply saved theme on load

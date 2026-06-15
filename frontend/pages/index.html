@@ -453,30 +453,34 @@
         </div>
       </section>
 
-      <div class="modal hidden" id="cancelReasonModal">
-        <div class="modal-overlay" id="cancelReasonOverlay"></div>
-        <div class="modal-content">
+      <!-- Cancel Reason Modal -->
+      <div class="modal-overlay hidden" id="cancelReasonModal">
+        <div class="modal-overlay-bg" id="cancelReasonOverlay"></div>
+        <div class="modal-card">
           <div class="modal-header">
-            <h2>Cancel Request</h2>
+            <h3>Cancel Request</h3>
             <button type="button" class="modal-close" id="cancelReasonClose">&times;</button>
           </div>
-          <div class="modal-body">
-            <form id="cancelReasonForm">
-              <div class="form-group">
-                <label for="cancelReason">Why are you canceling this request? (Optional)</label>
-                <textarea
-                  id="cancelReason"
-                  class="form-control"
-                  placeholder="Please provide details about your cancellation..."
-                  rows="4"
-                ></textarea>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
-                <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
-              </div>
-            </form>
-          </div>
+          <form id="cancelReasonForm">
+            <div class="form-group">
+              <label for="cancelReason">Reason for cancellation (Optional)</label>
+              <select id="cancelReason" class="form-control">
+                <option value="">-- No reason selected --</option>
+                <option value="Schedule conflict with another event">Schedule conflict with another event</option>
+                <option value="Venue no longer available">Venue no longer available</option>
+                <option value="Insufficient attendees or participants">Insufficient attendees or participants</option>
+                <option value="Budget or funding issues">Budget or funding issues</option>
+                <option value="Change of plans by the organization">Change of plans by the organization</option>
+                <option value="Event postponed to a later date">Event postponed to a later date</option>
+                <option value="Duplicate or accidental submission">Duplicate or accidental submission</option>
+                <option value="Other / Prefer not to say">Other / Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+              <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
+            </div>
+          </form>
         </div>
       </div>
 

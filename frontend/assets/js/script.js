@@ -83,7 +83,7 @@ function initializeStudentLogin() {
   const form = document.getElementById("studentLoginForm");
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const studentNumber = document.getElementById("studentNumber")?.value.trim();
     const password = document.getElementById("studentPassword")?.value;
@@ -93,8 +93,23 @@ function initializeStudentLogin() {
       return;
     }
 
-    // Redirect to student dashboard
-    window.location.href = "index.html?role=Student";
+    try {
+      const response = await fetch("http://localhost:5108/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentNumber, password }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        alert(result.backendMessage || "Login failed.");
+        return;
+      }
+      saveAuthSession(result.data);
+      window.location.href = "index.html?role=Student";
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during login.");
+    }
   });
 }
 
@@ -106,7 +121,7 @@ function initializeFacultyLogin() {
   const form = document.getElementById("facultyLoginForm");
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("facultyUsername")?.value.trim();
     const password = document.getElementById("facultyPassword")?.value;
@@ -116,8 +131,23 @@ function initializeFacultyLogin() {
       return;
     }
 
-    // Redirect to faculty dashboard
-    window.location.href = "faculty-dash.html";
+    try {
+      const response = await fetch("http://localhost:5108/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        alert(result.backendMessage || "Login failed.");
+        return;
+      }
+      saveAuthSession(result.data);
+      window.location.href = "faculty-dash.html";
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during login.");
+    }
   });
 }
 
@@ -129,7 +159,7 @@ function initializeStudentSignUp() {
   const form = document.getElementById("studentSignUpForm");
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearFormErrors(form);
 
@@ -152,26 +182,24 @@ function initializeStudentSignUp() {
 
     if (hasError) return;
 
-    // Check for duplicate student number in localStorage
-    const users = loadStudentUsers();
-    const existing = users.find((u) => u.studentNumber === studentNumber);
-    if (existing) {
-      showFieldError("signUpStudentNumber", "This student number is already registered.");
-      return;
+    try {
+      const response = await fetch("http://localhost:5108/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentNumber, password, role: "student" }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        showFieldError("signUpStudentNumber", result.backendMessage || "Registration failed.");
+        return;
+      }
+      form.reset();
+      switchAuthPanel("login");
+      showToast();
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during sign up.");
     }
-
-    // Save new user to localStorage
-    users.push({
-      studentNumber,
-      fullName,
-      password, // In production, this should be hashed server-side
-      createdAt: new Date().toISOString(),
-    });
-    saveStudentUsers(users);
-
-    form.reset();
-    switchAuthPanel("login");
-    showToast();
   });
 }
 
@@ -183,7 +211,7 @@ function initializeFacultySignUp() {
   const form = document.getElementById("facultySignUpForm");
   if (!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearFormErrors(form);
 
@@ -205,24 +233,24 @@ function initializeFacultySignUp() {
 
     if (hasError) return;
 
-    // Check for duplicate username in localStorage
-    const users = loadFacultyUsers();
-    const existing = users.find((u) => u.username === username);
-    if (existing) {
-      showFieldError("signUpFacultyUsername", "This username is already registered.");
-      return;
+    try {
+      const response = await fetch("http://localhost:5108/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, role: "faculty" }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        showFieldError("signUpFacultyUsername", result.backendMessage || "Registration failed.");
+        return;
+      }
+      form.reset();
+      switchAuthPanel("login");
+      showToast();
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during sign up.");
     }
-
-    users.push({
-      username,
-      password,
-      createdAt: new Date().toISOString(),
-    });
-    saveFacultyUsers(users);
-
-    form.reset();
-    switchAuthPanel("login");
-    showToast();
   });
 }
 
@@ -231,6 +259,9 @@ function initializeFacultySignUp() {
 // =============================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (typeof checkAuthAndRedirect === "function") {
+    checkAuthAndRedirect();
+  }
   initializeAuthPanels();
   initializeStudentLogin();
   initializeFacultyLogin();
