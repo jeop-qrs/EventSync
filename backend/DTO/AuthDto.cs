@@ -20,9 +20,11 @@ namespace backend.DTO
     public class AuthDataObjectResponse
     {
         public string? Username { get; set; }
+        public string? StudentNumber { get; set; }
+        public string? StudNo { get; set; }
         public string? Role { get; set; }
         public string? AccessToken { get; set; }
-        public int ExpiresIn { get; set; }
+        public int ExpiresAt { get; set; }
         public string? RefreshToken { get; set; }
     }
 }

@@ -29,10 +29,74 @@ namespace backend.Services
 
         public async Task<GlobalResponse> Register(AuthRegisterRequest req)
         {
-            // Check if user already exists
-            // SQL Query: SELECT * FROM Users WHERE Username = req.Username;
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
+            var roleLower = req.Role?.ToLowerInvariant();
+            if (roleLower != "student" && roleLower != "faculty")
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Invalid role specified"
+                };
+            }
+
+            User? existingUser = null;
+            if (roleLower == "student")
+            {
+                if (string.IsNullOrEmpty(req.StudentNumber))
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Student Number cannot be empty"
+                    };
+                }
+                if (req.StudentNumber.Contains(' '))
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Student Number may not contain spaces"
+                    };
+                }
+                if (req.StudentNumber.Length <= 8 || req.StudentNumber.Length >= 20)
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Student Number must be at least 8 characters long and at most 20 characters long"
+                    };
+                }
+                existingUser = await _context.Users.FirstOrDefaultAsync(u => u.StudentNumber == req.StudentNumber);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(req.Username))
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Username cannot be empty"
+                    };
+                }
+                if (req.Username.Contains(' '))
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Username may not contain spaces"
+                    };
+                }
+                if (req.Username.Length <= 8 || req.Username.Length >= 20)
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Username must be at least 8 characters long and at most 20 characters long"
+                    };
+                }
+                existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+            }
+
             if (existingUser != null)
             {
                 return new GlobalResponse
@@ -41,43 +105,9 @@ namespace backend.Services
                     BackendMessage = "User already registered"
                 };
             }
-            // Check if Username is empty
-            if (string.IsNullOrEmpty(req.Username) || string.IsNullOrEmpty(req.StudentNumber))
-            {
-                return new GlobalResponse
-                {
-                    Success = false,
-                    BackendMessage = "Username and Student Number cannot be empty"
-                };
-            }
-            // Check if Username contains no spaces
-            if (req.Username.Contains(' ') || req.StudentNumber.Contains(' '))
-            {
-                return new GlobalResponse
-                {
-                    Success = false,
-                    BackendMessage = "Username and Student Number may not contain spaces"
-                };
-            }
-            // Check Username Length
-            if (req.Username.Length <= 8 || req.StudentNumber.Length <= 8)
-            {
-                return new GlobalResponse
-                {
-                    Success = false,
-                    BackendMessage = "Username and Student Number must be at least 8 characters long"
-                };
-            }
-            if (req.Username.Length >= 20 || req.StudentNumber.Length >= 20)
-            {
-                return new GlobalResponse
-                {
-                    Success = false,
-                    BackendMessage = "Username and Student Number may only be 20 characters long"
-                };
-            }
+
             // Check Password Length
-            if (req.Password.Length <= 8 || req.Password.Length >= 20)
+            if (string.IsNullOrEmpty(req.Password) || req.Password.Length <= 8 || req.Password.Length >= 20)
             {
                 return new GlobalResponse
                 {
@@ -89,13 +119,13 @@ namespace backend.Services
             // Create object for newUser and initial AccessToken
             var newUser = new User
             {
-                Username = req.Username,
+                Username = roleLower == "faculty" ? req.Username : null,
+                StudentNumber = roleLower == "student" ? req.StudentNumber : null,
                 PasswordHash = _hasher.HashPassword(new User(), req.Password),
-                Role = req.Role,
+                Role = roleLower,
                 CreatedAt = DateTime.UtcNow
             };
-            // Add newUser to DB and save changes 
-            // SQL Query: INSERT INTO Users (Username, PasswordHash, Role, CreatedAt) VALUES (req.Username, _hasher.HashPassword(new User(), req.Password), req.Role, DateTime.UtcNow);
+            
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
@@ -108,9 +138,16 @@ namespace backend.Services
 
         public async Task<GlobalResponse> Login(AuthLoginRequest req)
         {
-            // Check if user exists
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
+            User? user = null;
+            if (!string.IsNullOrEmpty(req.StudentNumber))
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u => u.StudentNumber == req.StudentNumber);
+            }
+            else if (!string.IsNullOrEmpty(req.Username))
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+            }
+
             if (user == null)
             {
                 return new GlobalResponse
@@ -137,18 +174,20 @@ namespace backend.Services
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _context.SaveChangesAsync();
             var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
-            var expiresIn = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
+            var expiresAt = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
 
             return new GlobalResponse
             {
                 Success = true,
-                BackendMessage = "Login successful",
+                BackendMessage = "Login successful.",
                 Data = new AuthDataObjectResponse
                 {
-                    Username = user.Username,
+                    Username = user.Role == "faculty" ? user.Username : null,
+                    StudentNumber = user.Role == "student" ? user.StudentNumber : null,
+                    StudNo = user.Role == "student" ? user.StudentNumber : null,
                     Role = user.Role,
                     AccessToken = accessToken,
-                    ExpiresIn = expiresIn,
+                    ExpiresAt = expiresAt,
                     RefreshToken = refreshToken
                 }
             };
@@ -190,18 +229,20 @@ namespace backend.Services
             await _context.SaveChangesAsync();
 
             var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
-            var expiresIn = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
+            var expiresAt = (int)(jwtToken.ValidTo - DateTime.UtcNow).TotalSeconds;
 
             return new GlobalResponse
             {
                 Success = true,
-                BackendMessage = "Token refreshed",
+                BackendMessage = "Token refreshed.",
                 Data = new AuthDataObjectResponse
                 {
-                    Username = user.Username,
+                    Username = user.Role == "faculty" ? user.Username : null,
+                    StudentNumber = user.Role == "student" ? user.StudentNumber : null,
+                    StudNo = user.Role == "student" ? user.StudentNumber : null,
                     Role = user.Role,
                     AccessToken = accessToken,
-                    ExpiresIn = expiresIn,
+                    ExpiresAt = expiresAt,
                     RefreshToken = refreshToken
                 }
             };
