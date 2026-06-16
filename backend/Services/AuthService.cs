@@ -105,6 +105,7 @@ namespace backend.Services
             // Create object for newUser
             var newUser = new User
             {
+                StudentNumber = req.StudentNumber,
                 Username = req.Username,
                 PasswordHash = _hasher.HashPassword(new User(), req.Password),
                 Role = req.Role,

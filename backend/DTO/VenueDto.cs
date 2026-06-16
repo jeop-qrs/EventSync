@@ -7,8 +7,8 @@ namespace backend.DTO
         public int Capacity { get; set; }
         public string Description { get; set; } = string.Empty;
         public string Availability { get; set; } = string.Empty;
-        public List<TimeSlotsDto> Timeslots { get; set; } = [];
-        public IFormFile PhotoCover { get; set; } = null!;
+        public List<string> Timeslots { get; set; } = [];
+        public IFormFile? PhotoCover { get; set; }
     }
 
     public class VenueResponseDto
@@ -19,14 +19,8 @@ namespace backend.DTO
         public int Capacity { get; set; }
         public string Description { get; set; } = string.Empty;
         public string Availability { get; set; } = string.Empty;
-        public List<TimeSlotsDto> Timeslots { get; set; } = [];
+        public List<string> Timeslots { get; set; } = [];
         public string Status { get; set; } = string.Empty;
         public string PhotoPath { get; set; } = string.Empty;
-    }
-
-    public class TimeSlotsDto
-    {
-        public string StartTime { get; set; } = string.Empty;
-        public string EndTime { get; set; } = string.Empty;
     }
 }

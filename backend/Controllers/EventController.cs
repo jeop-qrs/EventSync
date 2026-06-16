@@ -22,6 +22,7 @@ namespace backend.Controllers
             _eventService = eventService;
         }
 
+        // GET api/events?status={status}
         [HttpGet]
         [Authorize]
         public async Task<ActionResult> GetEvents([FromQuery] string status)
@@ -37,8 +38,9 @@ namespace backend.Controllers
             return Unauthorized(new GlobalResponse { Success = false, BackendMessage = "Invalid role" });
         }
 
+        // POST api/events
         [HttpPost]
-        [Authorize(Roles = "Student")]
+        [Authorize(Roles = "student")]
         public async Task<ActionResult> Create([FromForm] EventCreateRequest req)
         {
             int studentId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
@@ -48,13 +50,15 @@ namespace backend.Controllers
             return Ok(result);
         }
 
+        // PATCH api/events/{id}/status
         [HttpPatch("{id}/status")]
         [Authorize]
-        public async Task<ActionResult> UpdateStatus([FromRoute] int eventId, [FromBody] EventStatusUpdateRequest req)
+        public async Task<ActionResult> UpdateStatus([FromRoute] int id, [FromBody] EventStatusUpdateRequest req)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-            var result = await _eventService.UpdateEventStatus(eventId, userId, userRole, req);
+            if (userId == 0) return Unauthorized(new GlobalResponse { Success = false, BackendMessage = "Invalid user" });
+            var userRole = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+            var result = await _eventService.UpdateEventStatus(id, userId, userRole, req);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }

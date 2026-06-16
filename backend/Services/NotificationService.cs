@@ -27,20 +27,30 @@ public class NotificationService
         await _context.SaveChangesAsync();
     }
 
-    public async Task NotifyOnStatusChange(Event @event, string? reason)
+    public async Task NotifyOnStatusChange(Event @event, string? reason, string role)
     {
         var preference = await _context.NotificationPreferences
             .FirstOrDefaultAsync(p => p.UserId == @event.OrganizerId);
         if (preference != null && !preference.NotifyOnStatusChange) return;
-        var message = @event.Status switch
+        if (role == "student")
         {
-            "approved" => $"Your event '{@event.Title}' has been approved!",
-            "rejected" => reason is not null
-                ? $"Your event '{@event.Title}' was rejected. Reason: {reason}"
-                : $"Your event '{@event.Title}' was rejected.",
-            _ => $"Your event '{@event.Title}' status changed to {@event.Status}." // Fallback case
-        };
-        await SaveNotification(@event.OrganizerId, @event.EventId, message);
+            var message = @event.Status switch
+            {
+                "approved" => $"Your event '{@event.Title}' has been approved!",
+                "rejected" => reason is not null
+                    ? $"Your event '{@event.Title}' was rejected. Reason: {reason}"
+                    : $"Your event '{@event.Title}' was rejected.",
+                _ => $"Your event '{@event.Title}' status changed to {@event.Status}." // Fallback case
+            };
+            await SaveNotification(@event.OrganizerId, @event.EventId, message);
+        }
+        else if (role == "faculty" && @event.FacultyId != null)
+        {
+            var message = reason is not null
+                ? $"The event '{@event.Title}' by '{@event.OrganizerId}' was cancelled. Reason: {reason}"
+                : $"The event '{@event.Title}' by '{@event.OrganizerId}' was cancelled.";
+            await SaveNotification(@event.FacultyId.Value, @event.EventId, message);
+        }
     }
 
     public async Task NotifyUpcomingEvents()

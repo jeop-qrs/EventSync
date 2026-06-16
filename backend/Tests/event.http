@@ -1,52 +1,81 @@
 @baseUrl1 = http://localhost:5108
 @baseUrl2 = https://localhost:7248
 
-@testUsername = appuser1234
-@testPassword = password123
-@testStatus = approved
 
-
-
+### ------------------------------------------------------
 ### Get access token
+@testStudentNumber = R2024-01234
+@testPassword = password123
 # @name login
 POST {{baseUrl1}}/api/auth/login
 Content-Type: application/json
 
 {
-    "username": "{{testUsername}}",
+    "studentNumber": "{{testStudentNumber}}",
     "password": "{{testPassword}}"
 }
 
+### ------------------------------------------------------
+### Store tokens
 @accessToken = {{login.response.body.data.accessToken}}
 @refreshToken = {{login.response.body.data.refreshToken}}
 
 
-
+### ------------------------------------------------------
 ### Get all events based on filter
+@testStatus = approved
 GET {{baseUrl1}}/api/events?status={{testStatus}}
 Authorization: Bearer {{accessToken}}
 
 
-
+### ------------------------------------------------------
 ### Create event
 # @name create
 POST {{baseUrl1}}/api/events
 Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
-title: Test Event
-department: COMMITS
-venueId: 1
-eventDate: 2026-11-05
-startTime: 13:00
-endTime: 17:00
-expectedAttendees: 100
-submitLetter: @test-files/sampol.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+Test Event
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+COMMITS
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="venueId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="eventDate"
+
+2026-11-05
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="startTime"
+
+13:00
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="endTime"
+
+17:00
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expectedAttendees"
+
+100
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="submitLetter"; filename="sampol.pdf"
+Content-Type: application/pdf
+
+< ./test_files/sampol.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 
-
+###
+### ------------------------------------------------------
 ### Update event status
-# @name updateStatus
-PATCH {{baseUrl1}}/api/events/{{create.response.body.data.eventId}}/status
+@eventId = 1
+PATCH {{baseUrl1}}/api/events/{{eventId}}/status
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
