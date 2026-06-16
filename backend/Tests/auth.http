@@ -2,11 +2,11 @@
 @baseUrl2 = https://localhost:7248
 
 
-
-@studentNumber = R2024-02383
+### ------------------------------------------------------
+### Register for student
+@studentNumber = R2024-01234
 @studentPassword = password123
 @studentRole = student
-### Register for student
 POST {{baseUrl1}}/api/auth/register
 Content-Type: application/json
 
@@ -16,11 +16,11 @@ Content-Type: application/json
     "role": "{{studentRole}}"
 }
 
-###
-@facultyUsername = appuser123
+### ------------------------------------------------------
+### Register for faculty
+@facultyUsername = prof.aguilar123
 @facultyPassword = password123
 @facultyRole = faculty
-### Register for faculty
 POST {{baseUrl1}}/api/auth/register
 Content-Type: application/json
 
@@ -31,7 +31,7 @@ Content-Type: application/json
 }
 
 
-
+### ------------------------------------------------------
 ### Login for student
 # @name loginStudent
 POST {{baseUrl1}}/api/auth/login
@@ -43,7 +43,7 @@ Content-Type: application/json
 }
 
 
-
+### ------------------------------------------------------
 ### Login for faculty
 # @name loginFaculty
 POST {{baseUrl1}}/api/auth/login
@@ -55,13 +55,15 @@ Content-Type: application/json
 }
 
 
-###
+### ------------------------------------------------------
+### Store tokens
 @accessToken = {{loginStudent.response.body.data.accessToken}}
 @refreshToken = {{loginStudent.response.body.data.refreshToken}}
 @accessToken = {{loginFaculty.response.body.data.accessToken}}
 @refreshToken = {{loginFaculty.response.body.data.refreshToken}}
 
 
+### ------------------------------------------------------
 ### Refresh Token
 POST {{baseUrl1}}/api/auth/refresh
 Content-Type: application/json
@@ -72,7 +74,7 @@ Authorization: Bearer {{accessToken}}
 }
 
 
-
+### ------------------------------------------------------
 ### Logout
 POST {{baseUrl1}}/api/auth/logout
 Content-Type: application/json

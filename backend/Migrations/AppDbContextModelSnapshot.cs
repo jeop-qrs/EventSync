@@ -202,10 +202,6 @@ namespace backend.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.PrimitiveCollection<string>("DailyTimeSlots")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -219,6 +215,9 @@ namespace backend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TimeSlots")
                         .HasColumnType("longtext");
 
                     b.HasKey("VenueId");

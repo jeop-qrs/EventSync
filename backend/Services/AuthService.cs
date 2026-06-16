@@ -29,6 +29,7 @@ namespace backend.Services
 
         public async Task<GlobalResponse> Register(AuthRegisterRequest req)
         {
+<<<<<<< HEAD
             var roleLower = req.Role?.ToLowerInvariant();
             if (roleLower != "student" && roleLower != "faculty")
             {
@@ -98,6 +99,12 @@ namespace backend.Services
             }
 
             if (existingUser != null)
+=======
+            // Check if user already exists
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == req.Username || u.StudentNumber == req.StudentNumber);
+            if (user != null)
+>>>>>>> backend/root
             {
                 return new GlobalResponse
                 {
@@ -105,7 +112,63 @@ namespace backend.Services
                     BackendMessage = "User already registered"
                 };
             }
+<<<<<<< HEAD
 
+=======
+            // Check which identifier is used based on role
+            string identifier;
+            if (req.Role == "student" && req.StudentNumber != null)
+            {
+                identifier = req.StudentNumber;
+            }
+            else if (req.Role == "faculty" && req.Username != null)
+            {
+                identifier = req.Username;
+            }
+            else
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Invalid Role"
+                };
+            }
+            // Check if Username is empty
+            if (string.IsNullOrEmpty(identifier))
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Username and Student Number cannot be empty"
+                };
+            }
+            // Check if Username contains no spaces
+            if (identifier.Contains(' '))
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Username and Student Number may not contain spaces"
+                };
+            }
+            // Check Username Length
+            if (identifier.Length <= 8)
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Username and Student Number must be at least 8 characters long"
+                };
+            }
+            if (identifier.Length >= 20)
+            {
+                return new GlobalResponse
+                {
+                    Success = false,
+                    BackendMessage = "Username and Student Number may only be 20 characters long"
+                };
+            }
+>>>>>>> backend/root
             // Check Password Length
             if (string.IsNullOrEmpty(req.Password) || req.Password.Length <= 8 || req.Password.Length >= 20)
             {
@@ -115,12 +178,16 @@ namespace backend.Services
                     BackendMessage = "Password must be at least 8 characters long and at most 20 characters long"
                 };
             }
-
-            // Create object for newUser and initial AccessToken
+            // Create object for newUser
             var newUser = new User
             {
+<<<<<<< HEAD
                 Username = roleLower == "faculty" ? req.Username : null,
                 StudentNumber = roleLower == "student" ? req.StudentNumber : null,
+=======
+                StudentNumber = req.StudentNumber,
+                Username = req.Username,
+>>>>>>> backend/root
                 PasswordHash = _hasher.HashPassword(new User(), req.Password),
                 Role = roleLower,
                 CreatedAt = DateTime.UtcNow
@@ -157,7 +224,7 @@ namespace backend.Services
                 };
             }
 
-            // Check if password is correct via hashed password
+            // Check if password input is correct
             if (!_hasher.VerifyHashedPassword(user, user.PasswordHash, req.Password).Equals(PasswordVerificationResult.Success))
             {
                 return new GlobalResponse

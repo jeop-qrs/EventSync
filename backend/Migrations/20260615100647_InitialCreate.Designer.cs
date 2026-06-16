@@ -12,7 +12,7 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260613001201_InitialCreate")]
+    [Migration("20260615100647_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -205,10 +205,6 @@ namespace backend.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.PrimitiveCollection<string>("DailyTimeSlots")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -222,6 +218,9 @@ namespace backend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TimeSlots")
                         .HasColumnType("longtext");
 
                     b.HasKey("VenueId");

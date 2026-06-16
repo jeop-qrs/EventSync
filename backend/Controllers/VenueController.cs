@@ -31,7 +31,7 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Faculty")]
+        [Authorize(Roles = "faculty")]
         public async Task<IActionResult> AddVenue([FromForm] VenueCreateDto req)
         {
             var result = await _venueService.AddVenue(req);

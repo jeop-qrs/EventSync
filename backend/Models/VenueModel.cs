@@ -13,8 +13,8 @@ namespace backend.Models
         public int Capacity { get; set; }
         public string Description { get; set; } = string.Empty;
         public string Availability { get; set; } = string.Empty; // List of days that the venue is available (e.g., Monday, Tuesday, etc.)
-        public List<string> DailyTimeSlots { get; set; } = []; // Max of 3 time slots each day (with max of 3 hours occupancy per slot)
-        public string Status { get; set; } = "available"; // Available, Not Available (based on capacity, avai)
+        public string? TimeSlots { get; set; }
+        public string Status { get; set; } = string.Empty; // Available, Not Available (based on capacity, avai)
         public string? PhotoPath { get; set; } // Path to the photo of the venue
     }
 }

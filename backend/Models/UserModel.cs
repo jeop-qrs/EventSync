@@ -12,9 +12,9 @@ namespace backend.Models
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
 
-        // For faculty
-        public string? StudentNumber { get; set; }
         // For student
+        public string? StudentNumber { get; set; }
+        // For Faculty
         public string? Username { get; set; }
 
         public string? RefreshToken { get; set; }

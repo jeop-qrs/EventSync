@@ -27,7 +27,7 @@ namespace backend.Models
         public TimeOnly StartTime { get; set; }
         public int ExpectedAttendees { get; set; }
         public string SubmitLetterPath { get; set; } = string.Empty;
-        public string Status { get; set; } = "pending"; // pending | approved | rejected | cancelled | 
+        public string Status { get; set; } = string.Empty; // pending | approved | rejected | cancelled | 
         public string? Reason { get; set; } // Optional reason for event cancellation or rejection
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

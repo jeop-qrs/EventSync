@@ -459,20 +459,7 @@ If no status is provided, all venues are returned.
         "capacity": 200,
         "description": "description",
         "availability": "Mon - Fri | 8:00 AM - 5:00 PM",
-        "timeslots": [
-          {
-            "startTime": "08:00",
-            "endTime": "11:00"
-          },
-          {
-            "startTime": "13:00",
-            "endTime": "15:00"
-          },
-          {
-            "startTime": "16:00",
-            "endTime": "19:00"
-          }
-        ],
+        "timeslots": ["8:00 - 11:00", "13:00 - 15:00", "16:00 - 17:00"],
         "status": "available | unavailable",
         "photoPath": "uploads/venues/venue-1.jpg"
       }
@@ -527,20 +514,7 @@ multipart/form-data
     "capacity": 200,
     "description": "description",
     "availability": "Mon - Fri | 8:00 AM - 5:00 PM",
-    "timeslots": [
-      {
-        "startTime": "08:00",
-        "endTime": "11:00"
-      },
-      {
-        "startTime": "13:00",
-        "endTime": "15:00"
-      },
-      {
-        "startTime": "16:00",
-        "endTime": "17:00"
-      }
-    ],
+    "timeslots": ["8:00 - 11:00", "13:00 - 15:00", "16:00 - 17:00"],
     "status": "available",
     "photoPath": "uploads/venues/venue-1.jpg"
   }
