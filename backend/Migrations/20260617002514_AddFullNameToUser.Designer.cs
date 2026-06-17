@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617002514_AddFullNameToUser")]
+    partial class AddFullNameToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,57 +24,6 @@ namespace backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
-
-            modelBuilder.Entity("backend.Models.AuditLog", b =>
-                {
-                    b.Property<int>("AuditLogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AuditLogId"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ObjectName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ObjectType")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("UserFullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserIdentifier")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("AuditLogId");
-
-                    b.ToTable("AuditLogs");
-                });
 
             modelBuilder.Entity("backend.Models.Event", b =>
                 {

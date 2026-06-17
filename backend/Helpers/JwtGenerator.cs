@@ -27,7 +27,7 @@ namespace backend.Helpers
             var userClaims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Role == "student" ? user.StudentNumber ?? "" : user.Username ?? ""),
+                new Claim(ClaimTypes.Name, user.FullName ?? ""),
                 new Claim(ClaimTypes.Role, user.Role ?? "")
             };
 

@@ -33,6 +33,9 @@
           <li class="menu-item" data-view="proposals-view">
             <h4>Proposed Events</h4>
           </li>
+          <li class="menu-item" data-view="logs-view">
+            <h4>Audit Logs</h4>
+          </li>
         </ul>
       </div>
     </nav>
@@ -318,6 +321,57 @@
             <p class="empty-state">No student proposals yet.</p>
           </div>
         </div>
+
+        <!-- Audit Logs -->
+        <div id="logs-view" class="view-section">
+          <p class="note-text" style="margin-bottom: 20px;">
+            System activity and audit logs for tracking actions by students and faculty.
+          </p>
+          <div class="logs-filter-bar">
+            <input type="text" id="logsSearch" class="form-control" placeholder="Search by user, object name, or message..." />
+            <select id="filterAction" class="form-control">
+              <option value="">All Actions</option>
+              <option value="Create">Create</option>
+              <option value="Update">Update</option>
+              <option value="Cancel">Cancel</option>
+              <option value="Approve">Approve</option>
+              <option value="Reject">Reject</option>
+              <option value="Login">Login</option>
+              <option value="Register">Register</option>
+            </select>
+            <select id="filterObjectType" class="form-control">
+              <option value="">All Types</option>
+              <option value="Venue">Venue</option>
+              <option value="Event">Event</option>
+              <option value="Auth">Auth</option>
+              <option value="NotificationPreference">Notification Preference</option>
+            </select>
+            <select id="filterRole" class="form-control">
+              <option value="">All Roles</option>
+              <option value="faculty">Faculty</option>
+              <option value="student">Student</option>
+              <option value="Anonymous">Anonymous</option>
+            </select>
+          </div>
+          <div class="logs-table-wrapper" style="margin-top: 20px;">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>TIME</th>
+                  <th>USER</th>
+                  <th>ROLE</th>
+                  <th>ACTIVITY DETAILS</th>
+                  <th>IP ADDRESS</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <tr>
+                  <td colspan="8" class="empty-state" style="text-align: center; padding: 40px;">Loading audit logs...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -474,13 +528,7 @@
               <input type="checkbox" id="settingsNotifications" checked />
             </label>
           </div>
-          <div class="form-group">
-            <label for="settingsLanguage">Language Preference</label>
-            <select id="settingsLanguage" class="form-control">
-              <option value="en">English</option>
-              <option value="fil">Filipino</option>
-            </select>
-          </div>
+
           <div class="form-actions">
             <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
             <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>

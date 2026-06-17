@@ -1,579 +1,475 @@
 <!doctype html>
 
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
 
-    <link
-      rel="icon"
-      href="/frontend/assets/img/EventSync logo.webp"
-      type="image/png"
-      sizes="192x192"
-    />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>EventSync - Student Dashboard</title>
+  <link rel="icon" href="/frontend/assets/img/EventSync logo.webp" type="image/png" sizes="192x192" />
 
-    <link rel="stylesheet" href="/frontend/assets/css/style.css" />
-  </head>
+  <title>EventSync - Student Dashboard</title>
 
-  <body data-page="student">
-    <div id="landingOverlay" class="landing-overlay">
-      <div class="landing-card">
-        <p class="landing-subtitle">WELCOME TO</p>
+  <link rel="stylesheet" href="/frontend/assets/css/style.css" />
+</head>
 
-        <h1 class="landing-title">EventSync</h1>
+<body data-page="student">
+  <div id="landingOverlay" class="landing-overlay">
+    <div class="landing-card">
+      <p class="landing-subtitle">WELCOME TO</p>
 
-        <p class="landing-copy">Please click your destination</p>
+      <h1 class="landing-title">EventSync</h1>
 
-        <div class="landing-actions">
-          <button
-            id="student-btn"
-            class="btn landing-button"
-            data-role="Student"
-          >
-            STUDENT
-          </button>
+      <p class="landing-copy">Please click your destination</p>
 
-          <button
-            id="faculty-btn"
-            class="btn landing-button"
-            data-role="Faculty"
-          >
-            FACULTY
-          </button>
-        </div>
+      <div class="landing-actions">
+        <button id="student-btn" class="btn landing-button" data-role="Student">
+          STUDENT
+        </button>
 
-        <p class="landing-terms">
-          By using this service, you understand and agree to the EventSync
-          Online Services Terms of Use and Privacy Statement
-        </p>
+        <button id="faculty-btn" class="btn landing-button" data-role="Faculty">
+          FACULTY
+        </button>
       </div>
+
+      <p class="landing-terms">
+        By using this service, you understand and agree to the EventSync
+        Online Services Terms of Use and Privacy Statement
+      </p>
     </div>
+  </div>
 
-    <nav class="sidebar hidden">
-      <div>
-        <div class="sidebar-brand">
-          <img
-            src="/frontend/assets/img/EventSync logo.webp"
-            alt="EventSync logo"
-            class="sidebar-logo"
-          />
+  <nav class="sidebar hidden">
+    <div>
+      <div class="sidebar-brand">
+        <img src="/frontend/assets/img/EventSync logo.webp" alt="EventSync logo" class="sidebar-logo" />
 
-          <h2>EventSync</h2>
-        </div>
-
-        <ul class="sidebar-menu">
-          <li class="menu-item active" data-view="dashboard-view">
-            <h4>Dashboard Overview</h4>
-          </li>
-
-          <li class="menu-item" data-view="venues-view">
-            <h4>Venue Directory</h4>
-          </li>
-
-          <li class="menu-item" data-view="schedule-view">
-            <h4>Event Application</h4>
-          </li>
-        </ul>
+        <h2>EventSync</h2>
       </div>
-    </nav>
 
-    <main class="main-workspace hidden">
-      <header class="navbar">
-        <div class="page-title">
-          <h1 id="workspaceTitle">Dashboard Overview</h1>
+      <ul class="sidebar-menu">
+        <li class="menu-item active" data-view="dashboard-view">
+          <h4>Dashboard Overview</h4>
+        </li>
+
+        <li class="menu-item" data-view="venues-view">
+          <h4>Venue Directory</h4>
+        </li>
+
+        <li class="menu-item" data-view="schedule-view">
+          <h4>Event Application</h4>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main-workspace hidden">
+    <header class="navbar">
+      <div class="page-title">
+        <h1 id="workspaceTitle">Dashboard Overview</h1>
+      </div>
+
+      <div class="nav-controls">
+        <div class="notification-bell" id="notificationBell">
+          <svg class="bell-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" role="img"
+            aria-label="Notifications">
+            <path
+              d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z" />
+          </svg>
+
+          <span class="bell-dot" id="notificationCount">0</span>
         </div>
 
-        <div class="nav-controls">
-          <div class="notification-bell" id="notificationBell">
-            <svg
-              class="bell-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-              role="img"
-              aria-label="Notifications"
-            >
-              <path
-                d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-1 1v1h14v-1l-1-1z"
-              />
-            </svg>
+        <div class="notification-popup hidden" id="notificationPopup">
+          <div class="notification-popup-header">Notifications</div>
 
-            <span class="bell-dot" id="notificationCount">0</span>
-          </div>
+          <div class="notification-popup-list" id="notificationPopupList"></div>
+        </div>
 
-          <div class="notification-popup hidden" id="notificationPopup">
-            <div class="notification-popup-header">Notifications</div>
+        <div class="profile-menu" id="profileMenu">
+          <button class="profile-button" id="profileButton" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="profile-avatar">STF</span>
 
-            <div
-              class="notification-popup-list"
-              id="notificationPopupList"
-            ></div>
-          </div>
+            <span class="profile-name">Student</span>
+          </button>
 
-          <div class="profile-menu" id="profileMenu">
-            <button
-              class="profile-button"
-              id="profileButton"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <span class="profile-avatar">STF</span>
-
-              <span class="profile-name">Student</span>
+          <div class="profile-dropdown hidden" id="profileDropdown" aria-label="Profile actions">
+            <button class="profile-option" type="button" id="viewProfileBtn">
+              View Profile
             </button>
 
-            <div
-              class="profile-dropdown hidden"
-              id="profileDropdown"
-              aria-label="Profile actions"
-            >
-              <button class="profile-option" type="button" id="viewProfileBtn">
-                View Profile
-              </button>
-
-              <button
-                class="profile-option"
-                type="button"
-                id="accountSettingsBtn"
-              >
-                Settings
-              </button>
-
-              <div class="profile-setting-row">
-                <span class="profile-setting-label">Dark mode</span>
-                <label class="toggle-switch" for="themeToggleStudent">
-                  <input type="checkbox" id="themeToggleStudent" aria-label="Toggle dark mode" />
-                  <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
-                </label>
-              </div>
-
-              <div class="profile-dropdown-separator"></div>
-
-              <button
-                class="profile-option profile-option--logout"
-                type="button"
-                id="logoutBtn"
-              >
-                Log Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section class="content-container">
-        <div id="dashboard-view" class="view-section active-view">
-          <div class="stats-grid stats-grid--three">
-            <div class="stat-card">
-              <div class="stat-label">Proposed Events</div>
-
-              <div class="stat-value" id="countProposed">0</div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-label">Pending Approval</div>
-
-              <div class="stat-value stat-value--warning" id="countPending">
-                0
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-label">Available Venues Today</div>
-
-              <div class="stat-value stat-value--success" id="countVenues">
-                4
-              </div>
-            </div>
-          </div>
-
-          <div class="student-dashboard-layout">
-            <button type="button" class="book-now-cta" id="dashboardBookNowBtn">
-              <span class="book-now-icon">+</span>
-
-              <span class="book-now-text">Book Now</span>
-
-              <span class="book-now-subtext"
-                >Browse venues and submit an event proposal</span
-              >
+            <button class="profile-option" type="button" id="accountSettingsBtn">
+              Settings
             </button>
 
-            <div class="my-events-panel">
-              <div class="section-header-inline">
-                <h3>My Submitted Events</h3>
-
-                <span class="section-badge" id="myEventsCount">0 events</span>
-              </div>
-
-              <div class="my-events-list" id="myEventsList">
-                <p class="empty-state">
-                  You have not submitted any events yet.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="venues-view" class="view-section">
-          <div class="venue-dashboard">
-            <section class="venue-list">
-
-              <div class="venue-grid" id="studentVenueGrid"></div>
-            </section>
-
-            <aside class="venue-detail-panel">
-              <div class="detail-sidebar-inner">
-                <div class="venue-info">
-                  <h3 id="detailVenueName">Select a Venue</h3>
-
-                  <p id="venueDescription">
-                    Pick a venue from the directory to see its description,
-                    availability, and booking options.
-                  </p>
-
-                  <div class="venue-meta">
-                    <p>
-                      <strong>Capacity:</strong>
-                      <span id="venueCapacity">-</span>
-                    </p>
-
-                    <p>
-                      <strong>Address:</strong>
-
-                      <span id="venueAddress">-</span>
-                    </p>
-
-                    <p>
-                      <strong>Availability:</strong>
-
-                      <span id="venueAvailabilityText">-</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div class="detail-section venue-calendar-section">
-                  <div class="section-header-inline">
-                    <h4>Availability Calendar</h4>
-                  </div>
-
-                  <div class="venue-calendar" id="venueCalendar">
-                    <div class="calendar-toolbar">
-                      <button
-                        type="button"
-                        id="calendarPrevMonth"
-                        class="calendar-nav-btn"
-                        aria-label="Previous month"
-                      >
-                        ‹
-                      </button>
-
-                      <h5
-                        id="calendarMonthLabel"
-                        class="calendar-month-title"
-                      ></h5>
-
-                      <button
-                        type="button"
-                        id="calendarNextMonth"
-                        class="calendar-nav-btn"
-                        aria-label="Next month"
-                      >
-                        ›
-                      </button>
-                    </div>
-
-                    <div class="calendar-weekdays" aria-hidden="true">
-                      <span>Sun</span>
-
-                      <span>Mon</span>
-
-                      <span>Tue</span>
-
-                      <span>Wed</span>
-
-                      <span>Thu</span>
-
-                      <span>Fri</span>
-
-                      <span>Sat</span>
-                    </div>
-
-                    <div
-                      class="calendar-dates"
-                      id="venueCalendarDates"
-                      role="grid"
-                      aria-labelledby="calendarMonthLabel"
-                    ></div>
-
-                    <div
-                      id="calendarDayDetail"
-                      class="calendar-day-detail"
-                      hidden
-                    >
-                      <p class="calendar-day-detail-heading">
-                        <span id="calendarDayDetailTitle"></span>
-                      </p>
-
-                      <ul
-                        id="calendarDayTimes"
-                        class="calendar-day-times-list"
-                      ></ul>
-                    </div>
-                  </div>
-
-                  <div class="calendar-legend">
-                    <span class="legend-item legend-available">
-                      <span></span>Available
-                    </span>
-                    <span class="legend-item legend-partial">
-                      <span></span>Limited slots
-                    </span>
-                    <span class="legend-item legend-booked">
-                      <span></span>Fully Booked
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button id="bookNowBtn" class="btn book-now-btn" type="button">
-                Book Now
-              </button>
-            </aside>
-          </div>
-        </div>
-
-        <div id="schedule-view" class="view-section">
-          <div class="form-card">
-            <form id="scheduleForm">
-              <div class="form-group">
-                <label for="eventTitle">Event Title <span class="required-indicator" aria-label="required">*</span></label>
-
-                <input
-                  type="text"
-                  id="eventTitle"
-                  class="form-control"
-                  required
-                  placeholder="e.g., Full-Stack Development Workshop"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="StudOrg">Student Organization / Department <span class="required-indicator" aria-label="required">*</span></label>
-
-                <input
-                  type="text"
-                  id="StudOrg"
-                  class="form-control"
-                  required
-                  placeholder="e.g., COMMITS"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="eventVenue">Select Venue <span class="required-indicator" aria-label="required">*</span></label>
-
-                <select id="eventVenue" class="form-control" required>
-                  <option value="">-- Choose a venue --</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="eventDate">Event Date <span class="required-indicator" aria-label="required">*</span></label>
-
-                <input
-                  type="date"
-                  id="eventDate"
-                  class="form-control"
-                  required
-                />
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="eventTime">Start Time <span class="required-indicator" aria-label="required">*</span></label>
-
-                  <input
-                    type="time"
-                    id="eventTime"
-                    class="form-control"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="attendees">Expected Attendance <span class="required-indicator" aria-label="required">*</span></label>
-
-                  <input
-                    type="number"
-                    id="attendees"
-                    class="form-control"
-                    required
-                    placeholder="Number of guests"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="eventPdf">Attach Letter Request <span class="required-indicator" aria-label="required">*</span></label>
-
-                <div id="pdfDropzone" class="pdf-dropzone">
-                  <span>Drag & drop your PDF here, or click to browse</span>
-
-                  <small id="pdfFileName">No file selected</small>
-                </div>
-
-                <input
-                  type="file"
-                  id="eventPdf"
-                  accept="application/pdf"
-                  required
-                  class="form-control file-input-hidden"
-                />
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn">
-                  Submit Booking Request
-                </button>
-
-                <button
-                  type="button"
-                  id="scheduleCancelBtn"
-                  class="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <!-- Cancel Reason Modal -->
-      <div class="modal-overlay hidden" id="cancelReasonModal">
-        <div class="modal-overlay-bg" id="cancelReasonOverlay"></div>
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>Cancel Request</h3>
-            <button type="button" class="modal-close" id="cancelReasonClose">&times;</button>
-          </div>
-          <form id="cancelReasonForm">
-            <div class="form-group">
-              <label for="cancelReason">Reason for cancellation (Optional)</label>
-              <select id="cancelReason" class="form-control">
-                <option value="">-- No reason selected --</option>
-                <option value="Schedule conflict with another event">Schedule conflict with another event</option>
-                <option value="Venue no longer available">Venue no longer available</option>
-                <option value="Insufficient attendees or participants">Insufficient attendees or participants</option>
-                <option value="Budget or funding issues">Budget or funding issues</option>
-                <option value="Change of plans by the organization">Change of plans by the organization</option>
-                <option value="Event postponed to a later date">Event postponed to a later date</option>
-                <option value="Duplicate or accidental submission">Duplicate or accidental submission</option>
-                <option value="Other / Prefer not to say">Other / Prefer not to say</option>
-              </select>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
-              <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Success Modal (absolute center of screen) -->
-      <div class="modal-overlay hidden" id="successModal">
-        <div class="modal-overlay-bg" id="successModalOverlay"></div>
-        <div class="modal-card modal-card--success">
-          <div class="modal-body-center">
-            <div class="success-icon">✓</div>
-            <h2>Booking Request Submitted</h2>
-            <p>Booking request successfully submitted to the faculty.</p>
-            <div class="form-actions" style="justify-content:center;">
-              <button type="button" class="btn" id="successModalBtn">Got It</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- View Profile Modal -->
-      <div class="modal-overlay hidden" id="profileModal">
-        <div class="modal-overlay-bg" id="profileModalOverlay"></div>
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>View Profile</h3>
-            <button type="button" class="modal-close" id="profileModalClose">&times;</button>
-          </div>
-          <form id="profileForm" onsubmit="return false;">
-            <div class="form-group">
-              <label for="profileDisplayName">Display Name <span class="required-indicator" aria-label="required">*</span></label>
-              <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Juan Dela Cruz" />
-            </div>
-            <div class="form-group">
-              <label for="profileEmail">Email Address</label>
-              <input type="email" id="profileEmail" class="form-control" placeholder="e.g., juan@email.com" />
-            </div>
-            <div class="form-group">
-              <label for="profileIdNumber">Student Number</label>
-              <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., 2021001234" />
-            </div>
-            <div class="form-group" id="profileDeptGroup" style="display:none;">
-              <label for="profileDepartment">Department</label>
-              <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn" id="profileModalSave">Save Profile</button>
-              <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Settings Modal -->
-      <div class="modal-overlay hidden" id="settingsModal">
-        <div class="modal-overlay-bg" id="settingsModalOverlay"></div>
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>Settings</h3>
-            <button type="button" class="modal-close" id="settingsModalClose">&times;</button>
-          </div>
-          <form id="settingsForm" onsubmit="return false;">
-            <div class="form-group">
-              <label class="settings-toggle-row">
-                <span>Enable Notifications</span>
-                <input type="checkbox" id="settingsNotifications" checked />
+            <div class="profile-setting-row">
+              <span class="profile-setting-label">Dark mode</span>
+              <label class="toggle-switch" for="themeToggleStudent">
+                <input type="checkbox" id="themeToggleStudent" aria-label="Toggle dark mode" />
+                <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
               </label>
             </div>
+
+            <div class="profile-dropdown-separator"></div>
+
+            <button class="profile-option profile-option--logout" type="button" id="logoutBtn">
+              Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="content-container">
+      <div id="dashboard-view" class="view-section active-view">
+        <div class="stats-grid stats-grid--three">
+          <div class="stat-card">
+            <div class="stat-label">Proposed Events</div>
+
+            <div class="stat-value" id="countProposed">0</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Pending Approval</div>
+
+            <div class="stat-value stat-value--warning" id="countPending">
+              0
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Available Venues Today</div>
+
+            <div class="stat-value stat-value--success" id="countVenues">
+              4
+            </div>
+          </div>
+        </div>
+
+        <div class="student-dashboard-layout">
+          <button type="button" class="book-now-cta" id="dashboardBookNowBtn">
+            <span class="book-now-icon">+</span>
+
+            <span class="book-now-text">Book Now</span>
+
+            <span class="book-now-subtext">Browse venues and submit an event proposal</span>
+          </button>
+
+          <div class="my-events-panel">
+            <div class="section-header-inline">
+              <h3>My Submitted Events</h3>
+
+              <span class="section-badge" id="myEventsCount">0 events</span>
+            </div>
+
+            <div class="my-events-list" id="myEventsList">
+              <p class="empty-state">
+                You have not submitted any events yet.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="venues-view" class="view-section">
+        <div class="venue-dashboard">
+          <section class="venue-list">
+
+            <div class="venue-grid" id="studentVenueGrid"></div>
+          </section>
+
+          <aside class="venue-detail-panel">
+            <div class="detail-sidebar-inner">
+              <div class="venue-info">
+                <h3 id="detailVenueName">Select a Venue</h3>
+
+                <p id="venueDescription">
+                  Pick a venue from the directory to see its description,
+                  availability, and booking options.
+                </p>
+
+                <div class="venue-meta">
+                  <p>
+                    <strong>Capacity:</strong>
+                    <span id="venueCapacity">-</span>
+                  </p>
+
+                  <p>
+                    <strong>Address:</strong>
+
+                    <span id="venueAddress">-</span>
+                  </p>
+
+                  <p>
+                    <strong>Availability:</strong>
+
+                    <span id="venueAvailabilityText">-</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="detail-section venue-calendar-section">
+                <div class="section-header-inline">
+                  <h4>Availability Calendar</h4>
+                </div>
+
+                <div class="venue-calendar" id="venueCalendar">
+                  <div class="calendar-toolbar">
+                    <button type="button" id="calendarPrevMonth" class="calendar-nav-btn" aria-label="Previous month">
+                      ‹
+                    </button>
+
+                    <h5 id="calendarMonthLabel" class="calendar-month-title"></h5>
+
+                    <button type="button" id="calendarNextMonth" class="calendar-nav-btn" aria-label="Next month">
+                      ›
+                    </button>
+                  </div>
+
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    <span>Sun</span>
+
+                    <span>Mon</span>
+
+                    <span>Tue</span>
+
+                    <span>Wed</span>
+
+                    <span>Thu</span>
+
+                    <span>Fri</span>
+
+                    <span>Sat</span>
+                  </div>
+
+                  <div class="calendar-dates" id="venueCalendarDates" role="grid" aria-labelledby="calendarMonthLabel">
+                  </div>
+
+                  <div id="calendarDayDetail" class="calendar-day-detail" hidden>
+                    <p class="calendar-day-detail-heading">
+                      <span id="calendarDayDetailTitle"></span>
+                    </p>
+
+                    <ul id="calendarDayTimes" class="calendar-day-times-list"></ul>
+                  </div>
+                </div>
+
+                <div class="calendar-legend">
+                  <span class="legend-item legend-available">
+                    <span></span>Available
+                  </span>
+                  <span class="legend-item legend-partial">
+                    <span></span>Limited slots
+                  </span>
+                  <span class="legend-item legend-booked">
+                    <span></span>Fully Booked
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button id="bookNowBtn" class="btn book-now-btn" type="button">
+              Book Now
+            </button>
+          </aside>
+        </div>
+      </div>
+
+      <div id="schedule-view" class="view-section">
+        <div class="form-card">
+          <form id="scheduleForm">
             <div class="form-group">
-              <label for="settingsLanguage">Language Preference</label>
-              <select id="settingsLanguage" class="form-control">
-                <option value="en">English</option>
-                <option value="fil">Filipino</option>
+              <label for="eventTitle">Event Title <span class="required-indicator"
+                  aria-label="required">*</span></label>
+
+              <input type="text" id="eventTitle" class="form-control" required
+                placeholder="e.g., Full-Stack Development Workshop" />
+            </div>
+
+            <div class="form-group">
+              <label for="StudOrg">Student Organization / Department <span class="required-indicator"
+                  aria-label="required">*</span></label>
+
+              <input type="text" id="StudOrg" class="form-control" required placeholder="e.g., COMMITS" />
+            </div>
+
+            <div class="form-group">
+              <label for="eventVenue">Select Venue <span class="required-indicator"
+                  aria-label="required">*</span></label>
+
+              <select id="eventVenue" class="form-control" required>
+                <option value="">-- Choose a venue --</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label for="eventDate">Event Date <span class="required-indicator" aria-label="required">*</span></label>
+
+              <input type="date" id="eventDate" class="form-control" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="eventTime">Start Time <span class="required-indicator"
+                    aria-label="required">*</span></label>
+
+                <input type="time" id="eventTime" class="form-control" required />
+              </div>
+
+              <div class="form-group">
+                <label for="attendees">Expected Attendance <span class="required-indicator"
+                    aria-label="required">*</span></label>
+
+                <input type="number" id="attendees" class="form-control" required placeholder="Number of guests" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="eventPdf">Attach Letter Request <span class="required-indicator"
+                  aria-label="required">*</span></label>
+
+              <div id="pdfDropzone" class="pdf-dropzone">
+                <span>Drag & drop your PDF here, or click to browse</span>
+
+                <small id="pdfFileName">No file selected</small>
+              </div>
+
+              <input type="file" id="eventPdf" accept="application/pdf" required
+                class="form-control file-input-hidden" />
+            </div>
+
             <div class="form-actions">
-              <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
-              <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
+              <button type="submit" class="btn">
+                Submit Booking Request
+              </button>
+
+              <button type="button" id="scheduleCancelBtn" class="btn btn-secondary">
+                Cancel
+              </button>
             </div>
           </form>
         </div>
       </div>
-    </main>
+    </section>
 
-    <!-- Toast Notifications -->
-    <div class="toast-notification hidden" id="profileSavedToast">
-      <div class="toast-icon">✓</div>
-      <div class="toast-message">Profile saved successfully.</div>
-    </div>
-    <div class="toast-notification hidden" id="settingsSavedToast">
-      <div class="toast-icon">✓</div>
-      <div class="toast-message">Settings saved successfully.</div>
+    <!-- Cancel Reason Modal -->
+    <div class="modal-overlay hidden" id="cancelReasonModal">
+      <div class="modal-overlay-bg" id="cancelReasonOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Cancel Request</h3>
+          <button type="button" class="modal-close" id="cancelReasonClose">&times;</button>
+        </div>
+        <form id="cancelReasonForm">
+          <div class="form-group">
+            <label for="cancelReason">Reason for cancellation (Optional)</label>
+            <select id="cancelReason" class="form-control">
+              <option value="">-- No reason selected --</option>
+              <option value="Schedule conflict with another event">Schedule conflict with another event</option>
+              <option value="Venue no longer available">Venue no longer available</option>
+              <option value="Insufficient attendees or participants">Insufficient attendees or participants</option>
+              <option value="Budget or funding issues">Budget or funding issues</option>
+              <option value="Change of plans by the organization">Change of plans by the organization</option>
+              <option value="Event postponed to a later date">Event postponed to a later date</option>
+              <option value="Duplicate or accidental submission">Duplicate or accidental submission</option>
+              <option value="Other / Prefer not to say">Other / Prefer not to say</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+            <button type="button" class="btn btn-secondary" id="cancelReasonCancel">Go Back</button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <script src="/frontend/assets/js/shared.js"></script>
-    <script src="/frontend/assets/js/student.js"></script>
-  </body>
+    <!-- Success Modal (absolute center of screen) -->
+    <div class="modal-overlay hidden" id="successModal">
+      <div class="modal-overlay-bg" id="successModalOverlay"></div>
+      <div class="modal-card modal-card--success">
+        <div class="modal-body-center">
+          <div class="success-icon">✓</div>
+          <h2>Booking Request Submitted</h2>
+          <p>Booking request successfully submitted to the faculty.</p>
+          <div class="form-actions" style="justify-content:center;">
+            <button type="button" class="btn" id="successModalBtn">Got It</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Profile Modal -->
+    <div class="modal-overlay hidden" id="profileModal">
+      <div class="modal-overlay-bg" id="profileModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>View Profile</h3>
+          <button type="button" class="modal-close" id="profileModalClose">&times;</button>
+        </div>
+        <form id="profileForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="profileDisplayName">Display Name <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Juan Dela Cruz" />
+          </div>
+          <div class="form-group">
+            <label for="profileEmail">Email Address</label>
+            <input type="email" id="profileEmail" class="form-control" placeholder="e.g., juan@email.com" />
+          </div>
+          <div class="form-group">
+            <label for="profileIdNumber">Student Number</label>
+            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., 2021001234" />
+          </div>
+          <div class="form-group" id="profileDeptGroup" style="display:none;">
+            <label for="profileDepartment">Department</label>
+            <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn" id="profileModalSave">Save Profile</button>
+            <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal-overlay-bg" id="settingsModalOverlay"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button type="button" class="modal-close" id="settingsModalClose">&times;</button>
+        </div>
+        <form id="settingsForm" onsubmit="return false;">
+          <div class="form-group">
+            <label class="settings-toggle-row">
+              <span>Enable Notifications</span>
+              <input type="checkbox" id="settingsNotifications" checked />
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn" id="settingsModalSave">Save Settings</button>
+            <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Notifications -->
+  <div class="toast-notification hidden" id="profileSavedToast">
+    <div class="toast-icon">✓</div>
+    <div class="toast-message">Profile saved successfully.</div>
+  </div>
+  <div class="toast-notification hidden" id="settingsSavedToast">
+    <div class="toast-icon">✓</div>
+    <div class="toast-message">Settings saved successfully.</div>
+  </div>
+
+  <script src="/frontend/assets/js/shared.js"></script>
+  <script src="/frontend/assets/js/student.js"></script>
+</body>
+
 </html>

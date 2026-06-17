@@ -8,9 +8,11 @@ namespace backend.Services
     public class VenueService
     {
         private readonly AppDbContext _context;
-        public VenueService(AppDbContext context)
+        private readonly AuditLogService _auditLogService;
+        public VenueService(AppDbContext context, AuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         public async Task<GlobalResponse> GetVenues(string? status)
@@ -68,6 +70,14 @@ namespace backend.Services
             };
             _context.Venues.Add(newVenue);
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(
+                null, null, null, null,
+                "Venue",
+                "Create",
+                newVenue.Name
+            );
+
             return new GlobalResponse { Success = true, BackendMessage = "Venue added successfully.", Data = newVenue };
         }
     }

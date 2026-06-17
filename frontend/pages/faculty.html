@@ -1,110 +1,143 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="icon"
-      href="/frontend/assets/img/EventSync logo.webp"
-      type="image/png"
-      sizes="192x192"
-    />
-    <title>Faculty Login - EventSync</title>
-    <link rel="stylesheet" href="/frontend/assets/css/faculty.css" />
-  </head>
-  <body>
-    <div class="landing-overlay">
-      <div class="landing-card">
-        <p class="landing-subtitle" id="authSubtitle">FACULTY LOGIN</p>
-        <h1 class="landing-title" id="authTitle">Faculty Portal</h1>
-        <p class="landing-copy" id="authCopy">Please sign in with your account</p>
 
-        <!-- ========== LOGIN FORM ========== -->
-        <div class="form-card auth-panel" id="loginPanel">
-          <form id="facultyLoginForm">
-            <div class="form-group">
-              <label for="facultyUsername">Faculty Username <span class="required-indicator" aria-label="required">*</span></label>
-              <input type="text" id="facultyUsername" class="form-control" required placeholder="e.g., Hoogie" />
-            </div>
-            <div class="form-group">
-              <label for="facultyPassword">Password <span class="required-indicator" aria-label="required">*</span></label>
-              <div class="password-wrapper">
-                <input type="password" id="facultyPassword" class="form-control" required placeholder="Enter your password" />
-                <button type="button" class="password-toggle" data-target="facultyPassword" aria-label="Show password">
-                  <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                </button>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn">Login</button>
-              <a id="facultyLoginBackBtn" href="index.html" class="btn btn-secondary">Back</a>
-            </div>
-          </form>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/frontend/assets/img/EventSync logo.webp" type="image/png" sizes="192x192" />
+  <title>Faculty Login - EventSync</title>
+  <link rel="stylesheet" href="/frontend/assets/css/faculty.css" />
+</head>
 
-          <div class="auth-switch">
-            <span>Don't have an account?</span>
-            <button type="button" class="auth-switch-link" id="showSignUpBtn">Sign Up</button>
+<body>
+  <div class="landing-overlay">
+    <div class="landing-card">
+      <p class="landing-subtitle" id="authSubtitle">FACULTY LOGIN</p>
+      <h1 class="landing-title" id="authTitle">Faculty Portal</h1>
+      <p class="landing-copy" id="authCopy">Please sign in with your account</p>
+
+      <!-- ========== LOGIN FORM ========== -->
+      <div class="form-card auth-panel" id="loginPanel">
+        <form id="facultyLoginForm">
+          <div class="form-group">
+            <label for="facultyUsername">Faculty Username <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <input type="text" id="facultyUsername" class="form-control" required placeholder="e.g., Hoogieee" />
           </div>
-        </div>
-
-        <!-- ========== SIGN UP FORM ========== -->
-        <div class="form-card auth-panel auth-panel--hidden" id="signUpPanel">
-          <form id="facultySignUpForm">
-            <div class="form-group">
-              <label for="signUpFacultyUsername">Faculty Username <span class="required-indicator" aria-label="required">*</span></label>
-              <input type="text" id="signUpFacultyUsername" class="form-control" required placeholder="e.g., Hoogie" />
+          <div class="form-group">
+            <label for="facultyPassword">Password <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <div class="password-wrapper">
+              <input type="password" id="facultyPassword" class="form-control" required
+                placeholder="Enter your password" />
+              <button type="button" class="password-toggle" data-target="facultyPassword" aria-label="Show password">
+                <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="display:none">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
             </div>
-            <div class="form-group">
-              <label for="signUpFacultyFullName">Faculty Full Name <span class="required-indicator" aria-label="required">*</span></label>
-              <input type="text" id="signUpFacultyFullName" class="form-control" required placeholder="e.g., Juan Two" />
-            </div>
-            <div class="form-group">
-              <label for="signUpFacultyPassword">Password <span class="required-indicator" aria-label="required">*</span></label>
-              <div class="password-wrapper">
-                <input type="password" id="signUpFacultyPassword" class="form-control" required placeholder="Create a password" minlength="8" />
-                <button type="button" class="password-toggle" data-target="signUpFacultyPassword" aria-label="Show password">
-                  <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                </button>
-              </div>
-              <small class="form-hint">Must be at least 8 characters</small>
-            </div>
-            <div class="form-group">
-              <label for="signUpFacultyConfirmPassword">Confirm Password <span class="required-indicator" aria-label="required">*</span></label>
-              <div class="password-wrapper">
-                <input type="password" id="signUpFacultyConfirmPassword" class="form-control" required placeholder="Confirm your password" />
-                <button type="button" class="password-toggle" data-target="signUpFacultyConfirmPassword" aria-label="Show password">
-                  <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                </button>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn">Create Account</button>
-              <button type="button" class="btn btn-secondary" id="signUpBackBtn">Cancel</button>
-            </div>
-          </form>
-
-          <div class="auth-switch">
-            <span>Already have an account?</span>
-            <button type="button" class="auth-switch-link" id="showLoginBtn">Sign In</button>
           </div>
-        </div>
+          <div class="form-actions">
+            <button type="submit" class="btn">Login</button>
+            <a id="facultyLoginBackBtn" href="index.html" class="btn btn-secondary">Back</a>
+          </div>
+        </form>
 
-        <p class="landing-terms" id="authTerms">
-          Use your faculty credentials to log in.
-        </p>
+        <div class="auth-switch">
+          <span>Don't have an account?</span>
+          <button type="button" class="auth-switch-link" id="showSignUpBtn">Sign Up</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Success Toast -->
-    <div class="toast-notification hidden" id="signUpToast">
-      <div class="toast-icon">✓</div>
-      <div class="toast-message">Account created successfully! You can now sign in.</div>
-    </div>
+      <!-- ========== SIGN UP FORM ========== -->
+      <div class="form-card auth-panel auth-panel--hidden" id="signUpPanel">
+        <form id="facultySignUpForm">
+          <div class="form-group">
+            <label for="signUpFacultyUsername">Faculty Username <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <input type="text" id="signUpFacultyUsername" class="form-control" required placeholder="e.g., Hoogieee" />
+          </div>
+          <div class="form-group">
+            <label for="signUpFacultyFullName">Faculty Full Name <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <input type="text" id="signUpFacultyFullName" class="form-control" required placeholder="e.g., Juan Two" />
+          </div>
+          <div class="form-group">
+            <label for="signUpFacultyPassword">Password <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <div class="password-wrapper">
+              <input type="password" id="signUpFacultyPassword" class="form-control" required
+                placeholder="Create a password" minlength="8" />
+              <button type="button" class="password-toggle" data-target="signUpFacultyPassword"
+                aria-label="Show password">
+                <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="display:none">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <small class="form-hint">Must be at least 8 characters</small>
+          </div>
+          <div class="form-group">
+            <label for="signUpFacultyConfirmPassword">Confirm Password <span class="required-indicator"
+                aria-label="required">*</span></label>
+            <div class="password-wrapper">
+              <input type="password" id="signUpFacultyConfirmPassword" class="form-control" required
+                placeholder="Confirm your password" />
+              <button type="button" class="password-toggle" data-target="signUpFacultyConfirmPassword"
+                aria-label="Show password">
+                <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="display:none">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn">Create Account</button>
+            <button type="button" class="btn btn-secondary" id="signUpBackBtn">Cancel</button>
+          </div>
+        </form>
 
-    <script src="/frontend/assets/js/shared.js"></script>
-    <script src="/frontend/assets/js/script.js"></script>
-  </body>
+        <div class="auth-switch">
+          <span>Already have an account?</span>
+          <button type="button" class="auth-switch-link" id="showLoginBtn">Sign In</button>
+        </div>
+      </div>
+
+      <p class="landing-terms" id="authTerms">
+        Use your faculty credentials to log in.
+      </p>
+    </div>
+  </div>
+
+  <!-- Success Toast -->
+  <div class="toast-notification hidden" id="signUpToast">
+    <div class="toast-icon">✓</div>
+    <div class="toast-message">Account created successfully! You can now sign in.</div>
+  </div>
+
+  <script src="/frontend/assets/js/shared.js"></script>
+  <script src="/frontend/assets/js/script.js"></script>
+</body>
+
 </html>

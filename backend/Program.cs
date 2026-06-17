@@ -16,6 +16,8 @@ builder.Services.AddControllers()
             System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition =
             System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 builder.Services.AddCors(options =>
@@ -45,6 +47,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<JwtGenerator>();
@@ -61,10 +65,32 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        context.Database.ExecuteSqlRaw(
+            "UPDATE AuditLogs a JOIN Users u ON a.UserId = u.UserId SET a.UserFullName = u.FullName, a.UserIdentifier = COALESCE(u.StudentNumber, u.Username) WHERE a.UserFullName = 'Anonymous' AND a.UserId IS NOT NULL;"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error running database cleanup: {ex.Message}");
+    }
+}
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+    RequestPath = "/Uploads"
+});
 
 app.MapControllers();
 

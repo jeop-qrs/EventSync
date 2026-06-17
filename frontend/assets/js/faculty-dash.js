@@ -10,34 +10,82 @@ let viewCalendarMonth = new Date().getMonth();
 let viewCalendarYear = new Date().getFullYear();
 let selectedCalendarDay = null;
 let facultyVenueData = {};
-let notifications = [];
-let unreadNotifications = 0;
 let editingVenueId = null; // Track if we're editing vs adding
 
-// =============================================
-// Venue Data — localStorage CRUD
-// =============================================
+let allFacultyVenuesList = [];
+let allFacultyProposalsList = [];
+let allAuditLogs = [];
 
-/**
- * loadVenues() / saveVenues(venues)
- * Read/write the venues array to localStorage under STORAGE_KEYS.VENUES.
- * Each venue: { id, name, address, description, availability, photoDataUrl,
- *               calendarAvailability, timeSlots }
- *
- * calendarAvailability: { [day]: { booked: bool, times: string[] } }
- * timeSlots: string[] — the 3 customizable time slots for this venue
- */
-function loadVenues() {
+async function loadFacultyVenues() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.VENUES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+    const response = await apiFetch("/api/venues");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        allFacultyVenuesList = result.data.map(v => ({
+          id: v.venueId,
+          name: v.name,
+          address: v.address,
+          capacity: v.capacity,
+          description: v.description,
+          availability: v.availability,
+          photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
+          timeSlots: v.timeSlots || []
+        }));
+        return allFacultyVenuesList;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load venues:", err);
+  }
+  return [];
+}
+
+async function loadEventsFromServer() {
+  try {
+    const statuses = ["pending", "approved", "rejected"];
+    const promises = statuses.map(async (status) => {
+      const response = await apiFetch(`/api/events?status=${status}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          return result.data;
+        }
+      }
+      return [];
+    });
+    const results = await Promise.all(promises);
+    allFacultyProposalsList = results.flat().map(e => ({
+      id: `proposal-${e.eventId}`,
+      eventId: e.eventId,
+      title: e.title,
+      org: e.department,
+      studentNumber: e.organizer && e.organizer.studentNumber ? e.organizer.studentNumber : (e.organizerId ? String(e.organizerId) : "Unknown"),
+      venue: allFacultyVenuesList.find(v => v.id === e.venueId)?.name || `Venue #${e.venueId}`,
+      venueId: e.venueId,
+      date: e.eventDate ? e.eventDate.split("T")[0] : "",
+      time: e.startTime,
+      attendees: e.expectedAttendees,
+      pdfName: e.submitLetterPath ? e.submitLetterPath.split("/").pop() : "letter-request.pdf",
+      pdfDataUrl: e.submitLetterPath ? `http://localhost:5108/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
+      status: e.status === "approved" ? "accepted" : (e.status === "rejected" ? "pending_reviewed" : e.status),
+      rejectionReason: e.reason || "",
+      submittedAt: e.createdAt
+    }));
+  } catch (err) {
+    console.error("Failed to load events:", err);
   }
 }
 
+function loadVenues() {
+  return allFacultyVenuesList;
+}
+
 function saveVenues(venues) {
-  localStorage.setItem(STORAGE_KEYS.VENUES, JSON.stringify(venues));
+}
+
+function loadProposals() {
+  return allFacultyProposalsList;
 }
 
 function buildVenueDataMap(venues) {
@@ -58,6 +106,7 @@ function switchView(viewId, element) {
     "dashboard-view": "Dashboard Overview",
     "venues-view": "Venue Directory",
     "proposals-view": "Proposed Events",
+    "logs-view": "System Audit Logs",
   };
   const titleEl = document.getElementById("workspaceTitle");
   if (titleEl) titleEl.textContent = titles[viewId] || "Dashboard";
@@ -68,6 +117,9 @@ function switchView(viewId, element) {
   }
 
   if (viewId === "proposals-view") renderProposals();
+  if (viewId === "logs-view") {
+    loadAuditLogs().then(renderAuditLogs);
+  }
 }
 
 // =============================================
@@ -225,23 +277,7 @@ function displayVenueDetail(venueId) {
 // =============================================
 
 function deleteVenue(venueId) {
-  if (!confirm("Are you sure you want to delete this venue? This action cannot be undone.")) {
-    return;
-  }
-
-  const venues = loadVenues();
-  const venueIndex = venues.findIndex((v) => v.id === venueId);
-  if (venueIndex === -1) return;
-
-  const venueName = venues[venueIndex].name;
-  venues.splice(venueIndex, 1);
-  saveVenues(venues);
-
-  activeVenue = null;
-  resetVenueDetailPanel();
-  renderFacultyVenueGrid();
-  updateDashboardStats();
-  addNotification(`Venue "${venueName}" has been deleted.`, "Just now");
+  alert("Deleting venues is not supported by the backend API.");
 }
 
 function resetVenueDetailPanel() {
@@ -367,60 +403,45 @@ async function handleAddVenueSubmit(e) {
   const photoInput = document.getElementById("venuePhotoInput");
   const photoFile = photoInput?.files?.[0];
 
-  // Read time slot values from the dynamic schedule editor
   let timeSlots = getDynamicSlots("venueSlotsContainer");
-  if (timeSlots.length === 0) timeSlots = [DEFAULT_TIME_SLOTS[0]]; // fallback
-
-  const venues = loadVenues();
+  if (timeSlots.length === 0) timeSlots = [DEFAULT_TIME_SLOTS[0]];
 
   if (editingVenueId) {
-    // ---- EDIT MODE ----
-    const venueIndex = venues.findIndex((v) => v.id === editingVenueId);
-    if (venueIndex === -1) return;
-
-    venues[venueIndex].name = name;
-    venues[venueIndex].address = address;
-    venues[venueIndex].capacity = capacity;
-    venues[venueIndex].description = description;
-    venues[venueIndex].availability = availability;
-    venues[venueIndex].timeSlots = timeSlots;
-
-    // Only update photo if a new one was selected
-    if (photoFile) {
-      venues[venueIndex].photoDataUrl = await readFileAsDataUrl(photoFile);
-    }
-
-    saveVenues(venues);
+    alert("Editing existing venues is not supported by the backend API.");
     closeAddVenueModal();
-    renderFacultyVenueGrid();
-    displayVenueDetail(editingVenueId);
-    addNotification(`Venue "${name}" has been updated.`, "Just now");
-  } else {
-    // ---- ADD MODE ----
-    let photoDataUrl = "";
-    if (photoFile) {
-      photoDataUrl = await readFileAsDataUrl(photoFile);
-    }
-
-    const newVenue = {
-      id: `venue-${Date.now()}`,
-      name,
-      address,
-      capacity,
-      description,
-      availability,
-      photoDataUrl,
-      calendarAvailability: {},
-      timeSlots,
-    };
-
-    venues.push(newVenue);
-    saveVenues(venues);
-    closeAddVenueModal();
-    renderFacultyVenueGrid();
-    displayVenueDetail(newVenue.id);
-    addNotification(`Venue "${name}" added to the directory.`, "Just now");
+    return;
   }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("address", address);
+  formData.append("capacity", parseInt(capacity, 10) || 0);
+  formData.append("description", description);
+  formData.append("availability", availability);
+  timeSlots.forEach(slot => {
+    formData.append("timeslots", slot);
+  });
+  if (photoFile) {
+    formData.append("photoCover", photoFile);
+  }
+
+  try {
+    const response = await apiFetch("/api/venues", {
+      method: "POST",
+      body: formData
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to save venue.");
+      return;
+    }
+    addNotification(`Venue "${name}" added to the directory.`, "Just now");
+  } catch (err) {
+    console.error("Failed to save venue:", err);
+    alert("An error occurred while saving the venue.");
+  }
+  closeAddVenueModal();
+  await refreshAll();
 }
 
 // =============================================
@@ -756,31 +777,48 @@ function renderProposals() {
   });
 }
 
-function acceptProposal(id) {
-  const proposals = loadProposals();
-  const proposal = proposals.find((p) => p.id === id);
+async function acceptProposal(id) {
+  const proposal = allFacultyProposalsList.find((p) => p.id === id);
   if (!proposal) return;
 
-  proposal.status = "accepted";
-  saveProposals(proposals);
-  addNotification(`Proposal "${proposal.title}" has been accepted.`, "Just now");
-  renderProposals();
-  renderFacultySchedule();
-  updateDashboardStats();
+  try {
+    const response = await apiFetch(`/api/events/${proposal.eventId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved" })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to approve proposal.");
+      return;
+    }
+    addNotification(`Proposal "${proposal.title}" has been accepted.`, "Just now");
+  } catch (err) {
+    console.error("Failed to accept proposal:", err);
+  }
+  await refreshAll();
 }
 
-function rejectProposal(id, reason) {
-  const proposals = loadProposals();
-  const proposal = proposals.find((p) => p.id === id);
+async function rejectProposal(id, reason) {
+  const proposal = allFacultyProposalsList.find((p) => p.id === id);
   if (!proposal) return;
 
-  proposal.status = "pending_reviewed";
-  proposal.rejectionReason = reason;
-  saveProposals(proposals);
-  addNotification(`Proposal "${proposal.title}" has been marked as pending reviewed.`, "Just now");
-  renderProposals();
-  renderFacultySchedule();
-  updateDashboardStats();
+  try {
+    const response = await apiFetch(`/api/events/${proposal.eventId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "rejected", reason: reason })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to reject proposal.");
+      return;
+    }
+    addNotification(`Proposal "${proposal.title}" has been marked as pending reviewed.`, "Just now");
+  } catch (err) {
+    console.error("Failed to reject proposal:", err);
+  }
+  await refreshAll();
 }
 
 // =============================================
@@ -797,6 +835,125 @@ function initializeVenuePhotoZone() {
   input.addEventListener("change", () => {
     label.textContent = input.files[0]?.name || "No file selected";
   });
+}
+
+// =============================================
+// Audit Logs — Fetch & Render
+// =============================================
+
+async function loadAuditLogs() {
+  try {
+    const response = await apiFetch("/api/auditlogs");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        allAuditLogs = result.data;
+        return allAuditLogs;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load audit logs:", err);
+  }
+  return [];
+}
+
+function getLogActivityDescription(log) {
+  const roleLabel = log.role === "faculty" ? "Faculty" : log.role === "student" ? "Student" : "Guest";
+  const nameLabel = log.userFullName && log.userFullName !== "Anonymous" ? log.userFullName : log.userIdentifier;
+  
+  if (log.objectType === "Event") {
+    if (log.action === "Create") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> requested a new event booking: <strong>"${escapeHtml(log.objectName)}"</strong>`;
+    }
+    if (log.action === "Cancel") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> cancelled the event request: <strong>"${escapeHtml(log.objectName)}"</strong>`;
+    }
+    if (log.action === "Approve") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> approved the event booking request: <strong>"${escapeHtml(log.objectName)}"</strong>`;
+    }
+    if (log.action === "Reject") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> marked event request <strong>"${escapeHtml(log.objectName)}"</strong> as pending reviewed`;
+    }
+  } else if (log.objectType === "Venue") {
+    if (log.action === "Create") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> added a new venue: <strong>"${escapeHtml(log.objectName)}"</strong>`;
+    }
+  } else if (log.objectType === "Auth") {
+    if (log.action === "Login") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> logged in successfully`;
+    }
+    if (log.action === "Register") {
+      return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> created an account`;
+    }
+    if (log.action.startsWith("Login Failed")) {
+      return `Failed login attempt using identifier <strong>"${escapeHtml(log.objectName)}"</strong>`;
+    }
+  } else if (log.objectType === "NotificationPreference") {
+    return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> updated their notification preferences`;
+  }
+  
+  return `${roleLabel} <strong>${escapeHtml(nameLabel)}</strong> performed action <strong>${escapeHtml(log.action)}</strong> on <strong>${escapeHtml(log.objectType)}</strong>: "${escapeHtml(log.objectName)}"`;
+}
+
+function renderAuditLogs() {
+  const tbody = document.getElementById("logsTableBody");
+  if (!tbody) return;
+
+  const searchQuery = document.getElementById("logsSearch")?.value.trim().toLowerCase() || "";
+  const filterActionVal = document.getElementById("filterAction")?.value || "";
+  const filterObjectTypeVal = document.getElementById("filterObjectType")?.value || "";
+  const filterRoleVal = document.getElementById("filterRole")?.value || "";
+
+  const filteredLogs = allAuditLogs.filter(log => {
+    // Search filter
+    if (searchQuery) {
+      const userMatch = log.userIdentifier?.toLowerCase().includes(searchQuery);
+      const nameMatch = log.userFullName?.toLowerCase().includes(searchQuery);
+      const objectMatch = log.objectName?.toLowerCase().includes(searchQuery);
+      const actionMatch = log.action?.toLowerCase().includes(searchQuery);
+      const typeMatch = log.objectType?.toLowerCase().includes(searchQuery);
+      if (!userMatch && !nameMatch && !objectMatch && !actionMatch && !typeMatch) {
+        return false;
+      }
+    }
+
+    // Dropdown filters
+    if (filterActionVal && log.action !== filterActionVal) return false;
+    if (filterObjectTypeVal && log.objectType !== filterObjectTypeVal) return false;
+    if (filterRoleVal && log.role !== filterRoleVal) return false;
+
+    return true;
+  });
+
+  if (filteredLogs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="text-align: center; padding: 40px;">No matching audit logs found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredLogs.map(log => {
+    const timeStr = new Date(log.timestamp).toLocaleString();
+    return `
+      <tr>
+        <td>${escapeHtml(timeStr)}</td>
+        <td><strong>${escapeHtml(log.userIdentifier)}</strong><br><small>${escapeHtml(log.userFullName)}</small></td>
+        <td><span class="status-pill ${log.role === 'faculty' ? 'status-approved' : log.role === 'student' ? 'status-pending' : 'status-rejected'}">${escapeHtml(log.role)}</span></td>
+        <td>${getLogActivityDescription(log)}</td>
+        <td><code>${escapeHtml(log.ipAddress)}</code></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function refreshAll() {
+  await loadFacultyVenues();
+  await loadEventsFromServer();
+  if (typeof loadNotificationsFromServer === "function") {
+    await loadNotificationsFromServer();
+  }
+  renderFacultyVenueGrid();
+  renderFacultySchedule();
+  renderProposals();
+  updateDashboardStats();
 }
 
 // =============================================
@@ -901,26 +1058,29 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!document.getElementById("profileMenu")?.contains(e.target)) closeProfileDropdown();
   });
 
+  // Auto-redirect if not logged in
+  checkAuthAndRedirect("faculty");
+
+  // Search and filters for logs
+  document.getElementById("logsSearch")?.addEventListener("input", renderAuditLogs);
+  document.getElementById("filterAction")?.addEventListener("change", renderAuditLogs);
+  document.getElementById("filterObjectType")?.addEventListener("change", renderAuditLogs);
+  document.getElementById("filterRole")?.addEventListener("change", renderAuditLogs);
+
   // Initialize all
   initializeVenuePhotoZone();
-  renderFacultyVenueGrid();
-  renderFacultySchedule();
-  renderProposals();
-  updateDashboardStats();
-  updateNotificationBadge();
+  refreshAll().then(() => {
+    updateNotificationBadge();
+  });
 
   // Listen for cross-tab updates
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEYS.PROPOSALS) {
-      renderProposals();
-      renderFacultySchedule();
-      updateDashboardStats();
+      refreshAll();
     }
   });
 
   window.addEventListener("eventsync-proposals-updated", () => {
-    renderProposals();
-    renderFacultySchedule();
-    updateDashboardStats();
+    refreshAll();
   });
 });

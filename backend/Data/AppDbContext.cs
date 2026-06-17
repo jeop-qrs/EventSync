@@ -22,5 +22,6 @@ namespace backend.Data
         public DbSet<Venue> Venues { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationPreference> NotificationPreferences { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
     }
 }

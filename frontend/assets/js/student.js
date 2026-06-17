@@ -5,38 +5,75 @@
 // Depends on shared.js being loaded first.
 // =============================================
 
-let activeVenue = null;
-let viewCalendarMonth = new Date().getMonth();
-let viewCalendarYear = new Date().getFullYear();
-let selectedCalendarDay = null;
-let selectedCalendarTime = "";
-let studentVenueData = {};
-let notifications = [];
-let unreadNotifications = 0;
-let cancelEventId = null;
-let editingProposalId = null;
+let allVenuesList = [];
+let myEventsList = [];
 
-// =============================================
-// Venue Data — Read from Faculty-managed localStorage
-// =============================================
-
-/**
- * loadFacultyVenues()
- * Reads venues array from localStorage. These are created/managed by faculty.
- * Each venue: { id, name, address, description, availability, photoDataUrl,
- *               calendarAvailability, timeSlots }
- */
-function loadFacultyVenues() {
+async function loadFacultyVenues() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.VENUES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+    const response = await apiFetch("/api/venues");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        allVenuesList = result.data.map(v => ({
+          id: v.venueId,
+          name: v.name,
+          address: v.address,
+          capacity: v.capacity,
+          description: v.description,
+          availability: v.availability,
+          photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
+          timeSlots: v.timeSlots || []
+        }));
+        return allVenuesList;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load venues:", err);
+  }
+  return [];
+}
+
+async function loadEventsFromServer() {
+  try {
+    const statuses = ["pending", "approved", "rejected", "cancelled"];
+    const promises = statuses.map(async (status) => {
+      const response = await apiFetch(`/api/events?status=${status}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          return result.data;
+        }
+      }
+      return [];
+    });
+    const results = await Promise.all(promises);
+    myEventsList = results.flat().map(e => ({
+      id: `proposal-${e.eventId}`,
+      eventId: e.eventId,
+      title: e.title,
+      org: e.department,
+      venue: allVenuesList.find(v => v.id === e.venueId)?.name || `Venue #${e.venueId}`,
+      venueId: e.venueId,
+      date: e.eventDate ? e.eventDate.split("T")[0] : "",
+      time: e.startTime,
+      attendees: e.expectedAttendees,
+      pdfName: e.submitLetterPath ? e.submitLetterPath.split("/").pop() : "letter-request.pdf",
+      pdfDataUrl: e.submitLetterPath ? `http://localhost:5108/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
+      status: e.status === "approved" ? "accepted" : (e.status === "rejected" ? "pending_reviewed" : e.status),
+      rejectionReason: e.reason || "",
+      submittedAt: e.createdAt
+    }));
+  } catch (err) {
+    console.error("Failed to load events:", err);
   }
 }
 
 function getAllVenues() {
-  return loadFacultyVenues();
+  return allVenuesList;
+}
+
+function loadProposals() {
+  return myEventsList;
 }
 
 function buildVenueMap(venues) {
@@ -214,23 +251,32 @@ function closeCancelReasonModal() {
   cancelEventId = null;
 }
 
-function confirmCancellation() {
+async function confirmCancellation() {
   if (!cancelEventId) return;
 
   const reasonSelect = document.getElementById("cancelReason");
   const reason = reasonSelect ? reasonSelect.value : "";
-  const proposals = loadProposals();
-  const proposal = proposals.find((p) => p.id === cancelEventId);
+  const proposal = myEventsList.find((p) => p.id === cancelEventId);
   if (!proposal) return;
 
-  proposal.status = "cancelled";
-  if (reason) {
-    proposal.cancellationReason = reason;
+  try {
+    const response = await apiFetch(`/api/events/${proposal.eventId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled", reason: reason })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to cancel event.");
+      return;
+    }
+    addNotification(`Event "${proposal.title}" has been cancelled.`, "Just now");
+  } catch (err) {
+    console.error("Failed to cancel event:", err);
+    alert("An error occurred while cancelling the event.");
   }
-  saveProposals(proposals);
-  addNotification(`Event "${proposal.title}" has been cancelled.`, "Just now");
   closeCancelReasonModal();
-  refreshAll();
+  await refreshAll();
 }
 
 // =============================================
@@ -576,7 +622,7 @@ async function handleFormSubmission(e) {
 
   const title = document.getElementById("eventTitle").value.trim();
   const org = document.getElementById("StudOrg").value.trim();
-  const venue = document.getElementById("eventVenue").value;
+  const venueName = document.getElementById("eventVenue").value;
   const date = document.getElementById("eventDate").value;
   const time = document.getElementById("eventTime").value;
   const attendees = document.getElementById("attendees").value;
@@ -588,58 +634,51 @@ async function handleFormSubmission(e) {
     return;
   }
 
-  // Convert PDF to base64 data URL so faculty can download it from localStorage
-  let pdfDataUrl = null;
-  let pdfName = null;
-  if (pdfFile) {
-    pdfDataUrl = await readFileAsDataUrl(pdfFile);
-    pdfName = pdfFile.name;
+  const selectedVenue = allVenuesList.find(v => v.name === venueName);
+  if (!selectedVenue) {
+    alert("Please choose a valid venue.");
+    return;
   }
 
-  const proposals = loadProposals();
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("department", org);
+  formData.append("venueId", selectedVenue.id);
+  formData.append("eventDate", date);
+  formData.append("startTime", time);
+  formData.append("expectedAttendees", parseInt(attendees, 10));
+  if (pdfFile) {
+    formData.append("submitLetter", pdfFile);
+  }
 
-  if (editingProposalId) {
-    const idx = proposals.findIndex((p) => p.id === editingProposalId);
-    if (idx !== -1) {
-      proposals[idx].title = title;
-      proposals[idx].org = org;
-      proposals[idx].venue = venue;
-      proposals[idx].date = date;
-      proposals[idx].time = time;
-      proposals[idx].attendees = attendees;
-      if (pdfDataUrl) {
-        proposals[idx].pdfDataUrl = pdfDataUrl;
-        proposals[idx].pdfName = pdfName;
-      }
-      proposals[idx].status = "pending";
-      proposals[idx].rejectionReason = "";
-      proposals[idx].submittedAt = new Date().toISOString();
-      
-      saveProposals(proposals);
-      addNotification(`Proposal "${title}" updated. Awaiting faculty review.`, "Just now");
-      showSuccessModal();
-    }
-    editingProposalId = null;
-  } else {
-    proposals.unshift({
-      id: `proposal-${Date.now()}`,
-      title,
-      org,
-      studentNumber: getAuthSession().identifier || "Unknown",
-      venue,
-      date,
-      time,
-      attendees,
-      pdfName,
-      pdfDataUrl,           // Base64 PDF for faculty to view/download
-      status: "pending",
-      rejectionReason: "",
-      submittedAt: new Date().toISOString(),
+  try {
+    const response = await apiFetch("/api/events", {
+      method: "POST",
+      body: formData
     });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to submit event proposal.");
+      return;
+    }
 
-    saveProposals(proposals);
+    if (editingProposalId) {
+      const oldProposal = myEventsList.find(p => p.id === editingProposalId);
+      if (oldProposal) {
+        await apiFetch(`/api/events/${oldProposal.eventId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "cancelled", reason: "Superseded by new request" })
+        });
+      }
+      editingProposalId = null;
+    }
+
     addNotification(`Proposal "${title}" submitted. Awaiting faculty review.`, "Just now");
     showSuccessModal();
+  } catch (err) {
+    console.error("Failed to submit event:", err);
+    alert("An error occurred during submission.");
   }
 }
 
@@ -667,7 +706,12 @@ function closeSuccessModal() {
 // Refresh All UI
 // =============================================
 
-function refreshAll() {
+async function refreshAll() {
+  await loadFacultyVenues();
+  await loadEventsFromServer();
+  if (typeof loadNotificationsFromServer === "function") {
+    await loadNotificationsFromServer();
+  }
   updateStudentStats();
   renderMyEvents();
   renderStudentVenueGrid();
@@ -773,10 +817,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("successModalBtn")?.addEventListener("click", closeSuccessModal);
   document.getElementById("successModalOverlay")?.addEventListener("click", closeSuccessModal);
 
-  // Auto-start session if redirected from login
+  // Auto-start session if redirected from login or already logged in
   const params = new URLSearchParams(window.location.search);
-  if (params.get("role") === "Student") {
+  const session = getAuthSession();
+  if (params.get("role") === "Student" || (session.accessToken && session.role?.toLowerCase() === "student")) {
     startSession();
+  } else if (session.accessToken && session.role?.toLowerCase() === "faculty") {
+    window.location.href = "faculty-dash.html";
+  } else {
+    // Keep landing overlay visible so user can choose between Student and Faculty portal
+    const overlay = document.getElementById("landingOverlay");
+    if (overlay) overlay.style.display = "flex";
   }
 
   // Listen for cross-tab localStorage changes to stay in sync

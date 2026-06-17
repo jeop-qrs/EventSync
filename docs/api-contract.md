@@ -90,6 +90,7 @@ Register a new user.
 ```json
 {
   "studentNumber": "2024-2025",
+  "fullName": "Juan Dela Cruz",
   "password": "password123",
   "role": "student"
 }
@@ -100,6 +101,7 @@ Register a new user.
 ```json
 {
   "username": "juandelacruz",
+  "fullName": "Juan Dela Cruz",
   "password": "password123",
   "role": "faculty"
 }

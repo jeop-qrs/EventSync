@@ -151,6 +151,19 @@ function initializeFacultyLogin() {
   });
 }
 
+function handleRegistrationError(result, isFaculty) {
+  const message = result.backendMessage || "Registration failed.";
+  const msgLower = message.toLowerCase();
+  
+  if (msgLower.includes("password")) {
+    const fieldId = isFaculty ? "signUpFacultyPassword" : "signUpPassword";
+    showFieldError(fieldId, message);
+  } else {
+    const fieldId = isFaculty ? "signUpFacultyUsername" : "signUpStudentNumber";
+    showFieldError(fieldId, message);
+  }
+}
+
 // =============================================
 // Student Sign Up
 // =============================================
@@ -168,29 +181,20 @@ function initializeStudentSignUp() {
     const password = document.getElementById("signUpPassword").value;
     const confirmPassword = document.getElementById("signUpConfirmPassword").value;
 
-    let hasError = false;
-
-    if (password.length < 8) {
-      showFieldError("signUpPassword", "Password must be at least 8 characters.");
-      hasError = true;
-    }
-
     if (password !== confirmPassword) {
       showFieldError("signUpConfirmPassword", "Passwords do not match.");
-      hasError = true;
+      return;
     }
-
-    if (hasError) return;
 
     try {
       const response = await fetch("http://localhost:5108/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentNumber, password, role: "student" }),
+        body: JSON.stringify({ studentNumber, fullName, password, role: "student" }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        showFieldError("signUpStudentNumber", result.backendMessage || "Registration failed.");
+        handleRegistrationError(result, false);
         return;
       }
       form.reset();
@@ -216,32 +220,24 @@ function initializeFacultySignUp() {
     clearFormErrors(form);
 
     const username = document.getElementById("signUpFacultyUsername").value.trim();
+    const fullName = document.getElementById("signUpFacultyFullName").value.trim();
     const password = document.getElementById("signUpFacultyPassword").value;
     const confirmPassword = document.getElementById("signUpFacultyConfirmPassword").value;
 
-    let hasError = false;
-
-    if (password.length < 8) {
-      showFieldError("signUpFacultyPassword", "Password must be at least 8 characters.");
-      hasError = true;
-    }
-
     if (password !== confirmPassword) {
       showFieldError("signUpFacultyConfirmPassword", "Passwords do not match.");
-      hasError = true;
+      return;
     }
-
-    if (hasError) return;
 
     try {
       const response = await fetch("http://localhost:5108/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, role: "faculty" }),
+        body: JSON.stringify({ username, fullName, password, role: "faculty" }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        showFieldError("signUpFacultyUsername", result.backendMessage || "Registration failed.");
+        handleRegistrationError(result, true);
         return;
       }
       form.reset();

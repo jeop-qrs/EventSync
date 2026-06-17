@@ -15,11 +15,13 @@ namespace backend.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly NotificationService _notificationService;
+        private readonly AuditLogService _auditLogService;
 
-        public EventService(AppDbContext dbContext, NotificationService notificationService)
+        public EventService(AppDbContext dbContext, NotificationService notificationService, AuditLogService auditLogService)
         {
             _dbContext = dbContext;
             _notificationService = notificationService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<GlobalResponse> GetEvents(int id, string role, string status)
@@ -29,16 +31,25 @@ namespace backend.Services
             List<Event> events = [];
             if (role == "student")
             {
-                events = await _dbContext.Events.Where(e => e.OrganizerId == id && e.Status == status).ToListAsync();
+                events = await _dbContext.Events
+                    .Include(e => e.Organizer)
+                    .Where(e => e.OrganizerId == id && e.Status == status)
+                    .ToListAsync();
             }
             else if (role == "faculty")
             {
                 if (status == "cancelled")
                     return new GlobalResponse { Success = false, BackendMessage = "Only students can view their own cancelled events.", Data = null };
                 else if (status == "pending")
-                    events = await _dbContext.Events.Where(e => e.Status == "pending").ToListAsync();
+                    events = await _dbContext.Events
+                        .Include(e => e.Organizer)
+                        .Where(e => e.Status == "pending")
+                        .ToListAsync();
                 else
-                    events = await _dbContext.Events.Where(e => e.FacultyId == id && e.Status == status).ToListAsync();
+                    events = await _dbContext.Events
+                        .Include(e => e.Organizer)
+                        .Where(e => e.FacultyId == id && e.Status == status)
+                        .ToListAsync();
             }
             if (events.Count == 0)
                 return new GlobalResponse { Success = false, BackendMessage = "No events found." };
@@ -75,6 +86,14 @@ namespace backend.Services
             };
             await _dbContext.Events.AddAsync(newEvent);
             await _dbContext.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(
+                studentId, null, null, "student",
+                "Event",
+                "Create",
+                newEvent.Title
+            );
+
             return new GlobalResponse { Success = true, BackendMessage = "Event created successfully.", Data = newEvent };
         }
 
@@ -93,6 +112,14 @@ namespace backend.Services
                     targetEvent.FacultyId = userId;
                     targetEvent.Reason = req.Reason;
                     await _dbContext.SaveChangesAsync();
+
+                    await _auditLogService.LogAsync(
+                        userId, null, null, "faculty",
+                        "Event",
+                        req.Status == "approved" ? "Approve" : "Reject",
+                        targetEvent.Title
+                    );
+
                     await _notificationService.NotifyOnStatusChange(targetEvent, req.Reason, userRole);
                 }
                 else return new GlobalResponse { Success = false, BackendMessage = "Faculty cannot update the Event's status to " + req.Status + " because it is already " + targetEvent.Status + " .", Data = null };
@@ -104,6 +131,14 @@ namespace backend.Services
                     targetEvent.Status = req.Status;
                     targetEvent.Reason = req.Reason;
                     await _dbContext.SaveChangesAsync();
+
+                    await _auditLogService.LogAsync(
+                        userId, null, null, "student",
+                        "Event",
+                        "Cancel",
+                        targetEvent.Title
+                    );
+
                     if (targetEvent.Status == "approved")
                         await _notificationService.NotifyOnStatusChange(targetEvent, req.Reason, userRole);
                 }

@@ -284,8 +284,44 @@ function formatTime12h(timeStr) {
 // Notification System
 // =============================================
 
-// NOTE: Each page-specific script initializes its own `notifications` and
-// `unreadNotifications` arrays. These shared functions operate on those globals.
+let notifications = [];
+let unreadNotifications = 0;
+
+function timeAgo(dateString) {
+  if (!dateString) return "Just now";
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+async function loadNotificationsFromServer() {
+  try {
+    const response = await apiFetch("/api/notifications");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        notifications = result.data.map(n => ({
+          id: n.notificationId,
+          message: n.message,
+          time: timeAgo(n.createdAt),
+          isRead: n.isRead
+        }));
+        unreadNotifications = result.data.filter(n => !n.isRead).length;
+        renderNotificationPopup();
+        updateNotificationBadge();
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load notifications from server:", err);
+  }
+}
 
 function addNotification(message, time = "Just now") {
   notifications.unshift({ message, time });
@@ -316,16 +352,26 @@ function updateNotificationBadge() {
   badge.style.display = unreadNotifications > 0 ? "inline-flex" : "none";
 }
 
-function toggleNotificationPopup() {
+async function toggleNotificationPopup() {
   if (typeof closeProfileDropdown === "function") {
     closeProfileDropdown();
   }
   const popup = document.getElementById("notificationPopup");
   if (!popup) return;
-  popup.classList.toggle("hidden");
-  if (!popup.classList.contains("hidden")) {
-    unreadNotifications = 0;
-    updateNotificationBadge();
+  const isHidden = popup.classList.toggle("hidden");
+  if (!isHidden) {
+    if (unreadNotifications > 0) {
+      try {
+        const response = await apiFetch("/api/notifications/read-all", { method: "POST" });
+        if (response.ok) {
+          unreadNotifications = 0;
+          updateNotificationBadge();
+          notifications.forEach(n => n.isRead = true);
+        }
+      } catch (err) {
+        console.error("Failed to mark all notifications as read:", err);
+      }
+    }
   }
 }
 
@@ -654,16 +700,26 @@ function saveProfileFromModal(role) {
  * openSettingsModal(role)
  * Populates and shows the Settings modal with saved preferences.
  */
-function openSettingsModal(role) {
+async function openSettingsModal(role) {
   const modal = document.getElementById("settingsModal");
   if (!modal) return;
 
-  const settings = loadSettings(role);
-  const notifToggle = document.getElementById("settingsNotifications");
-  const langSelect = document.getElementById("settingsLanguage");
+  let notifyVal = true;
+  try {
+    const response = await apiFetch("/api/notifications/preferences");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        notifyVal = result.data.notifyOnStatusChange;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch notification preferences:", err);
+  }
 
-  if (notifToggle) notifToggle.checked = settings.notifications !== false;
-  if (langSelect) langSelect.value = settings.language || "en";
+  const notifToggle = document.getElementById("settingsNotifications");
+
+  if (notifToggle) notifToggle.checked = notifyVal;
 
   modal.classList.remove("hidden");
 }
@@ -672,10 +728,28 @@ function closeSettingsModal() {
   document.getElementById("settingsModal")?.classList.add("hidden");
 }
 
-function saveSettingsFromModal(role) {
+async function saveSettingsFromModal(role) {
+  const isEnabled = document.getElementById("settingsNotifications")?.checked ?? true;
+  
+  try {
+    const response = await apiFetch("/api/notifications/preferences", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notifyOneDayBefore: isEnabled,
+        notifyOneWeekBefore: isEnabled,
+        notifyOnStatusChange: isEnabled
+      })
+    });
+    if (!response.ok) {
+      console.error("Failed to save notification preferences to backend");
+    }
+  } catch (err) {
+    console.error("Error saving preferences:", err);
+  }
+
   const data = {
-    notifications: document.getElementById("settingsNotifications")?.checked ?? true,
-    language: document.getElementById("settingsLanguage")?.value || "en",
+    notifications: isEnabled,
   };
   saveSettings(role, data);
   closeSettingsModal();
@@ -747,6 +821,14 @@ function saveAuthSession(authData) {
   localStorage.setItem(AUTH_KEYS.USER_IDENTIFIER, identifier || "");
   const expiresAtMs = Date.now() + (authData.expiresAt || authData.expiresIn || 3600) * 1000;
   localStorage.setItem(AUTH_KEYS.EXPIRES_AT, String(expiresAtMs));
+
+  // Sync full name (displayName) to profile information
+  const roleLower = authData.role?.toLowerCase();
+  if (authData.fullName && (roleLower === "student" || roleLower === "faculty")) {
+    const profile = loadProfile(roleLower);
+    profile.displayName = authData.fullName;
+    saveProfile(roleLower, profile);
+  }
 
   // Auto-populate profile idNumber if it's a student
   if (authData.role && authData.role.toLowerCase() === "student" && identifier) {
@@ -861,6 +943,7 @@ window.getAuthSession = getAuthSession;
 window.clearAuthSession = clearAuthSession;
 window.checkAuthAndRedirect = checkAuthAndRedirect;
 window.apiFetch = apiFetch;
+window.loadNotificationsFromServer = loadNotificationsFromServer;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Apply saved theme on load

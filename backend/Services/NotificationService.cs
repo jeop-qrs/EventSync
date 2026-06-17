@@ -8,9 +8,11 @@ namespace backend.Services;
 public class NotificationService
 {
     private readonly AppDbContext _context;
-    public NotificationService(AppDbContext context)
+    private readonly AuditLogService _auditLogService;
+    public NotificationService(AppDbContext context, AuditLogService auditLogService)
     {
         _context = context;
+        _auditLogService = auditLogService;
     }
 
     private async Task SaveNotification(int userId, int eventId, string message)
@@ -169,6 +171,14 @@ public class NotificationService
         existingPreference.NotifyOneWeekBefore = preference.NotifyOneWeekBefore;
         existingPreference.NotifyOnStatusChange = preference.NotifyOnStatusChange;
         await _context.SaveChangesAsync();
+
+        await _auditLogService.LogAsync(
+            userId, null, null, null,
+            "NotificationPreference",
+            "Update",
+            "Preferences"
+        );
+
         return new GlobalResponse
         {
             Success = true,

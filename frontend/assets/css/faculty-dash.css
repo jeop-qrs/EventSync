@@ -2056,3 +2056,70 @@ body.dark-mode .dynamic-slot-input {
   background: #fef2f2;
   border-color: var(--danger);
 }
+
+/* =============================================
+   Audit Logs View Styling
+   ============================================= */
+
+.logs-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.logs-filter-bar .form-control {
+  flex: 1;
+  min-width: 180px;
+}
+
+#logsSearch {
+  flex: 2;
+  min-width: 260px;
+}
+
+.logs-table-wrapper {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.logs-table th {
+  background-color: var(--bg-primary);
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+}
+
+.logs-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.logs-table tbody tr:hover {
+  background-color: rgba(79, 70, 229, 0.02);
+}
+
+body.dark-mode .logs-table tbody tr:hover {
+  background-color: rgba(124, 156, 255, 0.02);
+}
+
+.logs-table td.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px;
+}
