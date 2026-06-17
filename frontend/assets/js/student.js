@@ -209,7 +209,6 @@ function editEvent(id) {
   document.getElementById("eventTitle").value = proposal.title || "";
   document.getElementById("StudOrg").value = proposal.org || "";
   document.getElementById("eventDate").value = proposal.date || "";
-  document.getElementById("eventTime").value = proposal.time || "";
   document.getElementById("attendees").value = proposal.attendees || "";
   
   // Update venue options so we can select it
@@ -223,6 +222,38 @@ function editEvent(id) {
        venueSelect.appendChild(o);
     }
     venueSelect.value = proposal.venue;
+  }
+  
+  // Update time slot options and set it
+  updateAvailableTimeSlots();
+  const timeInput = document.getElementById("eventTime");
+  if (timeInput && proposal.time) {
+    let matchingValue = "";
+    for (let i = 0; i < timeInput.options.length; i++) {
+      if (timesAreEqual(timeInput.options[i].value, proposal.time)) {
+        matchingValue = timeInput.options[i].value;
+        break;
+      }
+    }
+    
+    if (!matchingValue) {
+      const venue = allVenuesList.find(v => v.name === proposal.venue);
+      if (venue) {
+        const slots = getDayTimeSlots(venue, proposal.date);
+        const matchingSlot = slots.find(slot => timesAreEqual(slot, proposal.time));
+        if (matchingSlot) {
+          const opt = document.createElement("option");
+          opt.value = matchingSlot;
+          opt.textContent = formatTime12h(matchingSlot);
+          timeInput.appendChild(opt);
+          matchingValue = matchingSlot;
+        }
+      }
+    }
+    
+    if (matchingValue) {
+      timeInput.value = matchingValue;
+    }
   }
   
   // Remove required attribute from PDF if they already have one
@@ -563,11 +594,54 @@ function shiftCalendarMonth(delta) {
 // Book Now — Calendar → Form Population
 // =============================================
 
-/**
- * openReservationWithVenue(venueName)
- * Called when "Book Now" is clicked. Populates the event application form
- * with the selected venue, date, and time slot from the calendar.
- */
+function updateAvailableTimeSlots() {
+  const venueSelect = document.getElementById("eventVenue");
+  const dateInput = document.getElementById("eventDate");
+  const timeSelect = document.getElementById("eventTime");
+  if (!venueSelect || !dateInput || !timeSelect) return;
+
+  const venueName = venueSelect.value;
+  const dateStr = dateInput.value;
+  
+  const currentValue = timeSelect.value;
+  timeSelect.innerHTML = '<option value="">-- Choose a time slot --</option>';
+
+  if (!venueName || !dateStr) {
+    return;
+  }
+
+  const venue = allVenuesList.find(v => v.name === venueName);
+  if (!venue) return;
+
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  const slots = getVenueTimeSlotsForDay(venue, day, month, year);
+
+  const isPast = isDateInPast(day, month, year);
+  const isBlackedOut = isVenueBlackedOut(venue, dateStr);
+
+  if (isPast || isBlackedOut) {
+    return;
+  }
+
+  slots.forEach(slot => {
+    if (!slot.booked) {
+      const opt = document.createElement("option");
+      opt.value = slot.time;
+      opt.textContent = formatTime12h(slot.time);
+      timeSelect.appendChild(opt);
+    }
+  });
+
+  if (currentValue) {
+    timeSelect.value = currentValue;
+  }
+}
+
 function openReservationWithVenue(venueName) {
   const select = document.getElementById("eventVenue");
   const dateInput = document.getElementById("eventDate");
@@ -581,21 +655,25 @@ function openReservationWithVenue(venueName) {
     dateInput.value = formatDateString(viewCalendarYear, viewCalendarMonth, selectedCalendarDay);
   }
 
-  // Set the time from the selected slot (use the start time for the time input)
+  // Populate time slot options based on select/date change
+  updateAvailableTimeSlots();
+
+  // Set the time slot from the selected slot
   if (timeInput && selectedCalendarTime) {
-    let normalizedTime = selectedCalendarTime.split(" - ")[0].trim();
-    
-    // Convert "8:00 AM" or "2:00 PM" back to "HH:mm" for the <input type="time">
-    const match = normalizedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (match) {
-      let [_, h, m, ampm] = match;
-      let hour = parseInt(h, 10);
-      if (ampm.toUpperCase() === "PM" && hour < 12) hour += 12;
-      if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
-      normalizedTime = `${String(hour).padStart(2, "0")}:${m}`;
+    let found = false;
+    for (let i = 0; i < timeInput.options.length; i++) {
+      if (timeInput.options[i].value === selectedCalendarTime) {
+        found = true;
+        break;
+      }
     }
-    
-    timeInput.value = normalizedTime;
+    if (!found) {
+      const opt = document.createElement("option");
+      opt.value = selectedCalendarTime;
+      opt.textContent = formatTime12h(selectedCalendarTime);
+      timeInput.appendChild(opt);
+    }
+    timeInput.value = selectedCalendarTime;
   }
 
   switchView("schedule-view", document.querySelector('[data-view="schedule-view"]'));
@@ -624,7 +702,8 @@ async function handleFormSubmission(e) {
   const org = document.getElementById("StudOrg").value.trim();
   const venueName = document.getElementById("eventVenue").value;
   const date = document.getElementById("eventDate").value;
-  const time = document.getElementById("eventTime").value;
+  const timeSlot = document.getElementById("eventTime").value;
+  const time = getStartHour24h(timeSlot);
   const attendees = document.getElementById("attendees").value;
   const pdfInput = document.getElementById("eventPdf");
   const pdfFile = pdfInput.files[0];
@@ -752,6 +831,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Form submit
   document.getElementById("scheduleForm")?.addEventListener("submit", handleFormSubmission);
+
+  // Dropdown synchronization
+  document.getElementById("eventVenue")?.addEventListener("change", updateAvailableTimeSlots);
+  document.getElementById("eventDate")?.addEventListener("change", updateAvailableTimeSlots);
 
   // Form interactions
   document.getElementById("scheduleCancelBtn")?.addEventListener("click", () => {

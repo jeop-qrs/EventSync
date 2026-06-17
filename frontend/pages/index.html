@@ -68,6 +68,7 @@
     <header class="navbar">
       <div class="page-title">
         <h1 id="workspaceTitle">Dashboard Overview</h1>
+        <span class="header-date" id="headerDate"></span>
       </div>
 
       <div class="nav-controls">
@@ -314,7 +315,9 @@
                 <label for="eventTime">Start Time <span class="required-indicator"
                     aria-label="required">*</span></label>
 
-                <input type="time" id="eventTime" class="form-control" required />
+                <select id="eventTime" class="form-control" required>
+                  <option value="">-- Choose a time slot --</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -413,10 +416,7 @@
                 aria-label="required">*</span></label>
             <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Juan Dela Cruz" />
           </div>
-          <div class="form-group">
-            <label for="profileEmail">Email Address</label>
-            <input type="email" id="profileEmail" class="form-control" placeholder="e.g., juan@email.com" />
-          </div>
+
           <div class="form-group">
             <label for="profileIdNumber">Student Number</label>
             <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., 2021001234" />

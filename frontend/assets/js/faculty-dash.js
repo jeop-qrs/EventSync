@@ -781,6 +781,14 @@ async function acceptProposal(id) {
   const proposal = allFacultyProposalsList.find((p) => p.id === id);
   if (!proposal) return;
 
+  const originalStatus = proposal.status;
+
+  // Optimistic UI update
+  proposal.status = "accepted";
+  renderProposals();
+  updateDashboardStats();
+  renderFacultySchedule();
+
   try {
     const response = await apiFetch(`/api/events/${proposal.eventId}/status`, {
       method: "PATCH",
@@ -789,12 +797,23 @@ async function acceptProposal(id) {
     });
     const result = await response.json();
     if (!response.ok || !result.success) {
+      // Revert optimistic update
+      proposal.status = originalStatus;
+      renderProposals();
+      updateDashboardStats();
+      renderFacultySchedule();
       alert(result.backendMessage || "Failed to approve proposal.");
       return;
     }
     addNotification(`Proposal "${proposal.title}" has been accepted.`, "Just now");
   } catch (err) {
     console.error("Failed to accept proposal:", err);
+    // Revert optimistic update
+    proposal.status = originalStatus;
+    renderProposals();
+    updateDashboardStats();
+    renderFacultySchedule();
+    alert("An error occurred while approving the proposal.");
   }
   await refreshAll();
 }
@@ -802,6 +821,16 @@ async function acceptProposal(id) {
 async function rejectProposal(id, reason) {
   const proposal = allFacultyProposalsList.find((p) => p.id === id);
   if (!proposal) return;
+
+  const originalStatus = proposal.status;
+  const originalReason = proposal.rejectionReason;
+
+  // Optimistic UI update
+  proposal.status = "pending_reviewed";
+  proposal.rejectionReason = reason;
+  renderProposals();
+  updateDashboardStats();
+  renderFacultySchedule();
 
   try {
     const response = await apiFetch(`/api/events/${proposal.eventId}/status`, {
@@ -811,12 +840,25 @@ async function rejectProposal(id, reason) {
     });
     const result = await response.json();
     if (!response.ok || !result.success) {
+      // Revert optimistic update
+      proposal.status = originalStatus;
+      proposal.rejectionReason = originalReason;
+      renderProposals();
+      updateDashboardStats();
+      renderFacultySchedule();
       alert(result.backendMessage || "Failed to reject proposal.");
       return;
     }
     addNotification(`Proposal "${proposal.title}" has been marked as pending reviewed.`, "Just now");
   } catch (err) {
     console.error("Failed to reject proposal:", err);
+    // Revert optimistic update
+    proposal.status = originalStatus;
+    proposal.rejectionReason = originalReason;
+    renderProposals();
+    updateDashboardStats();
+    renderFacultySchedule();
+    alert("An error occurred while rejecting the proposal.");
   }
   await refreshAll();
 }

@@ -571,6 +571,55 @@ function getBookedSlotsForDate(venueName, dateStr) {
 }
 
 /**
+ * timesAreEqual(timeA, timeB)
+ * Robustly compares two time strings or time slots to see if they represent
+ * the same starting hour/minute of the day.
+ */
+function timesAreEqual(timeA, timeB) {
+  const parseTime = (str) => {
+    if (!str) return null;
+    let s = str.trim().toUpperCase();
+    if (s.includes("-")) {
+      s = s.split("-")[0].trim();
+    }
+    const isPM = s.includes("PM");
+    const isAM = s.includes("AM");
+    s = s.replace(/[AP]M/g, "").trim();
+    const parts = s.split(":");
+    if (parts.length < 2) return null;
+    let hour = parseInt(parts[0], 10);
+    let min = parseInt(parts[1], 10);
+    if (isPM && hour < 12) hour += 12;
+    if (isAM && hour === 12) hour = 0;
+    return { hour, min };
+  };
+
+  const a = parseTime(timeA);
+  const b = parseTime(timeB);
+  if (!a || !b) return false;
+  return a.hour === b.hour && a.min === b.min;
+}
+
+/**
+ * getStartHour24h(slotStr)
+ * Extracts the starting hour and minute in 24-hour HH:mm format from a slot.
+ */
+function getStartHour24h(slotStr) {
+  if (!slotStr) return "";
+  let start = slotStr.split("-")[0].trim().toUpperCase();
+  const isPM = start.includes("PM");
+  const isAM = start.includes("AM");
+  start = start.replace(/[AP]M/g, "").trim();
+  const parts = start.split(":");
+  if (parts.length < 2) return "";
+  let hour = parseInt(parts[0], 10);
+  let min = parseInt(parts[1], 10);
+  if (isPM && hour < 12) hour += 12;
+  if (isAM && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+/**
  * getVenueTimeSlotsForDay(venue, day, month, year)
  * Returns the 3 available time slots for a venue on a given calendar day,
  * cross-referencing with existing bookings to mark each as available or booked.
@@ -582,9 +631,7 @@ function getVenueTimeSlotsForDay(venue, day, month, year) {
   const bookedTimes = getBookedSlotsForDate(venue.name, dateStr);
 
   return slots.map((slot) => {
-    // Normalize: check if the booked time matches the start of this slot
-    const slotStart = slot.split(" - ")[0];
-    const isBooked = bookedTimes.some((bt) => bt === slotStart || bt === slot);
+    const isBooked = bookedTimes.some((bt) => timesAreEqual(bt, slot));
     return {
       time: slot,
       booked: isBooked,
@@ -687,10 +734,23 @@ function closeProfileModal() {
 function saveProfileFromModal(role) {
   const data = {
     displayName: document.getElementById("profileDisplayName")?.value.trim() || "",
-    email: document.getElementById("profileEmail")?.value.trim() || "",
-    idNumber: document.getElementById("profileIdNumber")?.value.trim() || "",
-    department: document.getElementById("profileDepartment")?.value.trim() || "",
   };
+
+  const emailEl = document.getElementById("profileEmail");
+  if (emailEl) {
+    data.email = emailEl.value.trim();
+  }
+
+  const idEl = document.getElementById("profileIdNumber");
+  if (idEl) {
+    data.idNumber = idEl.value.trim();
+  }
+
+  const deptEl = document.getElementById("profileDepartment");
+  if (deptEl) {
+    data.department = deptEl.value.trim();
+  }
+
   saveProfile(role, data);
   closeProfileModal();
   showToast("profileSavedToast");
@@ -950,6 +1010,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const role = document.body?.dataset?.page;
   if (role === "student" || role === "faculty") {
     applyTheme(loadTheme(role));
+  }
+
+  // Set current date in the header navbar
+  const dateEl = document.getElementById("headerDate");
+  if (dateEl) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateEl.textContent = new Date().toLocaleDateString('en-US', options);
   }
 
   // Initialize password toggles on all pages

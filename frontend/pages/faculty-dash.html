@@ -44,6 +44,7 @@
       <header class="navbar">
         <div class="page-title">
           <h1 id="workspaceTitle">Dashboard Overview</h1>
+          <span class="header-date" id="headerDate"></span>
         </div>
         <div class="nav-controls">
           <div class="notification-bell" id="notificationBell">
@@ -335,7 +336,7 @@
               <option value="Update">Update</option>
               <option value="Cancel">Cancel</option>
               <option value="Approve">Approve</option>
-              <option value="Reject">Reject</option>
+              <option value="Reject">Pending Reviewed</option>
               <option value="Login">Login</option>
               <option value="Register">Register</option>
             </select>
@@ -350,7 +351,7 @@
               <option value="">All Roles</option>
               <option value="faculty">Faculty</option>
               <option value="student">Student</option>
-              <option value="Anonymous">Anonymous</option>
+
             </select>
           </div>
           <div class="logs-table-wrapper" style="margin-top: 20px;">
@@ -493,18 +494,8 @@
             <label for="profileDisplayName">Display Name <span class="required-indicator" aria-label="required">*</span></label>
             <input type="text" id="profileDisplayName" class="form-control" placeholder="e.g., Dr. Santos" />
           </div>
-          <div class="form-group">
-            <label for="profileEmail">Email Address</label>
-            <input type="email" id="profileEmail" class="form-control" placeholder="e.g., santos@university.edu" />
-          </div>
-          <div class="form-group">
-            <label for="profileIdNumber">Faculty ID</label>
-            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., FAC-2024-001" />
-          </div>
-          <div class="form-group" id="profileDeptGroup">
-            <label for="profileDepartment">Department</label>
-            <input type="text" id="profileDepartment" class="form-control" placeholder="e.g., Computer Science" />
-          </div>
+
+
           <div class="form-actions">
             <button type="button" class="btn" id="profileModalSave">Save Profile</button>
             <button type="button" class="btn btn-secondary" id="profileModalCancel">Cancel</button>
