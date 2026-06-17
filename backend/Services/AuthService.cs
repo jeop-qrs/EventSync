@@ -87,7 +87,7 @@ namespace backend.Services
                 };
             }
             // Check Username Length
-            if (identifier.Length <= 8)
+            if (identifier.Length < 8)
             {
                 return new GlobalResponse
                 {
@@ -95,7 +95,7 @@ namespace backend.Services
                     BackendMessage = "Username and Student Number must be at least 8 characters long"
                 };
             }
-            if (identifier.Length >= 20)
+            if (identifier.Length > 20)
             {
                 return new GlobalResponse
                 {
@@ -104,7 +104,7 @@ namespace backend.Services
                 };
             }
             // Check Password Length
-            if (req.Password.Length <= 8 || req.Password.Length >= 20)
+            if (req.Password.Length < 8 || req.Password.Length > 20)
             {
                 return new GlobalResponse
                 {
