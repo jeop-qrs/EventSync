@@ -4,7 +4,7 @@
 
 ### ------------------------------------------------------
 ### Register for student
-@studentNumber = R2024-01234
+@studentNumber = R2024-0123
 @studentPassword = password123
 @studentRole = student
 POST {{baseUrl1}}/api/auth/register

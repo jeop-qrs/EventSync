@@ -4,7 +4,7 @@
 
 ### ------------------------------------------------------
 ### Get access token
-@testStudentNumber = R2024-01234
+@testStudentNumber = R2024-0123
 @testPassword = password123
 # @name login
 POST {{baseUrl1}}/api/auth/login

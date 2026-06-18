@@ -479,18 +479,18 @@ body {
 
 /* Dark mode overrides */
 body.dark-mode {
-  --bg-primary: #0b1220;
-  --sidebar-bg: #071022;
-  --sidebar-hover: #0f1a2b;
+  --bg-primary: #0f172a;
+  --sidebar-bg: #0b1329;
+  --sidebar-hover: #1e293b;
   --accent-color: #7c9cff;
   --accent-hover: #6b86ff;
   --text-main: #e6eef8;
   --text-muted: #9fb0c8;
-  --card-bg: #071422;
+  --card-bg: #1e293b;
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
-  --border: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.1);
   background-color: var(--bg-primary);
   color: var(--text-main);
 }
@@ -508,6 +508,12 @@ body.dark-mode .modal-card {
   background-color: var(--card-bg);
   color: var(--text-main);
   border-color: var(--border);
+}
+
+body.dark-mode .form-control {
+  background-color: var(--bg-primary);
+  border-color: var(--border);
+  color: var(--text-main);
 }
 
 body.dark-mode .menu-item {
@@ -1056,7 +1062,7 @@ td {
 .venue-calendar {
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #fafbfc;
+  background: var(--bg-primary);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -1230,7 +1236,7 @@ td {
   margin-top: 4px;
   padding: 12px 14px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--bg-primary);
   border: 1px solid var(--border);
 }
 
@@ -2135,4 +2141,44 @@ body.dark-mode .logs-table tbody tr:hover {
   text-align: center;
   color: var(--text-muted);
   padding: 40px;
+}
+
+/* Dark mode calendar date cells styling overrides */
+body.dark-mode .calendar-date.available,
+body.dark-mode .calendar-date.neutral {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-main) !important;
+}
+
+body.dark-mode .calendar-date.available:hover,
+body.dark-mode .calendar-date.neutral:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.dark-mode .calendar-date.past,
+body.dark-mode .calendar-date.blackout {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.45;
+}
+
+body.dark-mode .calendar-date.booked {
+  background: linear-gradient(160deg, #311616 0%, #4c1d1d 100%) !important;
+  color: #fca5a5 !important;
+  border-color: #7f1d1d !important;
+}
+
+body.dark-mode .calendar-date.partial {
+  background: #c2410c !important;
+  color: #ffedd5 !important;
+  border-color: transparent !important;
+}
+
+body.dark-mode .calendar-nav-btn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+body.dark-mode .calendar-nav-btn:hover {
+  background: #475569;
 }

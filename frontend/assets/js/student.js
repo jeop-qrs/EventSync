@@ -21,6 +21,7 @@ async function loadFacultyVenues() {
           capacity: v.capacity,
           description: v.description,
           availability: v.availability,
+          status: v.status,
           photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
           timeSlots: v.timeSlots || []
         }));
@@ -125,7 +126,7 @@ function updateStudentStats() {
 
   document.getElementById("countProposed").textContent = proposed;
   document.getElementById("countPending").textContent = pending;
-  document.getElementById("countVenues").textContent = getAllVenues().length;
+  document.getElementById("countVenues").textContent = getAllVenues().filter(v => (v.status || "").toLowerCase() === "available").length;
 }
 
 // =============================================
@@ -282,7 +283,20 @@ function closeCancelReasonModal() {
   cancelEventId = null;
 }
 
-async function confirmCancellation() {
+function confirmCancellation() {
+  if (!cancelEventId) return;
+  // Hide the cancel reason modal
+  document.getElementById("cancelReasonModal")?.classList.add("hidden");
+  // Show the custom confirmation prompt modal
+  document.getElementById("cancelConfirmModal")?.classList.remove("hidden");
+}
+
+function closeCancelConfirmModal() {
+  document.getElementById("cancelConfirmModal")?.classList.add("hidden");
+  cancelEventId = null;
+}
+
+async function executeCancellation() {
   if (!cancelEventId) return;
 
   const reasonSelect = document.getElementById("cancelReason");
@@ -299,6 +313,7 @@ async function confirmCancellation() {
     const result = await response.json();
     if (!response.ok || !result.success) {
       alert(result.backendMessage || "Failed to cancel event.");
+      closeCancelConfirmModal();
       return;
     }
     addNotification(`Event "${proposal.title}" has been cancelled.`, "Just now");
@@ -306,7 +321,7 @@ async function confirmCancellation() {
     console.error("Failed to cancel event:", err);
     alert("An error occurred while cancelling the event.");
   }
-  closeCancelReasonModal();
+  closeCancelConfirmModal();
   await refreshAll();
 }
 
@@ -781,6 +796,13 @@ function closeSuccessModal() {
   refreshAll();
 }
 
+function closePdfPreview() {
+  const modal = document.getElementById("pdfPreviewModal");
+  const iframe = document.getElementById("pdfPreviewIframe");
+  if (modal) modal.classList.add("hidden");
+  if (iframe) iframe.src = "";
+}
+
 // =============================================
 // Refresh All UI
 // =============================================
@@ -887,7 +909,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializePdfDropzone();
   updateNotificationBadge();
 
-  // Cancel reason modal handlers
+   // Cancel reason modal handlers
   document.getElementById("cancelReasonForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
     confirmCancellation();
@@ -896,9 +918,18 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cancelReasonCancel")?.addEventListener("click", closeCancelReasonModal);
   document.getElementById("cancelReasonOverlay")?.addEventListener("click", closeCancelReasonModal);
 
+  // Cancellation Confirmation modal handlers
+  document.getElementById("cancelConfirmNoBtn")?.addEventListener("click", closeCancelConfirmModal);
+  document.getElementById("cancelConfirmOverlay")?.addEventListener("click", closeCancelConfirmModal);
+  document.getElementById("cancelConfirmYesBtn")?.addEventListener("click", executeCancellation);
+
   // Success modal handlers
   document.getElementById("successModalBtn")?.addEventListener("click", closeSuccessModal);
   document.getElementById("successModalOverlay")?.addEventListener("click", closeSuccessModal);
+
+  // PDF Preview modal handlers
+  document.getElementById("closePdfPreviewBtn")?.addEventListener("click", closePdfPreview);
+  document.getElementById("pdfPreviewOverlay")?.addEventListener("click", closePdfPreview);
 
   // Auto-start session if redirected from login or already logged in
   const params = new URLSearchParams(window.location.search);

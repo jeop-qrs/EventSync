@@ -29,6 +29,7 @@ async function loadFacultyVenues() {
           capacity: v.capacity,
           description: v.description,
           availability: v.availability,
+          status: v.status,
           photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
           timeSlots: v.timeSlots || []
         }));
@@ -136,7 +137,7 @@ function updateDashboardStats() {
   document.getElementById("countActive").textContent = active;
   document.getElementById("countPending").textContent = pending;
   document.getElementById("countPendingReviewed").textContent = pendingReviewed;
-  document.getElementById("countVenues").textContent = venues.length;
+  document.getElementById("countVenues").textContent = venues.filter(v => (v.status || "").toLowerCase() === "available").length;
 }
 
 // =============================================
@@ -344,6 +345,21 @@ function openAddVenueModal() {
   document.getElementById("addVenueForm")?.reset();
   document.getElementById("venuePhotoName").textContent = "No file selected";
 
+  // Reset photo upload zone preview
+  const zone = document.getElementById("venuePhotoZone");
+  if (zone) {
+    zone.style.backgroundImage = "";
+    const span = zone.querySelector("span");
+    if (span) span.style.display = "block";
+    const label = document.getElementById("venuePhotoName");
+    if (label) {
+      label.style.background = "";
+      label.style.color = "";
+      label.style.padding = "";
+      label.style.borderRadius = "";
+    }
+  }
+
   // Reset schedule editor
   renderDynamicSlots("venueSlotsContainer", DEFAULT_TIME_SLOTS);
 
@@ -369,6 +385,36 @@ function openEditVenueModal(venueId) {
   document.getElementById("venueDescInput").value = venue.description;
   document.getElementById("venueAvailInput").value = venue.availability;
   document.getElementById("venuePhotoName").textContent = venue.photoDataUrl ? "Current photo loaded" : "No file selected";
+
+  // Set photo upload zone preview for editing
+  const zone = document.getElementById("venuePhotoZone");
+  if (zone) {
+    if (venue.photoDataUrl) {
+      zone.style.backgroundImage = `url('${venue.photoDataUrl}')`;
+      zone.style.backgroundSize = "cover";
+      zone.style.backgroundPosition = "center";
+      const span = zone.querySelector("span");
+      if (span) span.style.display = "none";
+      const label = document.getElementById("venuePhotoName");
+      if (label) {
+        label.style.background = "rgba(15, 23, 42, 0.7)";
+        label.style.color = "#fff";
+        label.style.padding = "2px 8px";
+        label.style.borderRadius = "4px";
+      }
+    } else {
+      zone.style.backgroundImage = "";
+      const span = zone.querySelector("span");
+      if (span) span.style.display = "block";
+      const label = document.getElementById("venuePhotoName");
+      if (label) {
+        label.style.background = "";
+        label.style.color = "";
+        label.style.padding = "";
+        label.style.borderRadius = "";
+      }
+    }
+  }
 
   // Pre-fill time slots
   const slots = venue.timeSlots || DEFAULT_TIME_SLOTS;
@@ -675,6 +721,29 @@ function saveDayManager() {
  * Reads proposals from localStorage and renders each as a card.
  * Includes PDF preview iframe AND a download button for direct download.
  */
+function openPdfPreview(url, title) {
+  const modal = document.getElementById("pdfPreviewModal");
+  const iframe = document.getElementById("pdfPreviewIframe");
+  const titleEl = document.getElementById("pdfPreviewTitle");
+  if (!modal || !iframe) return;
+
+  iframe.src = url;
+  if (titleEl && title) {
+    titleEl.textContent = `Letter Request Preview - ${title}`;
+  } else if (titleEl) {
+    titleEl.textContent = "Letter Request Preview";
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closePdfPreview() {
+  const modal = document.getElementById("pdfPreviewModal");
+  const iframe = document.getElementById("pdfPreviewIframe");
+  if (modal) modal.classList.add("hidden");
+  if (iframe) iframe.src = "";
+}
+
 function renderProposals() {
   const grid = document.getElementById("proposalsGrid");
   const countBadge = document.getElementById("proposalsCount");
@@ -704,11 +773,12 @@ function renderProposals() {
         : p.status === "cancelled" ? "Cancelled"
         : "Pending Review";
 
-      // PDF section: preview iframe + download button
+      // PDF section: preview iframe + download button + fullscreen button
       const pdfSection = p.pdfDataUrl
         ? `<iframe src="${p.pdfDataUrl}" title="PDF preview for ${escapeHtml(p.title)}" class="proposal-pdf-frame"></iframe>
-           <div class="proposal-pdf-actions">
+           <div class="proposal-pdf-actions" style="display: flex; gap: 8px; justify-content: center; padding: 10px 12px; border-top: 1px solid var(--border);">
              <a href="${p.pdfDataUrl}" download="${escapeHtml(p.pdfName || 'letter-request.pdf')}" class="btn btn-small proposal-download-btn">⬇ Download PDF</a>
+             <button type="button" class="btn btn-small btn-secondary fullscreen-pdf-btn" data-url="${p.pdfDataUrl}" data-title="${escapeHtml(p.title)}">🔍 Fullscreen</button>
            </div>`
         : '<p class="empty-state">No PDF attached.</p>';
 
@@ -773,6 +843,11 @@ function renderProposals() {
         return;
       }
       rejectProposal(btn.dataset.id, reason);
+    });
+  });
+  grid.querySelectorAll(".fullscreen-pdf-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openPdfPreview(btn.dataset.url, btn.dataset.title);
     });
   });
 }
@@ -874,9 +949,73 @@ function initializeVenuePhotoZone() {
   if (!zone || !input) return;
 
   zone.addEventListener("click", () => input.click());
-  input.addEventListener("change", () => {
-    label.textContent = input.files[0]?.name || "No file selected";
+
+  // Prevent default drag behaviors
+  ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+    zone.addEventListener(eventName, e => e.preventDefault(), false);
+    document.body.addEventListener(eventName, e => e.preventDefault(), false);
   });
+
+  // Highlight drop area when item is dragged over it
+  ["dragenter", "dragover"].forEach(eventName => {
+    zone.addEventListener(eventName, () => {
+      zone.classList.add("dropzone-active");
+    }, false);
+  });
+
+  ["dragleave", "drop"].forEach(eventName => {
+    zone.addEventListener(eventName, () => {
+      zone.classList.remove("dropzone-active");
+    }, false);
+  });
+
+  // Handle dropped files
+  zone.addEventListener("drop", e => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length) {
+      input.files = files;
+      handlePhotoSelected(files[0]);
+    }
+  });
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (file) {
+      handlePhotoSelected(file);
+    } else {
+      label.textContent = "No file selected";
+      zone.style.backgroundImage = "";
+      const span = zone.querySelector("span");
+      if (span) span.style.display = "block";
+      label.style.background = "";
+      label.style.color = "";
+      label.style.padding = "";
+      label.style.borderRadius = "";
+    }
+  });
+
+  function handlePhotoSelected(file) {
+    if (!file.type.startsWith("image/")) {
+      alert("Please select or drop an image file.");
+      return;
+    }
+    label.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      zone.style.backgroundImage = `url('${e.target.result}')`;
+      zone.style.backgroundSize = "cover";
+      zone.style.backgroundPosition = "center";
+      const span = zone.querySelector("span");
+      if (span) span.style.display = "none";
+      
+      label.style.background = "rgba(15, 23, 42, 0.7)";
+      label.style.color = "#fff";
+      label.style.padding = "2px 8px";
+      label.style.borderRadius = "4px";
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 // =============================================
@@ -968,7 +1107,7 @@ function renderAuditLogs() {
   });
 
   if (filteredLogs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="text-align: center; padding: 40px;">No matching audit logs found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="text-align: center; padding: 40px;">No matching audit logs found.</td></tr>`;
     return;
   }
 
@@ -980,7 +1119,6 @@ function renderAuditLogs() {
         <td><strong>${escapeHtml(log.userIdentifier)}</strong><br><small>${escapeHtml(log.userFullName)}</small></td>
         <td><span class="status-pill ${log.role === 'faculty' ? 'status-approved' : log.role === 'student' ? 'status-pending' : 'status-rejected'}">${escapeHtml(log.role)}</span></td>
         <td>${getLogActivityDescription(log)}</td>
-        <td><code>${escapeHtml(log.ipAddress)}</code></td>
       </tr>
     `;
   }).join("");
@@ -1111,6 +1249,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize all
   initializeVenuePhotoZone();
+  
+  // PDF Preview modal handlers
+  document.getElementById("closePdfPreviewBtn")?.addEventListener("click", closePdfPreview);
+  document.getElementById("pdfPreviewOverlay")?.addEventListener("click", closePdfPreview);
+
   refreshAll().then(() => {
     updateNotificationBadge();
   });

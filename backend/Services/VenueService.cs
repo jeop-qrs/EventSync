@@ -32,6 +32,7 @@ namespace backend.Services
                 v.Description,
                 v.Availability,
                 v.Status,
+                v.PhotoPath,
                 TimeSlots = string.IsNullOrEmpty(v.TimeSlots)
                     ? []
                     : v.TimeSlots.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList()

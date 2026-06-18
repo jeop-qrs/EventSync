@@ -31,6 +31,18 @@ namespace backend.Services
 
         public async Task<GlobalResponse> Register(AuthRegisterRequest req)
         {
+            if (req.Role == "student")
+            {
+                if (string.IsNullOrEmpty(req.StudentNumber) || req.StudentNumber.Trim().Length != 10)
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Student Number must be exactly 10 characters long"
+                    };
+                }
+            }
+
             // Check if user already exists safely
             User? user = null;
             if (!string.IsNullOrEmpty(req.Username))
@@ -154,6 +166,14 @@ namespace backend.Services
             }
             else if (!string.IsNullOrEmpty(req.StudentNumber))
             {
+                if (req.StudentNumber.Trim().Length != 10)
+                {
+                    return new GlobalResponse
+                    {
+                        Success = false,
+                        BackendMessage = "Student Number must be exactly 10 characters long"
+                    };
+                }
                 user = await _context.Users.FirstOrDefaultAsync(u => u.StudentNumber == req.StudentNumber);
             }
 

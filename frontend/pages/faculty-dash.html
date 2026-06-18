@@ -133,12 +133,12 @@
             <div class="stat-card">
               <div class="stat-label">Available Venues Today</div>
               <div class="stat-value stat-value--success" id="countVenues">
-                4
+                0
               </div>
             </div>
             <div class="stat-card stat-card--rejected">
               <div class="stat-label">Pending Reviewed</div>
-              <div class="stat-value stat-value--danger" id="countRejected">
+              <div class="stat-value stat-value--danger" id="countPendingReviewed">
                 0
               </div>
             </div>
@@ -362,12 +362,11 @@
                   <th>USER</th>
                   <th>ROLE</th>
                   <th>ACTIVITY DETAILS</th>
-                  <th>IP ADDRESS</th>
                 </tr>
               </thead>
               <tbody id="logsTableBody">
                 <tr>
-                  <td colspan="8" class="empty-state" style="text-align: center; padding: 40px;">Loading audit logs...</td>
+                  <td colspan="4" class="empty-state" style="text-align: center; padding: 40px;">Loading audit logs...</td>
                 </tr>
               </tbody>
             </table>
@@ -525,6 +524,20 @@
             <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Fullscreen PDF Preview Modal -->
+    <div class="modal-overlay hidden" id="pdfPreviewModal" style="z-index: 3000;">
+      <div class="modal-overlay-bg" id="pdfPreviewOverlay"></div>
+      <div class="modal-card" style="width: 90vw; height: 90vh; max-width: none; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div class="modal-header" style="padding: 16px 24px; margin-bottom: 0; border-bottom: 1px solid var(--border);">
+          <h3 id="pdfPreviewTitle">Letter Request Preview</h3>
+          <button type="button" class="modal-close" id="closePdfPreviewBtn" style="font-size: 2rem;">&times;</button>
+        </div>
+        <div style="flex-grow: 1; position: relative;">
+          <iframe id="pdfPreviewIframe" src="" style="position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #fff;"></iframe>
+        </div>
       </div>
     </div>
 

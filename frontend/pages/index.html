@@ -143,7 +143,7 @@
             <div class="stat-label">Available Venues Today</div>
 
             <div class="stat-value stat-value--success" id="countVenues">
-              4
+              0
             </div>
           </div>
         </div>
@@ -387,6 +387,22 @@
       </div>
     </div>
 
+    <!-- Cancellation Confirmation Modal -->
+    <div class="modal-overlay hidden" id="cancelConfirmModal">
+      <div class="modal-overlay-bg" id="cancelConfirmOverlay"></div>
+      <div class="modal-card modal-card--warning">
+        <div class="modal-body-center">
+          <div class="warning-icon">⚠</div>
+          <h2>Are you sure?</h2>
+          <p>Do you really want to cancel this event request? This action cannot be undone.</p>
+          <div class="form-actions" style="justify-content:center; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" id="cancelConfirmNoBtn">No, Keep It</button>
+            <button type="button" class="btn btn-danger" id="cancelConfirmYesBtn">Yes, Cancel Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Success Modal (absolute center of screen) -->
     <div class="modal-overlay hidden" id="successModal">
       <div class="modal-overlay-bg" id="successModalOverlay"></div>
@@ -419,7 +435,8 @@
 
           <div class="form-group">
             <label for="profileIdNumber">Student Number</label>
-            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., 2021001234" />
+            <input type="text" id="profileIdNumber" class="form-control" placeholder="e.g., R2024-1111" minlength="10"
+              maxlength="10" />
           </div>
           <div class="form-group" id="profileDeptGroup" style="display:none;">
             <label for="profileDepartment">Department</label>
@@ -454,6 +471,22 @@
             <button type="button" class="btn btn-secondary" id="settingsModalCancel">Cancel</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Fullscreen PDF Preview Modal -->
+    <div class="modal-overlay hidden" id="pdfPreviewModal" style="z-index: 3000;">
+      <div class="modal-overlay-bg" id="pdfPreviewOverlay"></div>
+      <div class="modal-card"
+        style="width: 90vw; height: 90vh; max-width: none; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div class="modal-header" style="padding: 16px 24px; margin-bottom: 0; border-bottom: 1px solid var(--border);">
+          <h3 id="pdfPreviewTitle">Letter Request Preview</h3>
+          <button type="button" class="modal-close" id="closePdfPreviewBtn" style="font-size: 2rem;">&times;</button>
+        </div>
+        <div style="flex-grow: 1; position: relative;">
+          <iframe id="pdfPreviewIframe" src=""
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #fff;"></iframe>
+        </div>
       </div>
     </div>
   </main>

@@ -93,6 +93,11 @@ function initializeStudentLogin() {
       return;
     }
 
+    if (studentNumber.length !== 10) {
+      alert("Student Number must be exactly 10 characters long.");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:5108/api/auth/login", {
         method: "POST",
@@ -180,6 +185,11 @@ function initializeStudentSignUp() {
     const fullName = document.getElementById("signUpFullName").value.trim();
     const password = document.getElementById("signUpPassword").value;
     const confirmPassword = document.getElementById("signUpConfirmPassword").value;
+
+    if (studentNumber.length !== 10) {
+      showFieldError("signUpStudentNumber", "Student Number must be exactly 10 characters long.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       showFieldError("signUpConfirmPassword", "Passwords do not match.");
