@@ -11,6 +11,12 @@
 // GLOBAL CONSTANTS
 // =============================================
 
+// Centralized API base URL, derived dynamically from the current page's hostname.
+// This allows devices on the same network (e.g., phones, tablets) to connect to the backend
+// server without failing due to hardcoded 'localhost' mismatches.
+const serverIp = typeof window !== "undefined" ? (window.location.hostname || "localhost") : "localhost";
+const baseUrl = `http://${serverIp}:5108`;
+
 // Month name lookup table used by the calendar to display the header label
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -186,7 +192,6 @@ function checkAuthAndRedirect(requiredRole) {
 // 4. Redirects to login if the server returns 401 Unauthorized.
 // Called instead of fetch() on all authenticated API requests.
 async function apiFetch(url, options = {}) {
-  const baseUrl = "http://localhost:5108";
   const absoluteUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
 
   let session = getAuthSession();

@@ -113,7 +113,7 @@ function initializeStudentLogin() {
     }
 
     try {
-      const response = await fetch("http://localhost:5108/api/auth/login", {
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentNumber, password }),
@@ -156,7 +156,7 @@ function initializeFacultyLogin() {
     }
 
     try {
-      const response = await fetch("http://localhost:5108/api/auth/login", {
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -232,7 +232,7 @@ function initializeStudentSignUp() {
     }
 
     try {
-      const response = await fetch("http://localhost:5108/api/auth/register", {
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentNumber, fullName, password, role: "student" }),
@@ -280,7 +280,7 @@ function initializeFacultySignUp() {
     }
 
     try {
-      const response = await fetch("http://localhost:5108/api/auth/register", {
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, fullName, password, role: "faculty" }),
