@@ -821,12 +821,8 @@ async function handleAddVenueSubmit(e) {
   // Ensure at least one slot is present even if all were removed
   if (timeSlots.length === 0) timeSlots = [DEFAULT_TIME_SLOTS[0]];
 
-  if (editingVenueId) {
-    // Backend does not currently support venue editing via PUT/PATCH
-    alert("Editing existing venues is not supported by the backend API.");
-    closeAddVenueModal();
-    return;
-  }
+  const url = editingVenueId ? `/api/venues/${editingVenueId}` : "/api/venues";
+  const method = editingVenueId ? "PUT" : "POST";
 
   // Build the multipart request body
   const formData = new FormData();
@@ -842,8 +838,8 @@ async function handleAddVenueSubmit(e) {
   }
 
   try {
-    const response = await apiFetch("/api/venues", {
-      method: "POST",
+    const response = await apiFetch(url, {
+      method: method,
       body: formData
     });
     const result = await response.json();
@@ -851,7 +847,11 @@ async function handleAddVenueSubmit(e) {
       alert(result.backendMessage || "Failed to save venue.");
       return;
     }
-    addNotification(`Venue "${name}" added to the directory.`, "Just now");
+    if (editingVenueId) {
+      addNotification(`Venue "${name}" updated.`, "Just now");
+    } else {
+      addNotification(`Venue "${name}" added to the directory.`, "Just now");
+    }
   } catch (err) {
     console.error("Failed to save venue:", err);
     alert("An error occurred while saving the venue.");

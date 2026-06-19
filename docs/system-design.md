@@ -62,6 +62,7 @@ classDiagram
         -_auditLogService AuditLogService
         +GetVenues(status) GlobalResponse
         +AddVenue(VenueCreateDto) GlobalResponse
+        +UpdateVenue(venueId, VenueCreateDto) GlobalResponse
         +DeleteVenue(venueId) GlobalResponse
     }
 
@@ -107,6 +108,7 @@ classDiagram
         -_venueService VenueService
         +GetVenues(status) Task~IActionResult~
         +AddVenue(req) Task~IActionResult~
+        +UpdateVenue(id, req) Task~IActionResult~
         +DeleteVenue(id) Task~IActionResult~
     }
 
@@ -394,6 +396,10 @@ Controllers restrict actions using the `[Authorize(Roles = "...")]` attributes:
     *   **Auth Requirement:** `[Authorize(Roles = "faculty")]`
     *   **Request Format:** `[FromForm] VenueCreateDto` (Multipart Form Data supporting image banner file upload)
     *   **Response:** `GlobalResponse` detailing created `Venue` model.
+*   `PUT api/venues/{id}`
+    *   **Auth Requirement:** `[Authorize(Roles = "faculty")]`
+    *   **Request Format:** `[FromForm] VenueCreateDto` (Multipart Form Data supporting image banner file upload)
+    *   **Response:** `GlobalResponse` detailing updated `Venue` model.
 *   `DELETE api/venues/{id}`
     *   **Auth Requirement:** `[Authorize(Roles = "faculty")]`
     *   **Response:** `GlobalResponse` confirming deletion.

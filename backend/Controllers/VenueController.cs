@@ -42,6 +42,18 @@ namespace backend.Controllers
             return Ok(result);
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "faculty")]
+        public async Task<IActionResult> UpdateVenue(int id, [FromForm] VenueCreateDto req)
+        {
+            var result = await _venueService.UpdateVenue(id, req);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "faculty")]
         public async Task<IActionResult> DeleteVenue(int id)
