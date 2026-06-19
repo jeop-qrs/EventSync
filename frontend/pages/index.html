@@ -1,16 +1,11 @@
 <!doctype html>
-
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="icon" href="/frontend/assets/img/EventSync logo.webp" type="image/png" sizes="192x192" />
-
   <title>EventSync - Student Dashboard</title>
-
   <link rel="stylesheet" href="/frontend/assets/css/style.css" />
 </head>
 
@@ -18,11 +13,8 @@
   <div id="landingOverlay" class="landing-overlay">
     <div class="landing-card">
       <p class="landing-subtitle">WELCOME TO</p>
-
       <h1 class="landing-title">EventSync</h1>
-
       <p class="landing-copy">Please click your destination</p>
-
       <div class="landing-actions">
         <button id="student-btn" class="btn landing-button" data-role="Student">
           STUDENT
@@ -476,10 +468,13 @@
         </div>
         <form id="settingsForm" onsubmit="return false;">
           <div class="form-group">
-            <label class="settings-toggle-row">
+            <div class="settings-toggle-row">
               <span>Enable Notifications</span>
-              <input type="checkbox" id="settingsNotifications" checked />
-            </label>
+              <label class="toggle-switch" for="settingsNotifications">
+                <input type="checkbox" id="settingsNotifications" checked />
+                <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+              </label>
+            </div>
           </div>
 
           <div class="form-actions">

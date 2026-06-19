@@ -1,18 +1,36 @@
+/* =============================================
+   faculty-dash.css — Faculty Dashboard (faculty-dash.html)
+   CSS mirrors the top-to-bottom HTML structure:
+   Variables → Reset → Sidebar → Header →
+   Dashboard → Venues → Calendar → Day Manager →
+   Proposals → Audit Logs → Modals → Dark Mode
+   ============================================= */
+
+/* =============================================
+   1. CSS VARIABLES / ROOT
+   Design tokens used by all components.
+   Changing a variable here updates the entire UI.
+   ============================================= */
 :root {
   --bg-primary: #f4f6f9;
   --sidebar-bg: #1e293b;
   --sidebar-hover: #334155;
-  --accent-color: #4f46e5;
-  --accent-hover: #4338ca;
+  --accent-color: #000080;
+  --accent-hover: #000060;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --card-bg: #ffffff;
   --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --warning: #FF911C;
+  --danger: #FF0000;
   --border: #e2e8f0;
 }
 
+/* =============================================
+   2. GLOBAL RESET & BODY
+   Normalizes default browser styles and sets
+   the base layout for the full-height app.
+   ============================================= */
 * {
   margin: 0;
   padding: 0;
@@ -28,6 +46,10 @@ body {
   overflow: hidden;
 }
 
+/* =============================================
+   3. LANDING OVERLAY
+   Background screen shown before the user logs in.
+   ============================================= */
 /* Landing / Login overlay background */
 .landing-overlay {
   position: fixed;
@@ -55,6 +77,11 @@ body {
   z-index: 1;
 }
 
+/* =============================================
+   4. SIDEBAR / NAVIGATION
+   Left-hand navigation panel with menu items,
+   logo, and system info footer.
+   ============================================= */
 /* Sidebar Layout */
 .sidebar {
   background-color: var(--sidebar-bg);
@@ -62,14 +89,15 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: 0 0 20px 0;
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px 13.5px 24px;
+  padding: 0 24px;
+  height: 70px;
   border-bottom: 1px solid var(--sidebar-hover);
   width: 260px;
 }
@@ -134,6 +162,11 @@ body {
   overflow: hidden;
 }
 
+/* =============================================
+   5. HEADER / NAVBAR
+   Top bar with page title, date, notification
+   bell, and profile dropdown button.
+   ============================================= */
 /* Top Navbar */
 .navbar {
   height: 70px;
@@ -143,6 +176,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
+  flex-shrink: 0;
 }
 
 .page-title {
@@ -422,6 +456,10 @@ body {
   border-radius: 50%;
 }
 
+/* =============================================
+   8. DASHBOARD VIEW
+   Stat cards and the schedule tracker panel.
+   ============================================= */
 /* Content Container */
 .content-container {
   padding: 40px;
@@ -477,19 +515,25 @@ body {
   color: var(--danger);
 }
 
+/* =============================================
+   9. DARK MODE
+   CSS variable overrides and component-specific
+   style adjustments for the dark theme.
+   Applied via body.dark-mode class.
+   ============================================= */
 /* Dark mode overrides */
 body.dark-mode {
   --bg-primary: #0f172a;
   --sidebar-bg: #0b1329;
   --sidebar-hover: #1e293b;
-  --accent-color: #7c9cff;
-  --accent-hover: #6b86ff;
+  --accent-color: #000080;
+  --accent-hover: #000060;
   --text-main: #e6eef8;
   --text-muted: #9fb0c8;
   --card-bg: #1e293b;
   --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #fb7185;
+  --warning: #FF911C;
+  --danger: #FF0000;
   --border: rgba(255, 255, 255, 0.1);
   background-color: var(--bg-primary);
   color: var(--text-main);
@@ -534,6 +578,11 @@ body.dark-mode .notification-bell:hover {
   border-color: rgba(239, 68, 68, 0.25);
 }
 
+/* =============================================
+   10. VENUE DIRECTORY VIEW
+   Venue grid cards, detail panel, calendar,
+   and Day Manager for per-date slot editing.
+   ============================================= */
 /* Dashboard Content Structure */
 .dashboard-layout {
   display: grid;
