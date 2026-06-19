@@ -58,6 +58,16 @@ namespace backend.Services
 
         public async Task<GlobalResponse> CreateEvent(EventCreateRequest req, int studentId)
         {
+            var hasConflict = await _dbContext.Events.AnyAsync(e =>
+                e.VenueId == req.VenueId &&
+                e.EventDate.Date == req.EventDate.Date &&
+                e.StartTime == req.StartTime &&
+                e.Status == "approved");
+            if (hasConflict)
+            {
+                return new GlobalResponse { Success = false, BackendMessage = "This venue is already booked for the selected date and time slot.", Data = null };
+            }
+
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Events", "Letters");
             if (!Directory.Exists(uploadsFolder))
             {
@@ -108,6 +118,18 @@ namespace backend.Services
             {
                 if (targetEvent.Status == "pending" && (req.Status == "approved" || req.Status == "rejected"))
                 {
+                    if (req.Status == "approved")
+                    {
+                        var hasConflict = await _dbContext.Events.AnyAsync(e =>
+                            e.VenueId == targetEvent.VenueId &&
+                            e.EventDate.Date == targetEvent.EventDate.Date &&
+                            e.StartTime == targetEvent.StartTime &&
+                            e.Status == "approved");
+                        if (hasConflict)
+                        {
+                            return new GlobalResponse { Success = false, BackendMessage = "Cannot approve this event because another event has already been approved for this venue, date, and time slot.", Data = null };
+                        }
+                    }
                     targetEvent.Status = req.Status;
                     targetEvent.FacultyId = userId;
                     targetEvent.Reason = req.Reason;

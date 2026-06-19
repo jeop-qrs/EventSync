@@ -16,5 +16,6 @@ namespace backend.Models
         public string? TimeSlots { get; set; }
         public string Status { get; set; } = string.Empty; // Available, Not Available (based on capacity, avai)
         public string? PhotoPath { get; set; } // Path to the photo of the venue
+        public string Facilities { get; set; } = string.Empty;
     }
 }

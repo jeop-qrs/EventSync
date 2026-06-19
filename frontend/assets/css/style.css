@@ -745,6 +745,37 @@ td {
   align-items: start;
 }
 
+.venue-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 18px;
+  align-items: flex-end;
+}
+
+.venue-filters-bar .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 180px;
+}
+
+.venue-filters-bar .filter-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.venue-filters-bar .filter-group .form-control {
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
 .venue-list {
   display: flex;
   flex-direction: column;

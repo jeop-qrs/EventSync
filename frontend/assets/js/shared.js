@@ -565,7 +565,7 @@ function getBookedSlotsForDate(venueName, dateStr) {
     .filter((p) =>
       p.venue === venueName &&
       p.date === dateStr &&
-      (p.status === "pending" || p.status === "accepted")
+      p.status === "accepted"
     )
     .map((p) => p.time);
 }

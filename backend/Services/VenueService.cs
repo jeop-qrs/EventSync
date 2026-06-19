@@ -35,7 +35,10 @@ namespace backend.Services
                 v.PhotoPath,
                 TimeSlots = string.IsNullOrEmpty(v.TimeSlots)
                     ? []
-                    : v.TimeSlots.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList()
+                    : v.TimeSlots.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList(),
+                Facilities = string.IsNullOrEmpty(v.Facilities)
+                    ? []
+                    : v.Facilities.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()).ToList()
             });
             return new GlobalResponse { Success = true, BackendMessage = "Venues fetched successfully.", Data = result };
         }
@@ -67,7 +70,8 @@ namespace backend.Services
                 Availability = req.Availability,
                 TimeSlots = string.Join(",", req.Timeslots),
                 Status = "available",
-                PhotoPath = photoPath
+                PhotoPath = photoPath,
+                Facilities = req.Facilities ?? string.Empty
             };
             _context.Venues.Add(newVenue);
             await _context.SaveChangesAsync();

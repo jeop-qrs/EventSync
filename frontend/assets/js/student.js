@@ -23,7 +23,8 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
-          timeSlots: v.timeSlots || []
+          timeSlots: v.timeSlots || [],
+          facilities: v.facilities || []
         }));
         return allVenuesList;
       }
@@ -335,8 +336,30 @@ function renderStudentVenueGrid() {
   const grid = document.getElementById("studentVenueGrid");
   if (!grid) return;
 
-  const venues = getAllVenues();
+  const query = document.getElementById("venueSearchQuery")?.value.toLowerCase().trim() || "";
+  const minCapacity = parseInt(document.getElementById("venueCapacityFilter")?.value || "0", 10);
+
+  let venues = getAllVenues();
+
+  // Apply filters
+  if (query) {
+    venues = venues.filter(v => 
+      v.name.toLowerCase().includes(query) || 
+      v.address.toLowerCase().includes(query) ||
+      v.description.toLowerCase().includes(query)
+    );
+  }
+  if (minCapacity > 0) {
+    venues = venues.filter(v => v.capacity >= minCapacity);
+  }
+
   studentVenueData = buildVenueMap(venues);
+
+  if (venues.length === 0) {
+    grid.innerHTML = '<p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">No venues match the selected filters.</p>';
+    populateVenueSelect(venues);
+    return;
+  }
 
   grid.innerHTML = venues
     .map((venue, i) => {
@@ -836,6 +859,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const menuItem = document.querySelector(`.menu-item[data-view="${savedView}"]`);
     switchView(savedView, menuItem);
   }
+
+  // Venue Directory Filters
+  document.getElementById("venueSearchQuery")?.addEventListener("input", renderStudentVenueGrid);
+  document.getElementById("venueCapacityFilter")?.addEventListener("change", renderStudentVenueGrid);
 
   // Landing page role buttons
   document.getElementById("student-btn")?.addEventListener("click", () => {

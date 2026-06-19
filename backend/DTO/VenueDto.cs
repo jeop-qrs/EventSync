@@ -9,6 +9,7 @@ namespace backend.DTO
         public string Availability { get; set; } = string.Empty;
         public List<string> Timeslots { get; set; } = [];
         public IFormFile? PhotoCover { get; set; }
+        public string? Facilities { get; set; }
     }
 
     public class VenueResponseDto
@@ -22,5 +23,6 @@ namespace backend.DTO
         public List<string> Timeslots { get; set; } = [];
         public string Status { get; set; } = string.Empty;
         public string PhotoPath { get; set; } = string.Empty;
+        public string Facilities { get; set; } = string.Empty;
     }
 }

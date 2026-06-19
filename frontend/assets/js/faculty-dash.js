@@ -32,7 +32,8 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
-          timeSlots: v.timeSlots || []
+          timeSlots: v.timeSlots || [],
+          facilities: v.facilities || []
         }));
         return allFacultyVenuesList;
       }
@@ -201,7 +202,23 @@ function renderFacultyVenueGrid() {
   const grid = document.getElementById("facultyVenueGrid");
   if (!grid) return;
 
-  const venues = loadVenues();
+  const query = document.getElementById("venueSearchQuery")?.value.toLowerCase().trim() || "";
+  const minCapacity = parseInt(document.getElementById("venueCapacityFilter")?.value || "0", 10);
+
+  let venues = loadVenues();
+
+  // Apply filters
+  if (query) {
+    venues = venues.filter(v => 
+      v.name.toLowerCase().includes(query) || 
+      v.address.toLowerCase().includes(query) ||
+      v.description.toLowerCase().includes(query)
+    );
+  }
+  if (minCapacity > 0) {
+    venues = venues.filter(v => v.capacity >= minCapacity);
+  }
+
   facultyVenueData = buildVenueDataMap(venues);
 
   const cards = venues
@@ -1206,6 +1223,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const menuItem = document.querySelector(`.menu-item[data-view="${savedView}"]`);
     switchView(savedView, menuItem);
   }
+
+  // Venue Directory Filters
+  document.getElementById("venueSearchQuery")?.addEventListener("input", renderFacultyVenueGrid);
+  document.getElementById("venueCapacityFilter")?.addEventListener("change", renderFacultyVenueGrid);
 
   // Calendar navigation
   document.getElementById("calendarPrevMonth")?.addEventListener("click", () => shiftCalendarMonth(-1));
