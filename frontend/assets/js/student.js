@@ -102,6 +102,8 @@ function switchView(viewId, element) {
     document.querySelectorAll(".menu-item").forEach((i) => i.classList.remove("active"));
     element.classList.add("active");
   }
+
+  sessionStorage.setItem("studentActiveView", viewId);
 }
 
 // =============================================
@@ -827,6 +829,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".menu-item").forEach((item) => {
     item.addEventListener("click", () => switchView(item.dataset.view, item));
   });
+
+  // Restore active view from sessionStorage
+  const savedView = sessionStorage.getItem("studentActiveView");
+  if (savedView) {
+    const menuItem = document.querySelector(`.menu-item[data-view="${savedView}"]`);
+    switchView(savedView, menuItem);
+  }
 
   // Landing page role buttons
   document.getElementById("student-btn")?.addEventListener("click", () => {

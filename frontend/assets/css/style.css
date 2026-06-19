@@ -98,7 +98,7 @@ body {
   flex-grow: 1;
 }
 
-.sidebar-menu h4{
+.sidebar-menu h4 {
   font-weight: 500;
 }
 
@@ -306,11 +306,11 @@ body {
   transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.toggle-switch input:checked + .toggle-switch-track {
+.toggle-switch input:checked+.toggle-switch-track {
   background: var(--accent-color);
 }
 
-.toggle-switch input:checked + .toggle-switch-track .toggle-switch-thumb {
+.toggle-switch input:checked+.toggle-switch-track .toggle-switch-thumb {
   left: calc(100% - 19px);
 }
 
@@ -490,7 +490,7 @@ body.dark-mode {
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
-  --border: rgba(255,255,255,0.1);
+  --border: rgba(255, 255, 255, 0.1);
   background-color: var(--bg-primary);
   color: var(--text-main);
 }
@@ -826,7 +826,7 @@ td {
   gap: 6px;
 }
 
-.venue-address h5{
+.venue-address h5 {
   color: var(--text-muted);
   font-size: 0.92rem;
   font-weight: 500;
@@ -1140,7 +1140,7 @@ button.calendar-date[disabled] {
   font-size: 0.82rem;
 }
 
-.legend-item > span:first-child {
+.legend-item>span:first-child {
   width: 12px;
   height: 12px;
   border-radius: 4px;
@@ -1149,19 +1149,19 @@ button.calendar-date[disabled] {
 }
 
 
-.legend-available > span:first-child {
+.legend-available>span:first-child {
   background-color: #d3d3d3 !important;
 }
 
-.legend-partial > span:first-child {
+.legend-partial>span:first-child {
   background-color: #f97316 !important;
 }
 
-.legend-booked > span:first-child {
+.legend-booked>span:first-child {
   background-color: #ef4444;
 }
 
-.legend-neutral > span:first-child {
+.legend-neutral>span:first-child {
   background-color: #d3d3d3;
 }
 
@@ -1871,4 +1871,3 @@ body.dark-mode .calendar-nav-btn {
 body.dark-mode .calendar-nav-btn:hover {
   background: #475569;
 }
-

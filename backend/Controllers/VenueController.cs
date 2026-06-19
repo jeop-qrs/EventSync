@@ -41,5 +41,17 @@ namespace backend.Controllers
             }
             return Ok(result);
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "faculty")]
+        public async Task<IActionResult> DeleteVenue(int id)
+        {
+            var result = await _venueService.DeleteVenue(id);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }

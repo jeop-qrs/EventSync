@@ -403,6 +403,22 @@
       </div>
     </div>
 
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay hidden" id="logoutConfirmModal">
+      <div class="modal-overlay-bg" id="logoutConfirmOverlay"></div>
+      <div class="modal-card modal-card--warning">
+        <div class="modal-body-center">
+          <div class="warning-icon">⚠</div>
+          <h2>Logging Out?</h2>
+          <p>Are you sure you want to log out of your session?</p>
+          <div class="form-actions" style="justify-content:center; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" id="logoutConfirmNoBtn">Cancel</button>
+            <button type="button" class="btn btn-danger" id="logoutConfirmYesBtn">Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Success Modal (absolute center of screen) -->
     <div class="modal-overlay hidden" id="successModal">
       <div class="modal-overlay-bg" id="successModalOverlay"></div>

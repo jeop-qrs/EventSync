@@ -847,8 +847,17 @@ function initializeProfileAndSettingsModals(role) {
   document.getElementById("settingsModalSave")?.addEventListener("click", () => saveSettingsFromModal(role));
 
   // Logout
-  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  const openLogoutConfirm = () => {
     closeProfileDropdown();
+    document.getElementById("logoutConfirmModal")?.classList.remove("hidden");
+  };
+
+  const closeLogoutConfirm = () => {
+    document.getElementById("logoutConfirmModal")?.classList.add("hidden");
+  };
+
+  const executeLogout = async () => {
+    closeLogoutConfirm();
     try {
       await apiFetch("/api/auth/logout", { method: "POST" });
     } catch (e) {
@@ -857,7 +866,12 @@ function initializeProfileAndSettingsModals(role) {
       clearAuthSession();
       window.location.href = "index.html";
     }
-  });
+  };
+
+  document.getElementById("logoutBtn")?.addEventListener("click", openLogoutConfirm);
+  document.getElementById("logoutConfirmNoBtn")?.addEventListener("click", closeLogoutConfirm);
+  document.getElementById("logoutConfirmOverlay")?.addEventListener("click", closeLogoutConfirm);
+  document.getElementById("logoutConfirmYesBtn")?.addEventListener("click", executeLogout);
 }
 
 // =============================================
@@ -916,6 +930,8 @@ function clearAuthSession() {
   localStorage.removeItem(AUTH_KEYS.USER_ROLE);
   localStorage.removeItem(AUTH_KEYS.USER_IDENTIFIER);
   localStorage.removeItem(AUTH_KEYS.EXPIRES_AT);
+  sessionStorage.removeItem("facultyActiveView");
+  sessionStorage.removeItem("studentActiveView");
 }
 
 function checkAuthAndRedirect(requiredRole) {

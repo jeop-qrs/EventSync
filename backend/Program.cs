@@ -71,7 +71,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.ExecuteSqlRaw(
-            "UPDATE AuditLogs a JOIN Users u ON a.UserId = u.UserId SET a.UserFullName = u.FullName, a.UserIdentifier = COALESCE(u.StudentNumber, u.Username) WHERE a.UserFullName = 'Anonymous' AND a.UserId IS NOT NULL;"
+            "UPDATE AuditLogs a JOIN Users u ON a.UserId = u.UserId SET a.UserFullName = COALESCE(u.FullName, 'Anonymous'), a.UserIdentifier = COALESCE(u.StudentNumber, u.Username, 'Anonymous') WHERE a.UserFullName = 'Anonymous' AND a.UserId IS NOT NULL;"
         );
     }
     catch (Exception ex)

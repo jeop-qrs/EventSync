@@ -2182,3 +2182,44 @@ body.dark-mode .calendar-nav-btn {
 body.dark-mode .calendar-nav-btn:hover {
   background: #475569;
 }
+
+/* Custom Warning Modal Styles */
+.modal-card--warning {
+  max-width: 420px;
+}
+
+.modal-body-center {
+  text-align: center;
+  padding: 48px 32px;
+}
+
+.warning-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fef3c7;
+  border-radius: 50%;
+  font-size: 2.5rem;
+  color: #d97706;
+  font-weight: bold;
+}
+
+body.dark-mode .modal-body-center .warning-icon {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.modal-body-center h2 {
+  font-size: 1.5rem;
+  margin: 16px 0 12px;
+  color: var(--text-main);
+}
+
+.modal-body-center p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}

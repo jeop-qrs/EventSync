@@ -11,6 +11,7 @@ let viewCalendarYear = new Date().getFullYear();
 let selectedCalendarDay = null;
 let facultyVenueData = {};
 let editingVenueId = null; // Track if we're editing vs adding
+let deleteVenueId = null; // Track venue being deleted
 
 let allFacultyVenuesList = [];
 let allFacultyProposalsList = [];
@@ -116,6 +117,8 @@ function switchView(viewId, element) {
     document.querySelectorAll(".menu-item").forEach((i) => i.classList.remove("active"));
     element.classList.add("active");
   }
+
+  sessionStorage.setItem("facultyActiveView", viewId);
 
   if (viewId === "proposals-view") renderProposals();
   if (viewId === "logs-view") {
@@ -278,7 +281,58 @@ function displayVenueDetail(venueId) {
 // =============================================
 
 function deleteVenue(venueId) {
-  alert("Deleting venues is not supported by the backend API.");
+  openDeleteVenueConfirmModal(venueId);
+}
+
+function openDeleteVenueConfirmModal(venueId) {
+  const venue = facultyVenueData[venueId];
+  const name = venue ? venue.name : `Venue #${venueId}`;
+  const msgEl = document.getElementById("deleteVenueConfirmMessage");
+  if (msgEl) {
+    msgEl.textContent = `Do you really want to delete "${name}"? This action cannot be undone.`;
+  }
+  deleteVenueId = venueId;
+  document.getElementById("deleteVenueConfirmModal")?.classList.remove("hidden");
+}
+
+function closeDeleteVenueConfirmModal() {
+  document.getElementById("deleteVenueConfirmModal")?.classList.add("hidden");
+  deleteVenueId = null;
+}
+
+async function executeDeleteVenue() {
+  if (!deleteVenueId) return;
+  const venueId = deleteVenueId;
+  const venue = facultyVenueData[venueId];
+  const name = venue ? venue.name : `Venue #${venueId}`;
+
+  closeDeleteVenueConfirmModal();
+
+  try {
+    const response = await apiFetch(`/api/venues/${venueId}`, {
+      method: "DELETE"
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      alert(result.backendMessage || "Failed to delete venue.");
+      return;
+    }
+    addNotification(`Venue "${name}" deleted from the directory.`, "Just now");
+    resetVenueDetailPanel();
+    activeVenue = null;
+    
+    const calendarDates = document.getElementById("venueCalendarDates");
+    if (calendarDates) calendarDates.innerHTML = "";
+    const monthLabel = document.getElementById("calendarMonthLabel");
+    if (monthLabel) monthLabel.textContent = "Select a Venue";
+    const detailPanel = document.getElementById("calendarDayDetail");
+    if (detailPanel) detailPanel.hidden = true;
+
+    await refreshAll();
+  } catch (err) {
+    console.error("Failed to delete venue:", err);
+    alert("An error occurred while deleting the venue.");
+  }
 }
 
 function resetVenueDetailPanel() {
@@ -1146,6 +1200,13 @@ document.addEventListener("DOMContentLoaded", () => {
     item.addEventListener("click", () => switchView(item.dataset.view, item));
   });
 
+  // Restore active view from sessionStorage
+  const savedView = sessionStorage.getItem("facultyActiveView");
+  if (savedView) {
+    const menuItem = document.querySelector(`.menu-item[data-view="${savedView}"]`);
+    switchView(savedView, menuItem);
+  }
+
   // Calendar navigation
   document.getElementById("calendarPrevMonth")?.addEventListener("click", () => shiftCalendarMonth(-1));
   document.getElementById("calendarNextMonth")?.addEventListener("click", () => shiftCalendarMonth(1));
@@ -1159,9 +1220,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Venue detail — Delete and Edit buttons
-  document.getElementById("deleteVenueBtn")?.addEventListener("click", () => {
+  document.getElementById("deleteVenueBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
     if (activeVenue) deleteVenue(activeVenue);
   });
+  document.getElementById("deleteVenueConfirmNoBtn")?.addEventListener("click", closeDeleteVenueConfirmModal);
+  document.getElementById("deleteVenueConfirmOverlay")?.addEventListener("click", closeDeleteVenueConfirmModal);
+  document.getElementById("deleteVenueConfirmYesBtn")?.addEventListener("click", executeDeleteVenue);
   document.getElementById("editVenueBtn")?.addEventListener("click", () => {
     if (activeVenue) openEditVenueModal(activeVenue);
   });

@@ -81,5 +81,44 @@ namespace backend.Services
 
             return new GlobalResponse { Success = true, BackendMessage = "Venue added successfully.", Data = newVenue };
         }
+
+        public async Task<GlobalResponse> DeleteVenue(int venueId)
+        {
+            var venue = await _context.Venues.FindAsync(venueId);
+            if (venue == null)
+            {
+                return new GlobalResponse { Success = false, BackendMessage = "Venue not found." };
+            }
+
+            var hasActiveEvents = await _context.Events.AnyAsync(e => 
+                e.VenueId == venueId && 
+                e.Status != "cancelled" && 
+                e.Status != "rejected");
+            if (hasActiveEvents)
+            {
+                return new GlobalResponse { Success = false, BackendMessage = "Cannot delete venue because it has active events scheduled/associated with it." };
+            }
+
+            if (!string.IsNullOrEmpty(venue.PhotoPath))
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), venue.PhotoPath);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+
+            _context.Venues.Remove(venue);
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(
+                null, null, null, null,
+                "Venue",
+                "Delete",
+                venue.Name
+            );
+
+            return new GlobalResponse { Success = true, BackendMessage = "Venue deleted successfully." };
+        }
     }
 }
