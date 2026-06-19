@@ -1,13 +1,18 @@
 // =============================================
-// script.js — Auth pages only (users.html, faculty.html)
-// Handles login/signup form logic, auth panel toggling.
-// Shared utilities are in shared.js (loaded before this file).
+// script.js — Auth Pages (users.html, faculty.html)
+// Handles login/signup form logic and auth panel switching.
+// Shared utilities (showToast, showFieldError, etc.) are in shared.js,
+// which must be loaded before this file.
 // =============================================
 
+
 // =============================================
-// Auth Panel Toggle (Login ↔ Sign Up)
+// AUTH PANEL TOGGLE (Login ↔ Sign Up)
 // =============================================
 
+// [initializeAuthPanels]: Attaches click listeners to the "Sign Up", "Back to Login",
+// and "Show Login" buttons so the auth panel can switch between login and signup views.
+// Runs once on DOMContentLoaded.
 function initializeAuthPanels() {
   const showSignUpBtn = document.getElementById("showSignUpBtn");
   const showLoginBtn = document.getElementById("showLoginBtn");
@@ -26,6 +31,9 @@ function initializeAuthPanels() {
   }
 }
 
+// [switchAuthPanel]: Switches the visible auth panel between "login" and "signup"
+// and updates all heading text to match the current portal (Student or Faculty).
+// Triggered by button clicks wired in initializeAuthPanels().
 function switchAuthPanel(mode) {
   const loginPanel = document.getElementById("loginPanel");
   const signUpPanel = document.getElementById("signUpPanel");
@@ -36,7 +44,7 @@ function switchAuthPanel(mode) {
 
   if (!loginPanel || !signUpPanel) return;
 
-  // Detect which portal we are on
+  // Detect which portal we are on by checking the URL filename
   const pathname = window.location.pathname || "";
   const isFacultyPage =
     pathname.endsWith("/faculty.html") || pathname.endsWith("faculty.html");
@@ -46,9 +54,9 @@ function switchAuthPanel(mode) {
     loginPanel.classList.add("auth-panel--hidden");
     signUpPanel.classList.remove("auth-panel--hidden");
 
-    // Re-trigger animation
+    // Force the CSS animation to replay by resetting it momentarily
     signUpPanel.style.animation = "none";
-    signUpPanel.offsetHeight; // force reflow
+    signUpPanel.offsetHeight; // force reflow — required by browsers to restart animations
     signUpPanel.style.animation = "";
 
     if (subtitle) subtitle.textContent = `${portalLabel.toUpperCase()} REGISTRATION`;
@@ -59,7 +67,7 @@ function switchAuthPanel(mode) {
     signUpPanel.classList.add("auth-panel--hidden");
     loginPanel.classList.remove("auth-panel--hidden");
 
-    // Re-trigger animation
+    // Force animation replay on return to login panel
     loginPanel.style.animation = "none";
     loginPanel.offsetHeight;
     loginPanel.style.animation = "";
@@ -68,6 +76,7 @@ function switchAuthPanel(mode) {
     if (title) title.textContent = `${portalLabel} Portal`;
     if (copy) copy.textContent = `Please sign in with your account`;
     if (terms) {
+      // Show different terms text depending on the portal
       terms.textContent = isFacultyPage
         ? `Use your faculty credentials to log in.`
         : `Use your institutional credentials to log in.`;
@@ -75,10 +84,14 @@ function switchAuthPanel(mode) {
   }
 }
 
+
 // =============================================
-// Student Login
+// STUDENT LOGIN
 // =============================================
 
+// [initializeStudentLogin]: Attaches a submit listener to the student login form.
+// Validates input, sends credentials to the backend, and redirects to the student
+// dashboard on success. Triggers on form submit.
 function initializeStudentLogin() {
   const form = document.getElementById("studentLoginForm");
   if (!form) return;
@@ -93,6 +106,7 @@ function initializeStudentLogin() {
       return;
     }
 
+    // Student numbers must be exactly 10 characters per system rules
     if (studentNumber.length !== 10) {
       alert("Student Number must be exactly 10 characters long.");
       return;
@@ -109,6 +123,7 @@ function initializeStudentLogin() {
         alert(result.backendMessage || "Login failed.");
         return;
       }
+      // Store the auth session tokens in localStorage, then navigate to the dashboard
       saveAuthSession(result.data);
       window.location.href = "index.html?role=Student";
     } catch (err) {
@@ -118,10 +133,14 @@ function initializeStudentLogin() {
   });
 }
 
+
 // =============================================
-// Faculty Login
+// FACULTY LOGIN
 // =============================================
 
+// [initializeFacultyLogin]: Attaches a submit listener to the faculty login form.
+// Validates input, sends credentials to the backend, and redirects to the faculty
+// dashboard on success. Triggers on form submit.
 function initializeFacultyLogin() {
   const form = document.getElementById("facultyLoginForm");
   if (!form) return;
@@ -147,6 +166,7 @@ function initializeFacultyLogin() {
         alert(result.backendMessage || "Login failed.");
         return;
       }
+      // Store the auth session tokens in localStorage, then navigate to the dashboard
       saveAuthSession(result.data);
       window.location.href = "faculty-dash.html";
     } catch (err) {
@@ -156,10 +176,19 @@ function initializeFacultyLogin() {
   });
 }
 
+
+// =============================================
+// REGISTRATION ERROR HANDLING
+// =============================================
+
+// [handleRegistrationError]: Reads the backend error message and shows it
+// inline under the correct field (password field vs. username/student number field).
+// Called when a register API call fails.
 function handleRegistrationError(result, isFaculty) {
   const message = result.backendMessage || "Registration failed.";
   const msgLower = message.toLowerCase();
-  
+
+  // Check if the error is about the password or the username/student number
   if (msgLower.includes("password")) {
     const fieldId = isFaculty ? "signUpFacultyPassword" : "signUpPassword";
     showFieldError(fieldId, message);
@@ -169,28 +198,34 @@ function handleRegistrationError(result, isFaculty) {
   }
 }
 
+
 // =============================================
-// Student Sign Up
+// STUDENT SIGN UP
 // =============================================
 
+// [initializeStudentSignUp]: Attaches a submit listener to the student sign-up form.
+// Validates all fields, sends registration data to the backend, and switches back
+// to the login panel with a success toast on completion. Triggers on form submit.
 function initializeStudentSignUp() {
   const form = document.getElementById("studentSignUpForm");
   if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    clearFormErrors(form);
+    clearFormErrors(form); // Clear any previous validation errors before re-validating
 
     const studentNumber = document.getElementById("signUpStudentNumber").value.trim();
     const fullName = document.getElementById("signUpFullName").value.trim();
     const password = document.getElementById("signUpPassword").value;
     const confirmPassword = document.getElementById("signUpConfirmPassword").value;
 
+    // Enforce 10-character student number requirement
     if (studentNumber.length !== 10) {
       showFieldError("signUpStudentNumber", "Student Number must be exactly 10 characters long.");
       return;
     }
 
+    // Confirm passwords match before hitting the server
     if (password !== confirmPassword) {
       showFieldError("signUpConfirmPassword", "Passwords do not match.");
       return;
@@ -209,7 +244,7 @@ function initializeStudentSignUp() {
       }
       form.reset();
       switchAuthPanel("login");
-      showToast();
+      showToast(); // Show the "Account created!" success toast
     } catch (err) {
       console.error(err);
       alert("An error occurred during sign up.");
@@ -217,23 +252,28 @@ function initializeStudentSignUp() {
   });
 }
 
+
 // =============================================
-// Faculty Sign Up
+// FACULTY SIGN UP
 // =============================================
 
+// [initializeFacultySignUp]: Attaches a submit listener to the faculty sign-up form.
+// Validates all fields, sends registration data to the backend, and switches back
+// to the login panel with a success toast on completion. Triggers on form submit.
 function initializeFacultySignUp() {
   const form = document.getElementById("facultySignUpForm");
   if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    clearFormErrors(form);
+    clearFormErrors(form); // Clear any previous validation errors before re-validating
 
     const username = document.getElementById("signUpFacultyUsername").value.trim();
     const fullName = document.getElementById("signUpFacultyFullName").value.trim();
     const password = document.getElementById("signUpFacultyPassword").value;
     const confirmPassword = document.getElementById("signUpFacultyConfirmPassword").value;
 
+    // Confirm passwords match before hitting the server
     if (password !== confirmPassword) {
       showFieldError("signUpFacultyConfirmPassword", "Passwords do not match.");
       return;
@@ -252,7 +292,7 @@ function initializeFacultySignUp() {
       }
       form.reset();
       switchAuthPanel("login");
-      showToast();
+      showToast(); // Show the "Account created!" success toast
     } catch (err) {
       console.error(err);
       alert("An error occurred during sign up.");
@@ -260,18 +300,22 @@ function initializeFacultySignUp() {
   });
 }
 
+
 // =============================================
-// DOMContentLoaded — Auth Pages
+// DOM CONTENT LOADED — Auth Pages Entry Point
 // =============================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  // If the user is already logged in, redirect them to their respective dashboard
   if (typeof checkAuthAndRedirect === "function") {
     checkAuthAndRedirect();
   }
+
   initializeAuthPanels();
   initializeStudentLogin();
   initializeFacultyLogin();
   initializeStudentSignUp();
   initializeFacultySignUp();
-  // Password toggles are initialized in shared.js
+
+  // Password visibility toggles are initialized globally by shared.js
 });

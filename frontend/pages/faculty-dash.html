@@ -530,10 +530,13 @@
         </div>
         <form id="settingsForm" onsubmit="return false;">
           <div class="form-group">
-            <label class="settings-toggle-row">
+            <div class="settings-toggle-row">
               <span>Enable Notifications</span>
-              <input type="checkbox" id="settingsNotifications" checked />
-            </label>
+              <label class="toggle-switch" for="settingsNotifications">
+                <input type="checkbox" id="settingsNotifications" checked />
+                <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+              </label>
+            </div>
           </div>
 
           <div class="form-actions">

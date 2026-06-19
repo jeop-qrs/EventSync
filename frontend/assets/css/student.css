@@ -3,8 +3,8 @@
 :root {
   --bg-primary: #f4f6f9;
   --sidebar-bg: #1e293b;
-  --accent-color: #4f46e5;
-  --accent-hover: #4338ca;
+  --accent-color: #000080;
+  --accent-hover: #000060;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --card-bg: #ffffff;
@@ -173,8 +173,8 @@ body {
 body.dark-mode {
   --bg-primary: #071422;
   --sidebar-bg: #05101a;
-  --accent-color: #7c9cff;
-  --accent-hover: #6b86ff;
+  --accent-color: #000080;
+  --accent-hover: #000060;
   --text-main: #e6eef8;
   --text-muted: #9fb0c8;
   --card-bg: #071b26;
