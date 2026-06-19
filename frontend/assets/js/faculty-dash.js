@@ -61,7 +61,7 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           // Build a full URL for the venue photo from the server's relative path
-          photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
+          photoDataUrl: v.photoPath ? `${baseUrl}/${v.photoPath.replace(/\\/g, "/")}` : "",
           timeSlots: v.timeSlots || [],
           facilities: v.facilities || []
         }));
@@ -108,7 +108,7 @@ async function loadEventsFromServer() {
       time: e.startTime,
       attendees: e.expectedAttendees,
       pdfName: e.submitLetterPath ? e.submitLetterPath.split("/").pop() : "letter-request.pdf",
-      pdfDataUrl: e.submitLetterPath ? `http://localhost:5108/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
+      pdfDataUrl: e.submitLetterPath ? `${baseUrl}/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
       // Map backend status names to internal labels used across the UI
       status: e.status === "approved" ? "accepted" : (e.status === "rejected" ? "pending_reviewed" : e.status),
       rejectionReason: e.reason || "",
@@ -352,6 +352,11 @@ function renderFacultyVenueGrid() {
   // Re-attach the Add Venue button listener (it gets replaced when the grid re-renders)
   document.getElementById("openAddVenueBtn")?.addEventListener("click", openAddVenueModal);
   updateDashboardStats();
+
+  // Restore the selected state highlight if a venue was active
+  if (activeVenue) {
+    setActiveVenueCard(activeVenue);
+  }
 }
 
 // [displayVenueDetail]: Populates the right-hand panel with the selected venue's
@@ -1518,4 +1523,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("eventsync-proposals-updated", () => {
     refreshAll();
   });
+
+  // Poll for changes from other devices every 10 seconds to keep dynamic screens in sync
+  setInterval(refreshAll, 10000);
 });
