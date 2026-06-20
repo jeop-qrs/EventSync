@@ -289,7 +289,7 @@ function renderFacultyVenueGrid() {
   if (!grid) return;
 
   const query = document.getElementById("venueSearchQuery")?.value.toLowerCase().trim() || "";
-  const minCapacity = parseInt(document.getElementById("venueCapacityFilter")?.value || "0", 10);
+  const maxCapacity = parseInt(document.getElementById("venueCapacityFilter")?.value || "0", 10);
 
   let venues = loadVenues();
 
@@ -301,8 +301,8 @@ function renderFacultyVenueGrid() {
       v.description.toLowerCase().includes(query)
     );
   }
-  if (minCapacity > 0) {
-    venues = venues.filter(v => v.capacity >= minCapacity);
+  if (maxCapacity > 0) {
+    venues = venues.filter(v => v.capacity <= maxCapacity);
   }
 
   // Rebuild the lookup map every time the grid is refreshed
