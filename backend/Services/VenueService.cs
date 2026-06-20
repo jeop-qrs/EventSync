@@ -48,18 +48,14 @@ namespace backend.Services
             string? photoPath = null;
             if (req.PhotoCover != null)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Venue", "Banners");
-                if (!Directory.Exists(uploadsFolder))
+                using (var ms = new MemoryStream())
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    await req.PhotoCover.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    var base64String = Convert.ToBase64String(fileBytes);
+                    var contentType = req.PhotoCover.ContentType;
+                    photoPath = $"data:{contentType};base64,{base64String}";
                 }
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(req.PhotoCover.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await req.PhotoCover.CopyToAsync(stream);
-                }
-                photoPath = Path.Combine("Uploads", "Venue", "Banners", fileName);
             }
             var newVenue = new Venue
             {
@@ -103,7 +99,7 @@ namespace backend.Services
                 return new GlobalResponse { Success = false, BackendMessage = "Cannot delete venue because it has active events scheduled/associated with it." };
             }
 
-            if (!string.IsNullOrEmpty(venue.PhotoPath))
+            if (!string.IsNullOrEmpty(venue.PhotoPath) && !venue.PhotoPath.StartsWith("data:"))
             {
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), venue.PhotoPath);
                 if (File.Exists(filePath))
@@ -146,7 +142,7 @@ namespace backend.Services
             if (req.PhotoCover != null)
             {
                 // Delete old photo if it exists
-                if (!string.IsNullOrEmpty(venue.PhotoPath))
+                if (!string.IsNullOrEmpty(venue.PhotoPath) && !venue.PhotoPath.StartsWith("data:"))
                 {
                     var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), venue.PhotoPath);
                     if (File.Exists(oldFilePath))
@@ -162,19 +158,15 @@ namespace backend.Services
                     }
                 }
 
-                // Save new photo
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Venue", "Banners");
-                if (!Directory.Exists(uploadsFolder))
+                // Save new photo directly as Base64 data URL
+                using (var ms = new MemoryStream())
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    await req.PhotoCover.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    var base64String = Convert.ToBase64String(fileBytes);
+                    var contentType = req.PhotoCover.ContentType;
+                    venue.PhotoPath = $"data:{contentType};base64,{base64String}";
                 }
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(req.PhotoCover.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await req.PhotoCover.CopyToAsync(stream);
-                }
-                venue.PhotoPath = Path.Combine("Uploads", "Venue", "Banners", fileName);
             }
 
             await _context.SaveChangesAsync();

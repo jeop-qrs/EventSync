@@ -62,7 +62,7 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           // Build a full URL for the venue photo if a server path was returned
-          photoDataUrl: v.photoPath ? `${baseUrl}/${v.photoPath.replace(/\\/g, "/")}` : "",
+          photoDataUrl: v.photoPath ? (v.photoPath.startsWith("data:") ? v.photoPath : `${baseUrl}/${v.photoPath.replace(/\\/g, "/")}`) : "",
           timeSlots: v.timeSlots || [],
           facilities: v.facilities || []
         }));
