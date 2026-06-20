@@ -62,7 +62,7 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           // Build a full URL for the venue photo if a server path was returned
-          photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
+          photoDataUrl: v.photoPath ? (v.photoPath.startsWith("data:") ? v.photoPath : `${baseUrl}/${v.photoPath.replace(/\\/g, "/")}`) : "",
           timeSlots: v.timeSlots || [],
           facilities: v.facilities || []
         }));
@@ -106,7 +106,7 @@ async function loadEventsFromServer() {
       time: e.startTime,
       attendees: e.expectedAttendees,
       pdfName: e.submitLetterPath ? e.submitLetterPath.split("/").pop() : "letter-request.pdf",
-      pdfDataUrl: e.submitLetterPath ? `http://localhost:5108/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
+      pdfDataUrl: e.submitLetterPath ? `${baseUrl}/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
       // Map backend status names to the internal names used in this file
       status: e.status === "approved" ? "accepted" : (e.status === "rejected" ? "pending_reviewed" : e.status),
       rejectionReason: e.reason || "",
@@ -360,6 +360,11 @@ function renderStudentVenueGrid() {
 
   // Keep the venue dropdown in the booking form in sync with the venue list
   populateVenueSelect(venues);
+
+  // Restore the selected state highlight if a venue was active
+  if (activeVenue) {
+    setActiveVenueCard(activeVenue);
+  }
 }
 
 // [populateVenueSelect]: Updates the venue <select> dropdown in the Event Application
@@ -1141,4 +1146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === STORAGE_KEYS.PROPOSALS || e.key === STORAGE_KEYS.VENUES) refreshAll();
   });
   window.addEventListener("eventsync-proposals-updated", refreshAll);
+
+  // Poll for changes from other devices every 10 seconds to keep dynamic screens in sync
+  setInterval(refreshAll, 10000);
 });

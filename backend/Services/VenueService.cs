@@ -48,18 +48,14 @@ namespace backend.Services
             string? photoPath = null;
             if (req.PhotoCover != null)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Venue", "Banners");
-                if (!Directory.Exists(uploadsFolder))
+                using (var ms = new MemoryStream())
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    await req.PhotoCover.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    var base64String = Convert.ToBase64String(fileBytes);
+                    var contentType = req.PhotoCover.ContentType;
+                    photoPath = $"data:{contentType};base64,{base64String}";
                 }
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(req.PhotoCover.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await req.PhotoCover.CopyToAsync(stream);
-                }
-                photoPath = Path.Combine("Uploads", "Venue", "Banners", fileName);
             }
             var newVenue = new Venue
             {
@@ -103,7 +99,7 @@ namespace backend.Services
                 return new GlobalResponse { Success = false, BackendMessage = "Cannot delete venue because it has active events scheduled/associated with it." };
             }
 
-            if (!string.IsNullOrEmpty(venue.PhotoPath))
+            if (!string.IsNullOrEmpty(venue.PhotoPath) && !venue.PhotoPath.StartsWith("data:"))
             {
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), venue.PhotoPath);
                 if (File.Exists(filePath))
@@ -123,6 +119,66 @@ namespace backend.Services
             );
 
             return new GlobalResponse { Success = true, BackendMessage = "Venue deleted successfully." };
+        }
+
+        public async Task<GlobalResponse> UpdateVenue(int venueId, VenueCreateDto req)
+        {
+            var venue = await _context.Venues.FindAsync(venueId);
+            if (venue == null)
+            {
+                return new GlobalResponse { Success = false, BackendMessage = "Venue not found." };
+            }
+
+            // Update simple properties
+            venue.Name = req.Name;
+            venue.Address = req.Address;
+            venue.Capacity = req.Capacity;
+            venue.Description = req.Description;
+            venue.Availability = req.Availability;
+            venue.TimeSlots = string.Join(",", req.Timeslots);
+            venue.Facilities = req.Facilities ?? string.Empty;
+
+            // Handle photo cover update if provided
+            if (req.PhotoCover != null)
+            {
+                // Delete old photo if it exists
+                if (!string.IsNullOrEmpty(venue.PhotoPath) && !venue.PhotoPath.StartsWith("data:"))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), venue.PhotoPath);
+                    if (File.Exists(oldFilePath))
+                    {
+                        try
+                        {
+                            File.Delete(oldFilePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error deleting old photo: {ex.Message}");
+                        }
+                    }
+                }
+
+                // Save new photo directly as Base64 data URL
+                using (var ms = new MemoryStream())
+                {
+                    await req.PhotoCover.CopyToAsync(ms);
+                    var fileBytes = ms.ToArray();
+                    var base64String = Convert.ToBase64String(fileBytes);
+                    var contentType = req.PhotoCover.ContentType;
+                    venue.PhotoPath = $"data:{contentType};base64,{base64String}";
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(
+                null, null, null, null,
+                "Venue",
+                "Update",
+                venue.Name
+            );
+
+            return new GlobalResponse { Success = true, BackendMessage = "Venue updated successfully.", Data = venue };
         }
     }
 }

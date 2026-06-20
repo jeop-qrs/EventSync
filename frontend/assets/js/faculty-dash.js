@@ -61,7 +61,7 @@ async function loadFacultyVenues() {
           availability: v.availability,
           status: v.status,
           // Build a full URL for the venue photo from the server's relative path
-          photoDataUrl: v.photoPath ? `http://localhost:5108/${v.photoPath.replace(/\\/g, "/")}` : "",
+          photoDataUrl: v.photoPath ? (v.photoPath.startsWith("data:") ? v.photoPath : `${baseUrl}/${v.photoPath.replace(/\\/g, "/")}`) : "",
           timeSlots: v.timeSlots || [],
           facilities: v.facilities || []
         }));
@@ -108,7 +108,7 @@ async function loadEventsFromServer() {
       time: e.startTime,
       attendees: e.expectedAttendees,
       pdfName: e.submitLetterPath ? e.submitLetterPath.split("/").pop() : "letter-request.pdf",
-      pdfDataUrl: e.submitLetterPath ? `http://localhost:5108/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
+      pdfDataUrl: e.submitLetterPath ? `${baseUrl}/${e.submitLetterPath.replace(/\\/g, "/")}` : "",
       // Map backend status names to internal labels used across the UI
       status: e.status === "approved" ? "accepted" : (e.status === "rejected" ? "pending_reviewed" : e.status),
       rejectionReason: e.reason || "",
@@ -352,6 +352,11 @@ function renderFacultyVenueGrid() {
   // Re-attach the Add Venue button listener (it gets replaced when the grid re-renders)
   document.getElementById("openAddVenueBtn")?.addEventListener("click", openAddVenueModal);
   updateDashboardStats();
+
+  // Restore the selected state highlight if a venue was active
+  if (activeVenue) {
+    setActiveVenueCard(activeVenue);
+  }
 }
 
 // [displayVenueDetail]: Populates the right-hand panel with the selected venue's
@@ -821,12 +826,8 @@ async function handleAddVenueSubmit(e) {
   // Ensure at least one slot is present even if all were removed
   if (timeSlots.length === 0) timeSlots = [DEFAULT_TIME_SLOTS[0]];
 
-  if (editingVenueId) {
-    // Backend does not currently support venue editing via PUT/PATCH
-    alert("Editing existing venues is not supported by the backend API.");
-    closeAddVenueModal();
-    return;
-  }
+  const url = editingVenueId ? `/api/venues/${editingVenueId}` : "/api/venues";
+  const method = editingVenueId ? "PUT" : "POST";
 
   // Build the multipart request body
   const formData = new FormData();
@@ -842,8 +843,8 @@ async function handleAddVenueSubmit(e) {
   }
 
   try {
-    const response = await apiFetch("/api/venues", {
-      method: "POST",
+    const response = await apiFetch(url, {
+      method: method,
       body: formData
     });
     const result = await response.json();
@@ -851,7 +852,11 @@ async function handleAddVenueSubmit(e) {
       alert(result.backendMessage || "Failed to save venue.");
       return;
     }
-    addNotification(`Venue "${name}" added to the directory.`, "Just now");
+    if (editingVenueId) {
+      addNotification(`Venue "${name}" updated.`, "Just now");
+    } else {
+      addNotification(`Venue "${name}" added to the directory.`, "Just now");
+    }
   } catch (err) {
     console.error("Failed to save venue:", err);
     alert("An error occurred while saving the venue.");
@@ -1518,4 +1523,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("eventsync-proposals-updated", () => {
     refreshAll();
   });
+
+  // Poll for changes from other devices every 10 seconds to keep dynamic screens in sync
+  setInterval(refreshAll, 10000);
 });
