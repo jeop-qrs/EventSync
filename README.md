@@ -501,7 +501,7 @@ Polytechnic University of the Philippines – Quezon City
 
 | Name | GitHub | Role |
 |------|---------|------|
-| Erwin Airon Sia | [@N/A](https://github.com/N/A) | Business Analyst & Documenter |
+| Erwin Airon Sia | [@eassia-pup](https://github.com/eassia-pup) | Business Analyst & Documenter |
 | Trish Anne Adoray | [@Aitsh28](https://github.com/Aitsh28) | Frontend Developer |
 | Agnes Campano | [@kddot00](https://github.com/kddot00) | Frontend Developer |
 | Roe Mabli Jabaan | [@romabss](https://github.com/romabss) | Frontend Developer |
@@ -513,9 +513,9 @@ Polytechnic University of the Philippines – Quezon City
 
 ### Project Roles Summary
 
+- Business Analyst & Documenter – Requirement Gathering, Documentation,
 - Frontend Development – UI/UX, API Integration
-- Backend Development – API, Services, Database
-- Business Analyst & Documenter – Requirement Gathering, Documentation, 
+- Backend Development – API, Services, Database 
 
 ---
 
