@@ -248,8 +248,8 @@ frontend/
 ### Documentation
 
 ```
+README.md
 docs/
-├── README.md                          # This file
 ├── api-contract.md                    # Detailed API contract (all endpoints, request/response shapes)
 ├── system-design.md                   # System design document (architecture, data models, workflows)
 ├── ERD.png                            # Entity Relationship Diagram
@@ -474,6 +474,7 @@ API endpoints are tested using **REST Client `.http` files** located in `backend
 | `auth.http`       | Register, Login, Refresh, Logout      |
 | `event.http`      | Get events, Create event, Update status|
 | `venue.http`      | Get venues, Add venue, Delete venue   |
+| `verify_booking.ps1`| Verify booking                        |
 | `notification.http`| (Coming soon)                         |
 | `dashboard.http`   | (Coming soon)                         |
 | `auditlogs.http`    | (Coming soon)                         |
