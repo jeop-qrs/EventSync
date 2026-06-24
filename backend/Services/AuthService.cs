@@ -206,7 +206,7 @@ namespace backend.Services
                     user.Role,
                     "Auth",
                     "Login Failed (Incorrect password)",
-                    user.Role == "faculty" ? user.Username : user.StudentNumber
+                    (user.Role == "faculty" ? user.Username : user.StudentNumber) ?? "Unknown"
                 );
 
                 return new GlobalResponse
@@ -230,7 +230,7 @@ namespace backend.Services
                 user.Role,
                 "Auth",
                 "Login",
-                user.Role == "faculty" ? user.Username : user.StudentNumber
+                (user.Role == "faculty" ? user.Username : user.StudentNumber) ?? "Unknown"
             );
 
             var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);

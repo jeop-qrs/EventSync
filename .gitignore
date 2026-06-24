@@ -5,6 +5,7 @@
 
 # Project-specific files
 appsettings.Development.json
+Uploads/*
 
 # User-specific files
 *.rsuser
